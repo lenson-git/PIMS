@@ -2,90 +2,527 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PIMS - 产品库存管理系统</title>
+    <title>PIMS 管理系统</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <div id="app">
-        <header>
-            <h1>PIMS 管理系统</h1>
-            <div id="auth-section">
-                <span id="user-email"></span>
-                <button id="login-btn" onclick="handleLogin()">Google 登录</button>
-                <button id="logout-btn" onclick="handleLogout()" style="display:none">登出</button>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>PIMS</h1>
             </div>
-        </header>
+            <nav class="sidebar-nav">
+                <div class="nav-item" onclick="navigate('dashboard')">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                    <span>仪表盘</span>
+                </div>
+                <div class="nav-item active" onclick="navigate('sku')">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                    </svg>
+                    <span>SKU管理</span>
+                </div>
+                <div class="nav-item" onclick="navigate('inbound')">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <polyline points="19 12 12 19 5 12"/>
+                    </svg>
+                    <span>入库</span>
+                </div>
+                <div class="nav-item" onclick="navigate('outbound')">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <line x1="12" y1="19" x2="12" y2="5"/>
+                        <polyline points="5 12 12 5 19 12"/>
+                    </svg>
+                    <span>出库</span>
+                </div>
+                <div class="nav-item" onclick="navigate('stock')">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    <span>库存管理</span>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <div class="topbar">
+                <h2 id="page-title">SKU管理</h2>
+            </div>
+            
+            <div class="content-area">
+                <!-- 仪表盘 (占位) -->
+                <div id="dashboard-view" class="view">
+                    <div class="card">
+                        <h3>仪表盘</h3>
+                        <p>功能开发中...</p>
+                    </div>
+                </div>
 
-        <nav>
-            <a href="#" onclick="showPage('sku')">SKU 管理</a>
-            <a href="#" onclick="showPage('inbound')">入库</a>
-            <a href="#" onclick="showPage('outbound')">出库</a>
-            <a href="#" onclick="showPage('stock')">库存查询</a>
-        </nav>
+                <!-- SKU 管理视图 -->
+                <div id="sku-view" class="view active">
+                    <!-- 顶部操作区 -->
+                    <div class="sku-header-panel">
+                        <div class="input-group-large">
+                            <div class="input-wrapper">
+                                <svg class="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <input type="text" id="sku-main-input" placeholder="新建或搜索 SKU / 条码 / 产品名称..." autocomplete="off">
+                                <button class="btn-icon-only scan-btn" title="使用摄像头扫描">
+                                    <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                                </button>
+                            </div>
+                            <div class="action-buttons-row">
+                                <button class="btn btn-black btn-lg" onclick="handleSearch()">
+                                    <svg class="btn-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    搜索
+                                </button>
+                                <button class="btn btn-outline btn-lg" onclick="handleCreate()">
+                                    <svg class="btn-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    新建
+                                </button>
+                                <button class="btn btn-outline btn-lg" onclick="importSKU()">
+                                    <svg class="btn-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    批量上传
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-        <main id="main-content">
-            <div id="sku-page" class="page">
-                <h2>SKU 管理</h2>
-                <div id="sku-list"></div>
+                    <!-- SKU 列表区域 -->
+                    <div class="table-container">
+                        <table class="data-table sku-table-compact">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px">ID</th>
+                                    <th style="width: 120px">产品图片</th>
+                                    <th style="width: 140px">产品条码</th>
+                                    <th>产品信息</th>
+                                    <th style="width: 100px">采购价</th>
+                                    <th style="width: 100px">销售价</th>
+                                    <th style="width: 120px" class="text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="7" class="text-center">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 入库视图 -->
+                <div id="inbound-view" class="view">
+                    <!-- 上部：操作区 -->
+                    <div class="card inbound-header-panel">
+                        <div class="inbound-controls">
+                            <!-- 1. SKU 扫码输入 -->
+                            <div class="floating-label-group main-input">
+                                <input type="text" id="inbound-sku-input" placeholder=" " autocomplete="off" style="padding-right: 40px;">
+                                <label>扫描/输入 SKU</label>
+                                <button class="btn-icon-only scan-btn" title="开启摄像头">
+                                    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                                </button>
+                            </div>
+
+                            <!-- 2. 仓库选择 -->
+                            <div class="floating-label-group">
+                                <select id="inbound-warehouse" name="warehouse" autocomplete="off">
+                                    <option value=""></option>
+                                    <option value="__new__">+ 新建...</option>
+                                </select>
+                                <label>入库仓库</label>
+                            </div>
+
+                            <!-- 3. 入库类型 -->
+                            <div class="floating-label-group">
+                                <select id="inbound-type" name="inbound_type" autocomplete="off">
+                                    <option value=""></option>
+                                    <option value="__new__">+ 新建...</option>
+                                </select>
+                                <label>入库类型</label>
+                            </div>
+
+                            <!-- 4. 采购单导入 -->
+                            <div class="control-group" style="flex: 0 0 auto;">
+                                <button class="btn btn-outline btn-lg-height" onclick="triggerSheetUpload()">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    导入采购单
+                                </button>
+                                <input type="file" id="sheet-upload-input" accept=".xlsx,.xls,.csv" hidden>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 下部：待入库清单 -->
+                    <div class="card inbound-list-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">待入库清单</div>
+                            <div class="panel-actions">
+                                <button class="btn btn-black" onclick="submitInbound()">确认入库</button>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table inbound-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px">序号</th>
+                                        <th style="width: 100px">图片</th>
+                                        <th>SKU 信息</th>
+                                        <th style="width: 120px">采购数量</th>
+                                        <th style="width: 120px">入库数量</th>
+                                        <th style="width: 80px" class="text-center">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inbound-list-body">
+                                    <!-- 动态内容 -->
+                                </tbody>
+                            </table>
+                            <!-- 空状态提示 -->
+                            <div id="inbound-empty-state" class="empty-state">
+                                <div class="empty-icon">📦</div>
+                                <div class="empty-text">暂无入库商品，请扫描条码或导入采购单</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 出库视图 -->
+                <div id="outbound-view" class="view">
+                    <!-- 上部：操作区 -->
+                    <div class="card outbound-header-panel">
+                        <div class="outbound-controls">
+                            <!-- 1. SKU 扫码输入 -->
+                            <div class="floating-label-group main-input">
+                                <input type="text" id="outbound-sku-input" placeholder=" " autocomplete="off" style="padding-right: 40px;">
+                                <label>扫描/输入 SKU</label>
+                                <button class="btn-icon-only scan-btn" title="开启摄像头">
+                                    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                                </button>
+                            </div>
+
+                            <!-- 2. 仓库选择 -->
+                            <div class="floating-label-group">
+                                <select id="outbound-warehouse" name="warehouse" autocomplete="off">
+                                    <option value=""></option>
+                                    <option value="__new__">+ 新建...</option>
+                                </select>
+                                <label>出库仓库</label>
+                            </div>
+
+                            <!-- 3. 出库类型 -->
+                            <div class="floating-label-group">
+                                <select id="outbound-type" name="outbound_type" autocomplete="off">
+                                    <option value=""></option>
+                                    <option value="__new__">+ 新建...</option>
+                                </select>
+                                <label>出库类型</label>
+                            </div>
+
+                            <!-- 4. 订单导入 -->
+                            <div class="control-group" style="flex: 0 0 auto;">
+                                <button class="btn btn-outline btn-lg-height" onclick="triggerOrderUpload()">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    导入订单
+                                </button>
+                                <input type="file" id="order-upload-input" accept=".xlsx,.xls,.csv" hidden>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 下部：待出库清单 -->
+                    <div class="card outbound-list-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">待出库清单</div>
+                            <div class="panel-actions">
+                                <button class="btn btn-black" onclick="submitOutbound()">确认出库</button>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table outbound-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px">序号</th>
+                                        <th style="width: 100px">图片</th>
+                                        <th>SKU 信息</th>
+                                        <th style="width: 100px">当前库存</th>
+                                        <th style="width: 120px">出库数量</th>
+                                        <th style="width: 80px" class="text-center">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="outbound-list-body">
+                                    <!-- 动态内容 -->
+                                </tbody>
+                            </table>
+                            <!-- 空状态提示 -->
+                            <div id="outbound-empty-state" class="empty-state">
+                                <div class="empty-icon">📤</div>
+                                <div class="empty-text">暂无出库商品，请扫描条码或导入订单</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 库存视图 -->
+                <div id="stock-view" class="view">
+                    <!-- 上部：搜索区 -->
+                    <div class="card stock-header-panel">
+                        <div class="stock-controls">
+                            <!-- 1. SKU 搜索输入 -->
+                            <div class="floating-label-group main-input">
+                                <input type="text" id="stock-search-input" placeholder=" " autocomplete="off" style="padding-right: 40px;">
+                                <label>搜索 SKU / 条码 / 产品名称</label>
+                                <button class="btn-icon-only scan-btn" title="开启摄像头">
+                                    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                                </button>
+                            </div>
+
+                            <!-- 2. 仓库选择 -->
+                            <div class="floating-label-group">
+                                <select id="stock-warehouse" name="warehouse" autocomplete="off">
+                                    <option value="">全部仓库</option>
+                                    <option value="__new__">+ 新建...</option>
+                                </select>
+                                <label>仓库</label>
+                            </div>
+
+                            <!-- 3. 搜索按钮 -->
+                            <div class="control-group" style="flex: 0 0 auto;">
+                                <button class="btn btn-black btn-lg-height" onclick="searchStock()">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    搜索
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 下部：库存列表 -->
+                    <div class="card stock-list-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">库存列表</div>
+                            <div class="panel-info text-secondary">共 <strong id="stock-total-count">0</strong> 个 SKU</div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table stock-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px">序号</th>
+                                        <th style="width: 100px">产品图片</th>
+                                        <th>产品信息</th>
+                                        <th style="width: 100px">库存数量</th>
+                                        <th style="width: 100px">安全库存</th>
+                                        <th style="width: 100px">状态</th>
+                                        <th style="width: 100px" class="text-center">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stock-list-body">
+                                    <tr><td colspan="7" class="text-center">加载中...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
-
-        <div id="loader" style="display:none">加载中...</div>
     </div>
 
-    <script type="module">
-        import { initAuth, loginWithGoogle, logout, checkAuth } from './js/auth.js'
-        import { fetchSKUs } from './js/supabase-client.js'
-        import { showLoading, hideLoading, showError } from './js/utils.js'
-
-        // 全局函数
-        window.handleLogin = loginWithGoogle
-        window.handleLogout = logout
-        
-        window.showPage = function(pageName) {
-            console.log('Show page:', pageName)
-        }
-
-        // 初始化
-        async function init() {
-            initAuth()
-            
-            const user = await checkAuth()
-            if (user) {
-                console.log('User logged in:', user.email)
-                await loadSKUs()
-            } else {
-                console.log('User not logged in')
-            }
-        }
-
-        // 加载 SKU 列表
-        async function loadSKUs() {
-            try {
-                showLoading()
-                const skus = await fetchSKUs()
-                console.log('SKUs:', skus)
-                
-                const listEl = document.getElementById('sku-list')
-                if (skus.length === 0) {
-                    listEl.innerHTML = '<p>暂无数据</p>'
-                } else {
-                    listEl.innerHTML = skus.map(sku => `
-                        <div class="sku-item">
-                            <strong>${sku.external_barcode}</strong>
-                            <p>${sku.product_info || '-'}</p>
+    <!-- SKU 模态框 -->
+    <div id="sku-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>SKU 信息</h3>
+                <button class="btn-close" onclick="closeModal('sku-modal')">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="sku-form">
+                    <div class="form-row">
+                        <div class="floating-label-group">
+                            <select name="shop" autocomplete="off">
+                                <option value=""></option>
+                                <option value="__new__">+ 新建...</option>
+                            </select>
+                            <label>店铺</label>
                         </div>
-                    `).join('')
-                }
-            } catch (error) {
-                showError(error.message)
-            } finally {
-                hideLoading()
-            }
-        }
+                        <div class="floating-label-group">
+                            <input type="text" name="barcode" id="modal-barcode-input" placeholder=" " autocomplete="off">
+                            <label>外部条码</label>
+                        </div>
+                        <div class="floating-label-group">
+                            <select name="status" autocomplete="off">
+                                <option value="Active">上架 (Active)</option>
+                                <option value="Inactive">下架 (Inactive)</option>
+                            </select>
+                            <label>状态</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="floating-label-group full-width">
+                            <textarea name="product_info" rows="4" placeholder=" "></textarea>
+                            <label>产品信息</label>
+                        </div>
+                    </div>
 
-        init()
-    </script>
+                    <div class="form-row">
+                        <div class="floating-label-group">
+                            <input type="number" name="purchase_price" min="0" step="0.01" placeholder=" " autocomplete="off">
+                            <label>采购价 (RMB)</label>
+                        </div>
+                        <div class="floating-label-group">
+                            <input type="number" name="sales_price" min="0" step="0.01" placeholder=" " autocomplete="off">
+                            <label>销售价 (THB)</label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>产品图片 (自动上传)</label>
+                            <div class="file-upload-area" id="sku-upload-area">
+                                <input type="file" id="sku-img-input" accept="image/*" hidden>
+                                <label for="sku-img-input" class="upload-label">
+                                    <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                    <span>点击选择图片</span>
+                                    <span class="text-sm text-secondary">选择后将自动上传并重命名</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('sku-modal')">取消</button>
+                <button class="btn btn-black" onclick="saveSKU()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速新建模态框 (Inbound) -->
+    <div id="quick-create-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>新建 SKU (未找到条码)</h3>
+                <button class="btn-close" onclick="closeModal('quick-create-modal')">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning" style="color: #856404; background-color: #fff3cd; border-color: #ffeeba; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+                    系统未找到条码 <strong id="unknown-barcode"></strong>，请先创建该 SKU。
+                </div>
+                <form id="quick-create-form">
+                    <div class="floating-label-group">
+                        <input type="text" id="quick-barcode" readonly placeholder=" ">
+                        <label>条码</label>
+                    </div>
+                    <div class="floating-label-group">
+                        <input type="text" placeholder=" " autocomplete="off">
+                        <label>产品名称</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('quick-create-modal')">取消</button>
+                <button class="btn btn-black">创建并入库</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 库存不足警告模态框 (Outbound) -->
+    <div id="stock-warning-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>⚠️ 库存不足警告</h3>
+                <button class="btn-close" onclick="closeModal('stock-warning-modal')">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning" style="color: #856404; background-color: #fff3cd; border-color: #ffeeba; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+                    以下商品库存不足，无法完成出库操作：
+                </div>
+                <ul id="warning-list" class="warning-list">
+                    <!-- 动态内容 -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-black" onclick="closeModal('stock-warning-modal')">知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 库存调整模态框 (Stock) -->
+    <div id="adjust-stock-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>调整库存</h3>
+                <button class="btn-close" onclick="closeModal('adjust-stock-modal')">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="adjust-info">
+                    <div class="info-row">
+                        <span class="info-label">SKU:</span>
+                        <span class="info-value" id="adjust-sku-code"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">产品名称:</span>
+                        <span class="info-value" id="adjust-sku-name"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">当前库存:</span>
+                        <span class="info-value" id="adjust-current-stock"></span>
+                    </div>
+                </div>
+
+                <div class="floating-label-group">
+                    <select id="adjust-type" autocomplete="off">
+                        <option value="add">增加库存 (+)</option>
+                        <option value="reduce">减少库存 (-)</option>
+                        <option value="set">设置库存 (=)</option>
+                        <option value="__new__">+ 新建...</option>
+                    </select>
+                    <label>调整类型</label>
+                </div>
+
+                <div class="floating-label-group">
+                    <input type="number" id="adjust-qty" min="0" value="0" placeholder=" " autocomplete="off">
+                    <label>调整数量</label>
+                </div>
+
+                <div class="floating-label-group">
+                    <textarea id="adjust-note" rows="3" placeholder=" "></textarea>
+                    <label>备注</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('adjust-stock-modal')">取消</button>
+                <button class="btn btn-black">确认调整</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局灯箱 -->
+    <div id="global-lightbox" class="lightbox-overlay" onclick="closeLightbox()">
+        <div class="lightbox-content">
+            <img src="" alt="Large View">
+            <button class="lightbox-close">&times;</button>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>

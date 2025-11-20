@@ -1,0 +1,326 @@
+<div id="inbound-view" class="view">
+    <!-- 上部：操作区 -->
+    <div class="card inbound-header-panel">
+        <div class="inbound-controls">
+            <!-- 1. SKU 扫码输入 -->
+            <div class="floating-label-group main-input">
+                <input type="text" id="inbound-sku-input" placeholder=" " autocomplete="off" style="padding-right: 40px;">
+                <label>扫描/输入 SKU</label>
+                <button class="btn-icon-only scan-btn" title="开启摄像头">
+                    <svg viewBox="0 0 24 24" width="24" height="24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                </button>
+            </div>
+
+            <!-- 2. 仓库选择 -->
+            <div class="floating-label-group">
+                <select id="inbound-warehouse" name="warehouse" autocomplete="off">
+                    <option value=""></option>
+                    <option value="__new__">+ 新建...</option>
+                </select>
+                <label>入库仓库</label>
+            </div>
+
+            <!-- 3. 入库类型 -->
+            <div class="floating-label-group">
+                <select id="inbound-type" name="inbound_type" autocomplete="off">
+                    <option value=""></option>
+                    <option value="__new__">+ 新建...</option>
+                </select>
+                <label>入库类型</label>
+            </div>
+
+            <!-- 4. 采购单导入 -->
+            <div class="control-group" style="flex: 0 0 auto;">
+                <button class="btn btn-outline btn-lg-height" onclick="triggerSheetUpload()">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    导入采购单
+                </button>
+                <input type="file" id="sheet-upload-input" accept=".xlsx,.xls,.csv" hidden>
+            </div>
+        </div>
+    </div>
+
+    <!-- 下部：待入库清单 -->
+    <div class="card inbound-list-panel">
+        <div class="panel-header">
+            <div class="panel-title">待入库清单</div>
+            <div class="panel-actions">
+                <button class="btn btn-black" onclick="submitInbound()">确认入库</button>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="data-table inbound-table">
+                <thead>
+                    <tr>
+                        <th style="width: 60px">序号</th>
+                        <th style="width: 100px">图片</th>
+                        <th>SKU 信息</th>
+                        <th style="width: 120px">采购数量</th>
+                        <th style="width: 120px">入库数量</th>
+                        <th style="width: 80px" class="text-center">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="inbound-list-body">
+                    <!-- 示例行 -->
+                    <tr class="sku-row inbound-row" id="row-sku-123" onclick="showSKUDetails('SKU-123456')">
+                        <td>1</td>
+                        <td>
+                            <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('https://via.placeholder.com/1500');">
+                                <img src="https://via.placeholder.com/100" alt="Product">
+                            </div>
+                        </td>
+                        <td>
+                            <div class="sku-info">
+                                <div class="sku-code">SKU-123456</div>
+                                <div class="sku-name text-secondary">示例产品名称 - 黑色 XL</div>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="number" class="form-control-plaintext" value="10" readonly>
+                        </td>
+                        <td>
+                            <div class="qty-input-group">
+                                <button class="btn-qty-minus">-</button>
+                                <input type="number" class="form-control-qty" value="1" autocomplete="off">
+                                <button class="btn-qty-plus">+</button>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn-icon-action text-error" title="删除">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <!-- 空状态提示 -->
+            <div id="inbound-empty-state" class="empty-state" style="display: none;">
+                <div class="empty-icon">📦</div>
+                <div class="empty-text">暂无入库商品，请扫描条码或导入采购单</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 快速新建模态框 -->
+<div id="quick-create-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>新建 SKU (未找到条码)</h3>
+            <button class="btn-close" onclick="closeModal('quick-create-modal')">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="alert alert-warning">
+                系统未找到条码 <strong id="unknown-barcode"></strong>，请先创建该 SKU。
+            </div>
+            <form id="quick-create-form">
+                <div class="floating-label-group">
+                    <input type="text" id="quick-barcode" readonly placeholder=" ">
+                    <label>条码</label>
+                </div>
+                <div class="floating-label-group">
+                    <input type="text" placeholder=" " autocomplete="off">
+                    <label>产品名称</label>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('quick-create-modal')">取消</button>
+            <button class="btn btn-black">创建并入库</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSelectOptions('warehouse', 'warehouse');
+        loadSelectOptions('inbound_type', 'inbound_type');
+    });
+
+    function submitInbound() {
+        alert('确认入库！');
+    }
+
+    function triggerSheetUpload() {
+        document.getElementById('sheet-upload-input').click();
+    }
+</script>
+
+<style>
+    .inbound-header-panel {
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .inbound-controls {
+        display: flex;
+        gap: 16px; /* 间距稍作调整 */
+        align-items: flex-end;
+        width: 100%; /* 确保容器占满整行 */
+    }
+
+    .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px; /* 减小标签与输入框间距 */
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .control-group.main-input {
+        flex: 3;
+        min-width: 300px;
+    }
+
+    /* 重新添加丢失的标签样式 */
+    .control-group label {
+        display: block;
+        font-size: 12px; /* 极简小字体 */
+        font-weight: 500;
+        color: #4b5563;
+        margin-bottom: 0;
+    }
+
+    /* 统一输入框样式 - 紧凑版 */
+    .input-wrapper-large {
+        position: relative;
+    }
+
+    .input-wrapper-large input {
+        width: 100%;
+        padding: 0 12px 0 16px;
+        padding-right: 40px;
+        font-size: 13px; /* 小字体 */
+        border: 1px solid #d1d5db;
+        border-radius: 4px; /* 较小圆角 */
+        height: 36px; /* 紧凑高度 */
+        outline: none;
+        line-height: 36px;
+    }
+    
+    .form-control {
+        height: 36px; /* 紧凑高度 */
+        font-size: 13px; /* 小字体 */
+        border-radius: 4px;
+        padding: 0 12px;
+    }
+    
+    .btn {
+        height: 36px; /* 按钮高度跟随 */
+        font-size: 13px;
+        padding: 0 16px;
+        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .input-wrapper-large input:focus {
+        border-color: #1a1a1a;
+    }
+
+    .scan-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    /* 采购数量无边框样式 */
+    .form-control-plaintext {
+        display: block;
+        width: 100%;
+        padding: 6px 0;
+        margin-bottom: 0;
+        font-size: 15px;
+        line-height: 1.5;
+        color: #1a1a1a;
+        background-color: transparent;
+        border: solid transparent;
+        border-width: 1px 0;
+        font-weight: 500;
+        text-align: center; /* 居中显示 */
+    }
+
+    .inbound-list-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .panel-header {
+        padding: 16px 24px;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .panel-title {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .img-thumbnail-small {
+        width: 60px;
+        height: 60px;
+        background: #f9fafb;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid #e5e7eb;
+        cursor: zoom-in; /* 鼠标指针 */
+    }
+
+    .img-thumbnail-small img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .sku-code {
+        font-weight: 600;
+        color: #1a1a1a;
+    }
+
+    .qty-input-group {
+        display: flex;
+        align-items: center;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        width: 100px;
+    }
+
+    .btn-qty-minus, .btn-qty-plus {
+        width: 30px;
+        height: 30px;
+        background: #f9fafb;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        color: #6b7280;
+    }
+
+    .btn-qty-minus:hover, .btn-qty-plus:hover {
+        background: #e5e7eb;
+        color: #1a1a1a;
+    }
+
+    .form-control-qty {
+        width: 40px;
+        text-align: center;
+        border: none;
+        border-left: 1px solid #d1d5db;
+        border-right: 1px solid #d1d5db;
+        height: 30px;
+        font-weight: 600;
+        outline: none;
+    }
+
+
+</style>

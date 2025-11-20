@@ -1,0 +1,527 @@
+<div id="sku-view" class="view">
+    <!-- 顶部操作区 -->
+    <div class="sku-header-panel">
+        <div class="input-group-large">
+            <div class="input-wrapper">
+                <svg class="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="sku-main-input" placeholder="新建或搜索 SKU / 条码 / 产品名称..." autocomplete="off">
+                <button class="btn-icon-only scan-btn" title="使用摄像头扫描">
+                    <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                </button>
+            </div>
+            <div class="action-buttons-row">
+                <button class="btn btn-black btn-lg" onclick="handleSearch()">
+                    <svg class="btn-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    搜索
+                </button>
+                <button class="btn btn-outline btn-lg" onclick="handleCreate()">
+                    <svg class="btn-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    新建
+                </button>
+                <button class="btn btn-outline btn-lg" onclick="importSKU()">
+                    <svg class="btn-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    批量上传
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SKU 列表区域 -->
+    <div class="table-container">
+        <table class="data-table sku-table-compact">
+            <thead>
+                <tr>
+                    <th style="width: 50px">ID</th>
+                    <th style="width: 120px">产品图片</th>
+                    <th style="width: 140px">产品条码</th>
+                    <th>产品信息</th>
+                    <th style="width: 100px">采购价</th>
+                    <th style="width: 100px">销售价</th>
+                    <th style="width: 120px" class="text-center">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 示例数据 -->
+                <tr class="sku-row" onclick="showSKUDetails('SKU-123456')">
+                    <td>1</td>
+                    <td>
+                        <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('https://via.placeholder.com/1500');">
+                            <img src="https://via.placeholder.com/300" alt="Product">
+                        </div>
+                    </td>
+                    <td class="font-mono">690123456789</td>
+                    <td>
+                        <div class="product-info-compact">
+                            <div class="info-title">示例产品名称 - 黑色 XL</div>
+                            <div class="info-meta">规格: 20cm x 20cm</div>
+                            <div class="info-meta">材质: 棉</div>
+                            <div class="info-meta text-secondary">备注: 易碎品</div>
+                        </div>
+                    </td>
+                    <td class="font-num">¥ 15.00</td>
+                    <td class="font-num">฿ 150.00</td>
+                    <td class="text-center">
+                        <div class="action-icons">
+                            <button class="btn-icon-action" title="打印条码">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                            </button>
+                            <button class="btn-icon-action" title="修改" onclick="openModal('sku-modal')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- SKU 模态框 (新建/修改共用) -->
+<div id="sku-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>SKU 信息</h3>
+            <button class="btn-close" onclick="closeModal('sku-modal')">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="sku-form">
+                <div class="form-row">
+                    <div class="floating-label-group">
+                        <select name="shop" autocomplete="off">
+                            <option value=""></option>
+                            <!-- 动态加载 -->
+                            <option value="__new__">+ 新建...</option>
+                        </select>
+                        <label>店铺</label>
+                    </div>
+                    <div class="floating-label-group">
+                        <input type="text" name="barcode" id="modal-barcode-input" placeholder=" " autocomplete="off">
+                        <label>外部条码</label>
+                    </div>
+                    <div class="floating-label-group">
+                        <select name="status" autocomplete="off">
+                            <option value="Active">上架 (Active)</option>
+                            <option value="Inactive">下架 (Inactive)</option>
+                            <option value="__new__">+ 新建...</option>
+                        </select>
+                        <label>状态</label>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="floating-label-group full-width">
+                        <textarea name="product_info" rows="4" placeholder=" "></textarea>
+                        <label>产品信息</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-label-group">
+                        <input type="number" name="purchase_price" min="0" step="0.01" placeholder=" " autocomplete="off">
+                        <label>采购价 (RMB)</label>
+                    </div>
+                    <div class="floating-label-group">
+                        <input type="number" name="sales_price" min="0" step="0.01" placeholder=" " autocomplete="off">
+                        <label>销售价 (THB)</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-label-group full-width">
+                        <input type="url" name="url" placeholder=" " autocomplete="off">
+                        <label>产品链接 (URL)</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>产品图片 (自动上传)</label>
+                        <div class="file-upload-area" id="sku-upload-area">
+                            <input type="file" id="sku-img-input" accept="image/*" hidden>
+                            <label for="sku-img-input" class="upload-label">
+                                <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                <span>点击选择图片</span>
+                                <span class="text-sm text-secondary">选择后将自动上传并重命名</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('sku-modal')">取消</button>
+            <button class="btn btn-black" onclick="saveSKU()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentImageBase64 = null;
+    let currentSKUId = null;
+
+    // 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSKUs();
+        loadSelectOptions('shop', 'shop');
+        
+        // 监听图片选择
+        document.getElementById('sku-img-input').addEventListener('change', handleImageSelect);
+    });
+
+    function handleSearch() {
+        const query = document.getElementById('sku-main-input').value;
+        loadSKUs(1, query);
+    }
+
+    function handleCreate() {
+        resetForm();
+        const query = document.getElementById('sku-main-input').value;
+        openModal('sku-modal');
+        if (query) {
+            document.getElementById('modal-barcode-input').value = query;
+            // 触发浮动标签
+            document.getElementById('modal-barcode-input').parentElement.classList.add('active');
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('sku-form').reset();
+        currentSKUId = null;
+        currentImageBase64 = null;
+        document.getElementById('sku-upload-area').innerHTML = `
+            <input type="file" id="sku-img-input" accept="image/*" hidden>
+            <label for="sku-img-input" class="upload-label">
+                <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span>点击选择图片</span>
+                <span class="text-sm text-secondary">选择后将自动上传并重命名</span>
+            </label>
+        `;
+        // 重新绑定事件
+        document.getElementById('sku-img-input').addEventListener('change', handleImageSelect);
+        
+        // 重置浮动标签状态
+        document.querySelectorAll('.floating-label-group').forEach(group => group.classList.remove('active'));
+    }
+
+    function handleImageSelect(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            currentImageBase64 = e.target.result;
+            // 显示预览
+            const area = document.getElementById('sku-upload-area');
+            area.innerHTML = `
+                <div class="img-preview-wrapper" style="position: relative; width: 100%; height: 100%;">
+                    <img src="${currentImageBase64}" style="width: 100%; height: 100%; object-fit: contain;">
+                    <button type="button" onclick="resetForm()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">&times;</button>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function saveSKU() {
+        const form = document.getElementById('sku-form');
+        const formData = new FormData(form);
+        
+        const data = {
+            id: currentSKUId,
+            code: formData.get('barcode'), // 映射 barcode 到 code
+            name: formData.get('product_info').split('\n')[0], // 提取第一行作为名称显示
+            productInfo: formData.get('product_info'), // 完整产品信息
+            category: formData.get('shop'), // 暂时映射 shop 到 category
+            costPrice: parseFloat(formData.get('purchase_price')) || 0,
+            sellingPrice: parseFloat(formData.get('sales_price')) || 0,
+            status: formData.get('status'),
+            imageFile: currentImageBase64,
+            // 其他字段...
+        };
+
+        if (!data.code) {
+            alert('请输入 SKU / 条码');
+            return;
+        }
+
+        const btn = document.querySelector('#sku-modal .btn-black');
+        const originalText = btn.textContent;
+        btn.textContent = '保存中...';
+        btn.disabled = true;
+
+        google.script.run
+            .withSuccessHandler(function(response) {
+                btn.textContent = originalText;
+                btn.disabled = false;
+                if (response.success) {
+                    closeModal('sku-modal');
+                    loadSKUs();
+                    alert('保存成功');
+                } else {
+                    alert('保存失败: ' + response.error);
+                }
+            })
+            .withFailureHandler(function(error) {
+                btn.textContent = originalText;
+                btn.disabled = false;
+                alert('系统错误: ' + error.message);
+            })
+            .saveSKU(data);
+    }
+
+    function loadSKUs(page = 1, search = '') {
+        const tbody = document.querySelector('.sku-table-compact tbody');
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">加载中...</td></tr>';
+
+        console.log('loadSKUs called with page:', page, 'search:', search);
+
+        google.script.run
+            .withSuccessHandler(function(response) {
+                console.log('loadSKUs response:', response);
+                if (response.success) {
+                    console.log('loadSKUs data:', response.data);
+                    renderSKUTable(response.data);
+                } else {
+                    console.error('loadSKUs failed:', response.error);
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-error">加载失败: ' + response.error + '</td></tr>';
+                }
+            })
+            .withFailureHandler(function(error) {
+                console.error('loadSKUs system error:', error);
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-error">系统错误: ' + error.message + '</td></tr>';
+            })
+            .getSKUList(page, 20, search);
+    }
+
+    function renderSKUTable(products) {
+        console.log('renderSKUTable called with', products.length, 'products');
+        const tbody = document.querySelector('.sku-table-compact tbody');
+        if (!products || products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">暂无数据</td></tr>';
+            return;
+        }
+
+        try {
+            tbody.innerHTML = products.map(p => {
+                return `
+                <tr class="sku-row" onclick="showSKUDetails('${p.id}')">
+                    <td>${p.id}</td>
+                    <td>
+                        <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${p.image_url || 'https://via.placeholder.com/300'}');">
+                            <img src="${p.image_url || 'https://via.placeholder.com/300'}" alt="Product">
+                        </div>
+                    </td>
+                    <td class="font-mono">${p.code || '-'}</td>
+                    <td>
+                        <div class="product-info-compact">
+                            <div class="info-title" style="max-width: 300px; word-wrap: break-word; white-space: normal;">${p.name || '-'}</div>
+                        </div>
+                    </td>
+                    <td class="font-num">¥ ${p.cost_price || 0}</td>
+                    <td class="font-num">฿ ${p.selling_price || 0}</td>
+                    <td class="text-center">
+                        <div class="action-icons">
+                            <button class="btn-icon-action" title="修改" onclick="event.stopPropagation(); editSKU('${p.id}')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+            console.log('renderSKUTable completed successfully');
+        } catch (error) {
+            console.error('renderSKUTable error:', error);
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-error">渲染失败: ' + error.message + '</td></tr>';
+        }
+    }
+
+    function editSKU(id) {
+        // TODO: 实现编辑逻辑，需要先获取详情
+        alert('编辑功能开发中');
+    }
+</script>
+
+<style>
+    /* 修复图片显示问题 */
+    .img-thumbnail {
+        width: 100px;
+        height: 100px;
+        background: #f3f4f6;
+        border-radius: 6px;
+        overflow: hidden; /* 确保图片不溢出 */
+        cursor: zoom-in;
+        border: 1px solid #e5e7eb;
+        position: relative; /* 建立层叠上下文 */
+    }
+
+    .img-thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block; /* 消除底部间隙 */
+    }
+
+    /* 顶部操作区 */
+    .sku-header-panel {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 20px;
+    }
+
+    .input-group-large {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .input-wrapper {
+        flex: 1;
+        position: relative;
+    }
+
+    .input-wrapper input {
+        width: 100%;
+        padding: 12px 12px 12px 44px;
+        font-size: 15px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        outline: none;
+        height: 48px;
+    }
+
+    .input-wrapper input:focus {
+        border-color: #1a1a1a;
+    }
+
+    .icon-search {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        stroke: #9ca3af;
+        fill: none;
+        stroke-width: 2;
+    }
+
+    .scan-btn {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+    }
+
+    .action-buttons-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-lg {
+        padding: 0 20px;
+        font-size: 14px;
+        height: 48px;
+        border-radius: 6px;
+        white-space: nowrap; /* 防止文字换行 */
+    }
+
+    /* 按钮单色风格 */
+    .btn-black {
+        background: #1a1a1a;
+        color: white;
+        border: 1px solid #1a1a1a;
+    }
+    .btn-black:hover {
+        background: #333;
+    }
+
+    .btn-outline {
+        background: white;
+        color: #1a1a1a;
+        border: 1px solid #d1d5db;
+    }
+    .btn-outline:hover {
+        border-color: #1a1a1a;
+        background: #f9fafb;
+    }
+
+    /* 表格样式优化 */
+    .sku-table-compact th {
+        background: #f9fafb;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 12px;
+        color: #374151;
+    }
+
+    .sku-table-compact td {
+        padding: 12px;
+        vertical-align: middle;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* 产品信息紧凑排版 */
+    .product-info-compact {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .info-title {
+        font-weight: 500;
+        color: #1a1a1a;
+        font-size: 14px;
+        margin-bottom: 2px;
+    }
+
+    .info-meta {
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.4;
+    }
+
+    /* 修复操作图标样式 */
+    .action-icons {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-icon-action {
+        background: white;
+        border: 1px solid #d1d5db; /* 恢复边框 */
+        cursor: pointer;
+        padding: 6px;
+        color: #374151; /* 加深颜色 */
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .btn-icon-action:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+        color: #1a1a1a;
+    }
+
+    .btn-icon-action svg {
+        width: 18px;
+        height: 18px;
+        stroke-width: 2; /* 加粗线条 */
+    }
+
+    /* 模态框内强调色 */
+    .text-error {
+        color: #ef4444;
+    }
+
+
+</style>
