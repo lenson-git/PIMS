@@ -1253,7 +1253,7 @@ textarea.form-control {
    Expenses 页面特定样式
    ============================================ */
 .expenses-entry-panel {
-    padding: 24px;
+    padding: 0;
     margin-bottom: 24px;
 }
 
@@ -1279,13 +1279,17 @@ textarea.form-control {
 
 .filter-row {
     display: flex;
-    gap: 16px;
+    gap: 12px;
     align-items: flex-end;
 }
 
 .filter-row .floating-label-group {
     flex: 1;
-    min-width: 150px;
+    min-width: 0;
+}
+
+.filter-row .control-group {
+    flex-shrink: 0;
 }
 
 .control-group {
@@ -1365,6 +1369,10 @@ textarea.form-control {
     display: flex;
     gap: 12px;
     align-items: flex-end;
+}
+
+.expenses-entry-panel .form-row {
+    gap: 8px;
 }
 
 .form-group {
@@ -1497,4 +1505,14 @@ textarea.form-control {
     width: 18px;
     height: 18px;
     stroke-width: 2;
+}
+
+/* 费用管理视图整体padding */
+#expenses-view {
+    padding: 24px;
+}
+
+/* 确保entry-form有padding */
+.entry-form {
+    padding: 24px;
 }
