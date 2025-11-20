@@ -14,18 +14,18 @@ window._settingsCache = {
 };
 
 // 页面导航控制
-window.navigate = function (viewName) {
+function navigate(viewName) {
+    console.log('navigate called with:', viewName);
+
     // 更新导航高亮
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
-        // 简单匹配：如果点击的是当前项，或者通过 onclick 触发
-        // 这里我们假设 nav-item 的 onclick 已经正确设置
     });
 
     // 由于 onclick 是在 div 上，我们需要手动处理 active 类
-    // 这里的简单实现：遍历所有 nav-item，找到 onclick 包含 viewName 的那个
     document.querySelectorAll('.nav-item').forEach(item => {
-        if (item.getAttribute('onclick').includes(`'${viewName}'`)) {
+        const onclick = item.getAttribute('onclick');
+        if (onclick && onclick.includes(`'${viewName}'`)) {
             item.classList.add('active');
         }
     });
@@ -35,7 +35,12 @@ window.navigate = function (viewName) {
         view.classList.remove('active');
     });
     const view = document.getElementById(viewName + '-view');
-    if (view) view.classList.add('active');
+    if (view) {
+        view.classList.add('active');
+        console.log('Activated view:', viewName + '-view');
+    } else {
+        console.error('View not found:', viewName + '-view');
+    }
 
     // 更新标题
     const titles = {
@@ -56,6 +61,10 @@ window.navigate = function (viewName) {
         // loadStock(); // TODO: Implement loadStock
     }
 }
+
+// 明确暴露到全局
+window.navigate = navigate;
+console.log('window.navigate assigned:', typeof window.navigate);
 
 // 暴露给全局以便 HTML onclick 调用
 window.openModal = function (modalId) {
@@ -403,12 +412,12 @@ document.addEventListener('DOMContentLoaded', function () {
 // Expenses Logic
 // ==========================================
 
-window.selectQuickDate = function(period) {
+window.selectQuickDate = function (period) {
     const today = new Date();
     const dateFrom = document.getElementById('date-from');
     const dateTo = document.getElementById('date-to');
-    
-    switch(period) {
+
+    switch (period) {
         case 'today':
             dateFrom.value = today.toISOString().split('T')[0];
             dateTo.value = today.toISOString().split('T')[0];
@@ -434,17 +443,17 @@ window.selectQuickDate = function(period) {
     initFloatingLabels();
 }
 
-window.applyFilters = function() {
+window.applyFilters = function () {
     const dateFrom = document.getElementById('date-from').value;
     const dateTo = document.getElementById('date-to').value;
     const type = document.getElementById('expense-type-filter').value;
     const amountMin = document.getElementById('amount-min').value;
     const amountMax = document.getElementById('amount-max').value;
-    
+
     alert('筛选条件:\n日期: ' + dateFrom + ' 至 ' + dateTo + '\n类型: ' + (type || '全部') + '\n金额: ' + (amountMin || '0') + ' - ' + (amountMax || '∞'));
 }
 
-window.resetFilters = function() {
+window.resetFilters = function () {
     document.getElementById('date-from').value = '';
     document.getElementById('date-to').value = '';
     document.getElementById('expense-type-filter').value = '';
@@ -453,16 +462,16 @@ window.resetFilters = function() {
     initFloatingLabels();
 }
 
-window.addExpense = function() {
+window.addExpense = function () {
     const date = document.getElementById('new-expense-date').value;
     const type = document.getElementById('new-expense-type').value;
     const amount = document.getElementById('new-expense-amount').value;
     const note = document.getElementById('new-expense-note').value;
-    
+
     if (!date || !type || !amount) {
         alert('请填写必填项：日期、类型、金额');
         return;
     }
-    
+
     alert('添加费用:\n日期: ' + date + '\n类型: ' + type + '\n金额: ฿ ' + amount + '\n备注: ' + note);
 }
