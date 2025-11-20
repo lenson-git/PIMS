@@ -1254,11 +1254,11 @@ textarea.form-control {
    ============================================ */
 
 /* 费用管理视图整体 */
-#expenses-view {
-    padding: 24px;
+#expenses-view.active {
     display: flex;
     flex-direction: column;
     gap: 24px;
+    padding: 24px;
 }
 
 /* 三个区域的卡片 */
