@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIMS - 产品库存管理系统</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>PIMS 管理系统</h1>
+            <div id="auth-section">
+                <span id="user-email"></span>
+                <button id="login-btn" onclick="handleLogin()">Google 登录</button>
+                <button id="logout-btn" onclick="handleLogout()" style="display:none">登出</button>
+            </div>
+        </header>
+
+        <nav>
+            <a href="#" onclick="showPage('sku')">SKU 管理</a>
+            <a href="#" onclick="showPage('inbound')">入库</a>
+            <a href="#" onclick="showPage('outbound')">出库</a>
+            <a href="#" onclick="showPage('stock')">库存查询</a>
+        </nav>
+
+        <main id="main-content">
+            <div id="sku-page" class="page">
+                <h2>SKU 管理</h2>
+                <div id="sku-list"></div>
+            </div>
+        </main>
+
+        <div id="loader" style="display:none">加载中...</div>
+    </div>
+
+    <script type="module">
+        import { initAuth, loginWithGoogle, logout, checkAuth } from './js/auth.js'
+        import { fetchSKUs } from './js/supabase-client.js'
+        import { showLoading, hideLoading, showError } from './js/utils.js'
+
+        // 全局函数
+        window.handleLogin = loginWithGoogle
+        window.handleLogout = logout
+        
+        window.showPage = function(pageName) {
+            console.log('Show page:', pageName)
+        }
+
+        // 初始化
+        async function init() {
+            initAuth()
+            
+            const user = await checkAuth()
+            if (user) {
+                console.log('User logged in:', user.email)
+                await loadSKUs()
+            } else {
+                console.log('User not logged in')
+            }
+        }
+
+        // 加载 SKU 列表
+        async function loadSKUs() {
+            try {
+                showLoading()
+                const skus = await fetchSKUs()
+                console.log('SKUs:', skus)
+                
+                const listEl = document.getElementById('sku-list')
+                if (skus.length === 0) {
+                    listEl.innerHTML = '<p>暂无数据</p>'
+                } else {
+                    listEl.innerHTML = skus.map(sku => `
+                        <div class="sku-item">
+                            <strong>${sku.external_barcode}</strong>
+                            <p>${sku.product_info || '-'}</p>
+                        </div>
+                    `).join('')
+                }
+            } catch (error) {
+                showError(error.message)
+            } finally {
+                hideLoading()
+            }
+        }
+
+        init()
+    </script>
+</body>
+</html>
