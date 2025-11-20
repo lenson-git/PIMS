@@ -45,13 +45,6 @@
                     <span>出库</span>
                 </div>
                 <div class="nav-item" onclick="navigate('stock')">
-                    <svg class="nav-icon" viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" y1="13" x2="8" y2="13"/>
-                        <line x1="16" y1="17" x2="8" y2="17"/>
-                        <polyline points="10 9 9 9 8 9"/>
-                    </svg>
                     <span>库存管理</span>
                 </div>
             </nav>
@@ -64,11 +57,157 @@
             </div>
             
             <div class="content-area">
-                <!-- 仪表盘 (占位) -->
+                <!-- 仪表盘 -->
                 <div id="dashboard-view" class="view">
-                    <div class="card">
-                        <h3>仪表盘</h3>
-                        <p>功能开发中...</p>
+                    <div class="dashboard-grid">
+                        <!-- 1. 本月销售额 -->
+                        <div class="stat-card large">
+                            <div class="stat-header">
+                                <div class="stat-title">本月销售额</div>
+                                <div class="stat-total text-primary">฿ 0.00</div>
+                            </div>
+                            <div class="stat-body">
+                                <div class="shop-column">
+                                    <div class="shop-header">店铺 A</div>
+                                    <div class="metric-row">
+                                        <span class="label">Lazada</span>
+                                        <span class="value">฿ 0.00</span>
+                                    </div>
+                                    <div class="metric-row">
+                                        <span class="label">Shopee</span>
+                                        <span class="value">฿ 0.00</span>
+                                    </div>
+                                </div>
+                                <div class="vertical-divider"></div>
+                                <div class="shop-column">
+                                    <div class="shop-header">店铺 B</div>
+                                    <div class="metric-row">
+                                        <span class="label">Lazada</span>
+                                        <span class="value">฿ 0.00</span>
+                                    </div>
+                                    <div class="metric-row">
+                                        <span class="label">Shopee</span>
+                                        <span class="value">฿ 0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 2. 本月纯利润 -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">本月纯利润</div>
+                                <div class="stat-total text-success">฿ 0.00</div>
+                            </div>
+                            <div class="stat-body-simple">
+                                <div class="metric-row">
+                                    <span class="label">店铺 A</span>
+                                    <span class="value">฿ 0.00</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="label">店铺 B</span>
+                                    <span class="value">฿ 0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. 库存总价值 -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">库存总价值</div>
+                                <div class="stat-total text-primary">¥ 0.00</div>
+                            </div>
+                            <div class="stat-body-simple">
+                                <div class="metric-group">
+                                    <div class="metric-row highlight">
+                                        <span class="label">主仓库</span>
+                                        <span class="value">¥ 0.00</span>
+                                    </div>
+                                    <div class="metric-row highlight">
+                                        <span class="label">售后仓库</span>
+                                        <span class="value">¥ 0.00</span>
+                                    </div>
+                                </div>
+                                <div class="horizontal-divider"></div>
+                                <div class="metric-group">
+                                    <div class="metric-row">
+                                        <span class="label">店铺 A</span>
+                                        <span class="value">¥ 0.00</span>
+                                    </div>
+                                    <div class="metric-row">
+                                        <span class="label">店铺 B</span>
+                                        <span class="value">¥ 0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. 库存数量 -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">库存数量</div>
+                                <div class="stat-total">0 <span class="unit">件</span></div>
+                            </div>
+                            <div class="stat-body-simple">
+                                <div class="metric-group">
+                                    <div class="metric-row highlight">
+                                        <span class="label">主仓库</span>
+                                        <span class="value">0</span>
+                                    </div>
+                                    <div class="metric-row highlight">
+                                        <span class="label">售后仓库</span>
+                                        <span class="value">0</span>
+                                    </div>
+                                </div>
+                                <div class="horizontal-divider"></div>
+                                <div class="metric-group">
+                                    <div class="metric-row">
+                                        <span class="label">店铺 A</span>
+                                        <span class="value">0</span>
+                                    </div>
+                                    <div class="metric-row">
+                                        <span class="label">店铺 B</span>
+                                        <span class="value">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. 低库存预警 -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">低库存预警</div>
+                                <div class="stat-total text-error">0 <span class="unit">个</span></div>
+                            </div>
+                            <div class="stat-body-simple">
+                                <div class="metric-row">
+                                    <span class="label">店铺 A</span>
+                                    <span class="value text-error">0</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="label">店铺 B</span>
+                                    <span class="value text-error">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 6. SKU 数量 -->
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-title">SKU 数量</div>
+                                <div class="stat-total">0 <span class="unit">个</span></div>
+                            </div>
+                            <div class="stat-body-simple">
+                                <div class="metric-row">
+                                    <span class="label">店铺 A</span>
+                                    <span class="value">0</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="label">店铺 B</span>
+                                    <span class="value">0</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

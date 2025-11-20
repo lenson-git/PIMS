@@ -1135,3 +1135,358 @@ textarea.form-control {
     color: #1a1a1a;
     font-weight: 600;
 }
+
+/* ============================================
+   Dashboard 页面特定样式
+   ============================================ */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding-bottom: 20px;
+}
+
+@media (min-width: 1024px) {
+    .stat-card.large {
+        grid-column: span 2;
+    }
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid #f3f4f6;
+    padding-bottom: 12px;
+    margin-bottom: 4px;
+}
+
+.stat-title {
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.stat-total {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1a1a1a;
+    line-height: 1;
+}
+
+.stat-total .unit {
+    font-size: 14px;
+    color: #9ca3af;
+    font-weight: normal;
+}
+
+.stat-body {
+    display: flex;
+    gap: 24px;
+}
+
+.stat-body-simple {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.shop-column {
+    flex: 1;
+}
+
+.vertical-divider {
+    width: 1px;
+    background: #f3f4f6;
+}
+
+.horizontal-divider {
+    height: 1px;
+    background: #f3f4f6;
+    margin: 4px 0;
+}
+
+.shop-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    padding: 4px 0;
+}
+
+.metric-row.highlight {
+    font-weight: 500;
+    background: #f9fafb;
+    padding: 6px 8px;
+    border-radius: 4px;
+    margin: 0 -8px;
+}
+
+.metric-row .label {
+    color: #6b7280;
+}
+
+.metric-row .value {
+    font-weight: 500;
+    color: #1a1a1a;
+}
+
+/* ============================================
+   Expenses 页面特定样式
+   ============================================ */
+.expenses-entry-panel {
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.expenses-filter-panel {
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.filter-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #1a1a1a;
+}
+
+.expenses-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.filter-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.control-group.date-range-group {
+    flex: 2;
+}
+
+.control-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #4b5563;
+}
+
+.form-control {
+    height: 36px;
+    font-size: 13px;
+    border-radius: 4px;
+    padding: 0 12px;
+    border: 1px solid #d1d5db;
+    outline: none;
+}
+
+.form-control:focus {
+    border-color: #1a1a1a;
+}
+
+.date-selector, .amount-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.date-separator, .amount-separator {
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+.quick-date-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.btn-quick-date {
+    padding: 6px 12px;
+    font-size: 11px;
+    border: 1px solid #d1d5db;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #4b5563;
+    transition: all 0.2s;
+}
+
+.btn-quick-date:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.entry-form {
+    margin-top: 16px;
+}
+
+.form-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.form-group.flex-2 {
+    flex: 2;
+}
+
+.image-upload-wrapper {
+    position: relative;
+}
+
+.btn-upload {
+    width: 100%;
+    justify-content: center;
+}
+
+.expenses-list-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.panel-info {
+    font-size: 13px;
+}
+
+.expense-type-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 4px;
+}
+
+.type-shipping {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.type-packaging {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.type-platform {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.type-marketing {
+    background: #fce7f3;
+    color: #9f1239;
+}
+
+.type-other {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn-view-image {
+    background: white;
+    border: 1px solid #d1d5db;
+    cursor: pointer;
+    padding: 4px;
+    color: #6b7280;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-view-image:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    color: #1a1a1a;
+}
+
+.btn-view-image svg {
+    width: 16px;
+    height: 16px;
+}
+
+.action-icons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-icon-action {
+    background: white;
+    border: 1px solid #d1d5db;
+    cursor: pointer;
+    padding: 6px;
+    color: #374151;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-icon-action:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    color: #1a1a1a;
+}
+
+.btn-icon-action svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2;
+}

@@ -398,3 +398,71 @@ document.addEventListener('DOMContentLoaded', function () {
         imgInput.addEventListener('change', handleImageSelect);
     }
 });
+
+// ==========================================
+// Expenses Logic
+// ==========================================
+
+window.selectQuickDate = function(period) {
+    const today = new Date();
+    const dateFrom = document.getElementById('date-from');
+    const dateTo = document.getElementById('date-to');
+    
+    switch(period) {
+        case 'today':
+            dateFrom.value = today.toISOString().split('T')[0];
+            dateTo.value = today.toISOString().split('T')[0];
+            break;
+        case 'thisWeek':
+            const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
+            dateFrom.value = weekStart.toISOString().split('T')[0];
+            dateTo.value = new Date().toISOString().split('T')[0];
+            break;
+        case 'thisMonth':
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            dateFrom.value = monthStart.toISOString().split('T')[0];
+            dateTo.value = new Date().toISOString().split('T')[0];
+            break;
+        case 'lastMonth':
+            const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+            dateFrom.value = lastMonthStart.toISOString().split('T')[0];
+            dateTo.value = lastMonthEnd.toISOString().split('T')[0];
+            break;
+    }
+    // 触发浮动标签更新
+    initFloatingLabels();
+}
+
+window.applyFilters = function() {
+    const dateFrom = document.getElementById('date-from').value;
+    const dateTo = document.getElementById('date-to').value;
+    const type = document.getElementById('expense-type-filter').value;
+    const amountMin = document.getElementById('amount-min').value;
+    const amountMax = document.getElementById('amount-max').value;
+    
+    alert('筛选条件:\n日期: ' + dateFrom + ' 至 ' + dateTo + '\n类型: ' + (type || '全部') + '\n金额: ' + (amountMin || '0') + ' - ' + (amountMax || '∞'));
+}
+
+window.resetFilters = function() {
+    document.getElementById('date-from').value = '';
+    document.getElementById('date-to').value = '';
+    document.getElementById('expense-type-filter').value = '';
+    document.getElementById('amount-min').value = '';
+    document.getElementById('amount-max').value = '';
+    initFloatingLabels();
+}
+
+window.addExpense = function() {
+    const date = document.getElementById('new-expense-date').value;
+    const type = document.getElementById('new-expense-type').value;
+    const amount = document.getElementById('new-expense-amount').value;
+    const note = document.getElementById('new-expense-note').value;
+    
+    if (!date || !type || !amount) {
+        alert('请填写必填项：日期、类型、金额');
+        return;
+    }
+    
+    alert('添加费用:\n日期: ' + date + '\n类型: ' + type + '\n金额: ฿ ' + amount + '\n备注: ' + note);
+}
