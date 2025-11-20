@@ -486,6 +486,178 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 费用管理 -->
+                <div id="expenses-view" class="view">
+                    <!-- 上部：快速录入 -->
+                    <div class="card expenses-entry-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">快速录入费用</div>
+                        </div>
+                        <div class="entry-form">
+                            <div class="form-row">
+                                <div class="floating-label-group">
+                                    <input type="date" id="new-expense-date" autocomplete="off" placeholder=" ">
+                                    <label>日期</label>
+                                </div>
+                                <div class="floating-label-group">
+                                    <select id="new-expense-type" autocomplete="off">
+                                        <option value="">请选择...</option>
+                                        <option value="shipping">物流费用</option>
+                                        <option value="packaging">包装费用</option>
+                                        <option value="platform">平台费用</option>
+                                        <option value="marketing">营销费用</option>
+                                        <option value="other">其他费用</option>
+                                        <option value="__new__">+ 新建...</option>
+                                    </select>
+                                    <label>费用类型</label>
+                                </div>
+                                <div class="floating-label-group">
+                                    <input type="number" id="new-expense-amount" min="0" step="0.01" placeholder=" " autocomplete="off">
+                                    <label>金额 (THB)</label>
+                                </div>
+                                <div class="floating-label-group flex-2">
+                                    <input type="text" id="new-expense-note" placeholder=" " autocomplete="off">
+                                    <label>备注</label>
+                                </div>
+                                <div class="control-group" style="flex: 1;">
+                                    <div class="image-upload-wrapper">
+                                        <input type="file" id="expense-image-input" accept="image/*" hidden>
+                                        <button class="btn btn-outline btn-block btn-lg-height" onclick="document.getElementById('expense-image-input').click()">
+                                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                            选择图片
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="control-group" style="flex: 0 0 auto;">
+                                    <button class="btn btn-black btn-block btn-lg-height" onclick="addExpense()">
+                                        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        添加
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 中部：筛选区 -->
+                    <div class="card expenses-filter-panel">
+                        <div class="filter-title">费用筛选</div>
+                        <div class="expenses-filters">
+                            <!-- 第一行 -->
+                            <div class="filter-row">
+                                <!-- 1. 日期选择 -->
+                                <div class="floating-label-group">
+                                    <input type="date" id="date-from" placeholder=" ">
+                                    <label>开始日期</label>
+                                </div>
+                                <div class="floating-label-group">
+                                    <input type="date" id="date-to" placeholder=" ">
+                                    <label>结束日期</label>
+                                </div>
+
+                                <!-- 快捷日期选择 -->
+                                <div class="control-group" style="flex: 2;">
+                                    <div class="quick-date-buttons">
+                                        <button class="btn-quick-date" onclick="selectQuickDate('today')">今天</button>
+                                        <button class="btn-quick-date" onclick="selectQuickDate('thisWeek')">本周</button>
+                                        <button class="btn-quick-date" onclick="selectQuickDate('thisMonth')">本月</button>
+                                        <button class="btn-quick-date" onclick="selectQuickDate('lastMonth')">上月</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 第二行 -->
+                            <div class="filter-row">
+                                <!-- 2. 费用类型 -->
+                                <div class="floating-label-group">
+                                    <select id="expense-type-filter" autocomplete="off">
+                                        <option value="">全部类型</option>
+                                        <option value="shipping">物流费用</option>
+                                        <option value="packaging">包装费用</option>
+                                        <option value="platform">平台费用</option>
+                                        <option value="marketing">营销费用</option>
+                                        <option value="other">其他费用</option>
+                                        <option value="__new__">+ 新建...</option>
+                                    </select>
+                                    <label>费用类型</label>
+                                </div>
+
+                                <!-- 3. 金额筛选 -->
+                                <div class="floating-label-group">
+                                    <input type="number" id="amount-min" min="0" step="0.01" placeholder=" " autocomplete="off">
+                                    <label>最小金额</label>
+                                </div>
+                                <div class="floating-label-group">
+                                    <input type="number" id="amount-max" min="0" step="0.01" placeholder=" " autocomplete="off">
+                                    <label>最大金额</label>
+                                </div>
+
+                                <!-- 操作按钮 -->
+                                <div class="control-group filter-actions" style="flex: 0 0 auto;">
+                                    <div class="action-buttons">
+                                        <button class="btn btn-black btn-lg-height" onclick="applyFilters()">
+                                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                                            筛选
+                                        </button>
+                                        <button class="btn btn-outline btn-lg-height" onclick="resetFilters()">重置</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 下部：费用明细列表 -->
+                    <div class="card expenses-list-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">费用明细</div>
+                            <div class="panel-info text-secondary">
+                                共 <strong>45</strong> 条记录 | 总计: <strong class="text-error">฿ 12,580.50</strong>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table expenses-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px">序号</th>
+                                        <th style="width: 120px">日期</th>
+                                        <th style="width: 150px">费用类型</th>
+                                        <th style="width: 120px" class="text-right">金额 (THB)</th>
+                                        <th>备注</th>
+                                        <th style="width: 80px">凭证</th>
+                                        <th style="width: 100px" class="text-center">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expenses-list-body">
+                                    <!-- 示例行 1 -->
+                                    <tr>
+                                        <td>1</td>
+                                        <td>2025-11-19</td>
+                                        <td>
+                                            <span class="expense-type-badge type-shipping">物流费用</span>
+                                        </td>
+                                        <td class="text-right font-num">฿ 450.00</td>
+                                        <td class="text-secondary">快递费 - 订单 #12345</td>
+                                        <td class="text-center">
+                                            <button class="btn-view-image" onclick="showLightbox('https://via.placeholder.com/1500')" title="查看凭证">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                            </button>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="action-icons">
+                                                <button class="btn-icon-action" title="编辑">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                </button>
+                                                <button class="btn-icon-action text-error" title="删除">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
