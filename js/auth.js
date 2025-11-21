@@ -1,21 +1,22 @@
 import { supabase, CONFIG } from './config.js'
+import { showError } from './utils.js'
 
 // 检查用户是否已登录
 export async function checkAuth() {
   const { data: { session } } = await supabase.auth.getSession()
-  
+
   if (!session) {
     return null
   }
-  
+
   // 检查是否是允许的邮箱
   const email = session.user.email
   if (email !== CONFIG.ALLOWED_EMAIL) {
     await supabase.auth.signOut()
-    alert('您没有权限访问此系统')
+    showError('您没有权限访问此系统')
     return null
   }
-  
+
   return session.user
 }
 
@@ -27,12 +28,12 @@ export async function loginWithGoogle() {
       redirectTo: window.location.origin
     }
   })
-  
+
   if (error) {
     console.error('Login error:', error)
-    alert('登录失败: ' + error.message)
+    showError('登录失败: ' + error.message)
   }
-  
+
   return data
 }
 
@@ -60,7 +61,7 @@ function updateUIForAuth(user) {
   const loginBtn = document.getElementById('login-btn')
   const logoutBtn = document.getElementById('logout-btn')
   const userEmail = document.getElementById('user-email')
-  
+
   if (user) {
     if (loginBtn) loginBtn.style.display = 'none'
     if (logoutBtn) logoutBtn.style.display = 'block'

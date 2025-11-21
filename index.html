@@ -66,8 +66,13 @@
         
         <!-- 主内容区 -->
         <main class="main-content">
-            <div class="topbar">
+            <div class="topbar" style="display:flex; align-items:center; justify-content:space-between;">
                 <h2 id="page-title">SKU管理</h2>
+                <div class="auth-bar" style="display:flex; align-items:center; gap:12px;">
+                    <span id="user-email" class="text-secondary" style="font-size:13px;"></span>
+                    <button id="login-btn" class="btn btn-outline" onclick="loginWithGoogle()">登录</button>
+                    <button id="logout-btn" class="btn btn-outline" onclick="logout()" style="display:none;">退出</button>
+                </div>
             </div>
             
             <div class="content-area">
@@ -265,11 +270,13 @@
                                     <th>产品信息</th>
                                     <th style="width: 100px">采购价</th>
                                     <th style="width: 100px">销售价</th>
+                                    <th style="width: 60px">URL</th>
+                                    <th style="width: 60px">状态</th>
                                     <th style="width: 120px" class="text-center">操作</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td colspan="7" class="text-center">加载中...</td></tr>
+                                <tr><td colspan="9" class="text-center">加载中...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -291,7 +298,7 @@
 
                             <!-- 2. 仓库选择 -->
                             <div class="floating-label-group">
-                                <select id="inbound-warehouse" name="warehouse" autocomplete="off">
+                                <select id="inbound-warehouse" name="warehouse_code" autocomplete="off">
                                     <option value=""></option>
                                     <option value="__new__">+ 新建...</option>
                                 </select>
@@ -300,7 +307,7 @@
 
                             <!-- 3. 入库类型 -->
                             <div class="floating-label-group">
-                                <select id="inbound-type" name="inbound_type" autocomplete="off">
+                                <select id="inbound-type" name="inbound_type_code" autocomplete="off">
                                     <option value=""></option>
                                     <option value="__new__">+ 新建...</option>
                                 </select>
@@ -367,7 +374,7 @@
 
                             <!-- 2. 仓库选择 -->
                             <div class="floating-label-group">
-                                <select id="outbound-warehouse" name="warehouse" autocomplete="off">
+                                <select id="outbound-warehouse" name="warehouse_code" autocomplete="off">
                                     <option value=""></option>
                                     <option value="__new__">+ 新建...</option>
                                 </select>
@@ -376,7 +383,7 @@
 
                             <!-- 3. 出库类型 -->
                             <div class="floating-label-group">
-                                <select id="outbound-type" name="outbound_type" autocomplete="off">
+                                <select id="outbound-type" name="outbound_type_code" autocomplete="off">
                                     <option value=""></option>
                                     <option value="__new__">+ 新建...</option>
                                 </select>
@@ -443,7 +450,7 @@
 
                             <!-- 2. 仓库选择 -->
                             <div class="floating-label-group">
-                                <select id="stock-warehouse" name="warehouse" autocomplete="off">
+                                <select id="stock-warehouse" name="warehouse_code" autocomplete="off">
                                     <option value="">全部仓库</option>
                                     <option value="__new__">+ 新建...</option>
                                 </select>
@@ -502,13 +509,8 @@
                                     <label>日期</label>
                                 </div>
                                 <div class="floating-label-group">
-                                    <select id="new-expense-type" autocomplete="off">
+                                    <select id="new-expense-type" name="expense_type" autocomplete="off">
                                         <option value="">请选择...</option>
-                                        <option value="shipping">物流费用</option>
-                                        <option value="packaging">包装费用</option>
-                                        <option value="platform">平台费用</option>
-                                        <option value="marketing">营销费用</option>
-                                        <option value="other">其他费用</option>
                                     </select>
                                     <label>费用类型</label>
                                 </div>
@@ -520,7 +522,7 @@
                                     <input type="text" id="new-expense-note" placeholder=" " autocomplete="off">
                                     <label>备注</label>
                                 </div>
-                                <div class="control-group" style="flex: 1;">
+                                <div class="control-group" style="flex: 0 0 auto;">
                                     <div class="image-upload-wrapper">
                                         <input type="file" id="expense-image-input" accept="image/*" hidden>
                                         <button class="btn btn-outline btn-block btn-lg-height" onclick="document.getElementById('expense-image-input').click()">
@@ -555,7 +557,7 @@
                                     <input type="date" id="date-to" placeholder=" ">
                                     <label>结束日期</label>
                                 </div>
-                                <div class="control-group" style="flex: 2;">
+                                <div class="control-group">
                                     <div class="quick-date-buttons">
                                         <button class="btn-quick-date" onclick="selectQuickDate('today')">今天</button>
                                         <button class="btn-quick-date" onclick="selectQuickDate('thisWeek')">本周</button>
@@ -568,13 +570,8 @@
                             <!-- 第二行 -->
                             <div class="filter-row">
                                 <div class="floating-label-group">
-                                    <select id="expense-type-filter" autocomplete="off">
+                                    <select id="expense-type-filter" name="expense_type" autocomplete="off">
                                         <option value="">全部类型</option>
-                                        <option value="shipping">物流费用</option>
-                                        <option value="packaging">包装费用</option>
-                                        <option value="platform">平台费用</option>
-                                        <option value="marketing">营销费用</option>
-                                        <option value="other">其他费用</option>
                                     </select>
                                     <label>费用类型</label>
                                 </div>
@@ -586,7 +583,7 @@
                                     <input type="number" id="amount-max" min="0" step="0.01" placeholder=" " autocomplete="off">
                                     <label>最大金额</label>
                                 </div>
-                                <div class="control-group filter-actions" style="flex: 0 0 auto;">
+                                <div class="control-group filter-actions">
                                     <div class="action-buttons">
                                         <button class="btn btn-black btn-lg-height" onclick="applyFilters()">
                                             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
@@ -688,7 +685,7 @@
                 <form id="sku-form">
                     <div class="form-row">
                         <div class="floating-label-group">
-                            <select name="shop" autocomplete="off">
+                            <select name="shop_code" autocomplete="off">
                                 <option value=""></option>
                                 <option value="__new__">+ 新建...</option>
                             </select>
@@ -699,9 +696,9 @@
                             <label>外部条码</label>
                         </div>
                         <div class="floating-label-group">
-                            <select name="status" autocomplete="off">
-                                <option value="Active">上架 (Active)</option>
-                                <option value="Inactive">下架 (Inactive)</option>
+                            <select name="status_code" autocomplete="off">
+                                <option value=""></option>
+                                <option value="__new__">+ 新建...</option>
                             </select>
                             <label>状态</label>
                         </div>
@@ -711,6 +708,13 @@
                         <div class="floating-label-group full-width">
                             <textarea name="product_info" rows="4" placeholder=" "></textarea>
                             <label>产品信息</label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="floating-label-group full-width">
+                            <input type="text" name="url" placeholder=" " autocomplete="off">
+                            <label>产品链接 URL</label>
                         </div>
                     </div>
 
@@ -858,6 +862,41 @@
         <div class="lightbox-content">
             <img src="" alt="Large View">
             <button class="lightbox-close">&times;</button>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="confirm-title">确认</h3>
+                <button class="btn-close" id="confirm-close">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="confirm-message" class="text-secondary"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="confirm-cancel">取消</button>
+                <button class="btn btn-black" id="confirm-ok">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <div id="sku-detail-modal" class="modal-overlay">
+        <div class="modal" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>SKU 详情</h3>
+                <button class="btn-close" onclick="closeModal('sku-detail-modal')">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="sku-detail-body"></div>
+            <div class="modal-footer">
+                <button class="btn btn-black" onclick="closeModal('sku-detail-modal')">关闭</button>
+            </div>
         </div>
     </div>
 
