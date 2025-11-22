@@ -4,6 +4,7 @@
 
 let currentScannerTarget = null;
 let isScanning = false;
+let mediaStream = null; // 存储媒体流以便关闭
 
 // 打开条码扫描器
 window.openBarcodeScanner = function (inputId) {
@@ -25,6 +26,7 @@ window.openBarcodeScanner = function (inputId) {
 
 // 关闭条码扫描器
 window.closeBarcodeScanner = function () {
+    console.log('Closing barcode scanner...');
     const modal = document.getElementById('barcode-scanner-modal');
     if (modal) modal.style.display = 'none';
 
@@ -32,6 +34,16 @@ window.closeBarcodeScanner = function () {
     if (isScanning && typeof Quagga !== 'undefined') {
         Quagga.stop();
         isScanning = false;
+        console.log('QuaggaJS stopped');
+    }
+
+    // 停止所有媒体轨道（关闭摄像头）
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(track => {
+            track.stop();
+            console.log('Media track stopped:', track.kind);
+        });
+        mediaStream = null;
     }
 
     currentScannerTarget = null;
@@ -81,6 +93,18 @@ function initQuagga() {
         }
 
         console.log("QuaggaJS initialized");
+
+        // 保存媒体流引用
+        const stream = Quagga.CameraAccess.getActiveStreamLabel();
+        if (stream) {
+            // 获取实际的媒体流对象
+            const videoElement = document.querySelector('#scanner-viewport video');
+            if (videoElement && videoElement.srcObject) {
+                mediaStream = videoElement.srcObject;
+                console.log('Media stream captured');
+            }
+        }
+
         Quagga.start();
         isScanning = true;
     });

@@ -493,6 +493,11 @@ function formatNumber(num) {
 function navigate(viewName) {
     console.log('navigate called with:', viewName);
 
+    // 关闭可能打开的扫描器（防止摄像头一直开着）
+    if (typeof window.closeBarcodeScanner === 'function') {
+        window.closeBarcodeScanner();
+    }
+
     // 更新导航高亮
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
