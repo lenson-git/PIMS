@@ -1149,7 +1149,10 @@ function renderSKUTable(products) {
             <td>${p.__seqId}</td>
             <td>
                 <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${p.__original}')">
-                    <img src="${p.__thumb}" alt="Product" loading="lazy" onerror="window.handleImgError && window.handleImgError(this)">
+                    <div class="image-container" data-img-id="${p.id}">
+                        <div class="skeleton-image"></div>
+                        <img src="${p.__thumb}" alt="Product" loading="lazy" onerror="window.handleImgError && window.handleImgError(this)">
+                    </div>
                 </div>
             </td>
             <td class="font-mono">${p.external_barcode || '-'}</td>
@@ -1189,7 +1192,42 @@ function renderSKUTable(products) {
             </td>
         </tr >
     `).join('');
+
+    // 为所有图片添加加载事件监听
+    setupImageLoading();
 }
+
+// 设置图片加载监听
+function setupImageLoading() {
+    const containers = document.querySelectorAll('.image-container');
+    containers.forEach(container => {
+        const img = container.querySelector('img');
+        if (!img) return;
+
+        // 如果图片已经加载完成（来自缓存）
+        if (img.complete) {
+            handleImageLoad(container, img);
+        } else {
+            // 监听加载完成
+            img.addEventListener('load', () => handleImageLoad(container, img), { once: true });
+            // 监听加载失败
+            img.addEventListener('error', () => handleImageError(container, img), { once: true });
+        }
+    });
+}
+
+// 处理图片加载完成
+function handleImageLoad(container, img) {
+    img.classList.add('image-loaded');
+    container.classList.add('loaded');
+}
+
+// 处理图片加载失败
+function handleImageError(container, img) {
+    container.classList.add('loaded');
+    container.innerHTML = '<div class="image-placeholder">📦</div>';
+}
+
 
 window.showSKUDetails = async function (skuId) {
     try {
