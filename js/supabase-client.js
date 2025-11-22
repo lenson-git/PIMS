@@ -1,4 +1,4 @@
-import { supabase } from './config.js'
+export { supabase } from './config.js'
 
 // 获取 SKU 列表 (使用视图获取关联名称)
 export async function fetchSKUs(page = 1, pageSize = 20, search = '') {
