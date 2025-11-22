@@ -1,0 +1,86 @@
+
+/* ============================================
+   系统设置页面样式
+   ============================================ */
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    padding-bottom: 40px;
+}
+
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: #f9fafb;
+    border: 1px solid #f3f4f6;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.setting-item:hover {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+}
+
+.setting-name {
+    font-size: 14px;
+    color: #1a1a1a;
+    font-weight: 500;
+    flex: 1;
+}
+
+.setting-name.disabled {
+    color: #9ca3af;
+    text-decoration: line-through;
+}
+
+.setting-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0; /* 默认隐藏操作按钮 */
+    transition: opacity 0.2s;
+}
+
+.setting-item:hover .setting-actions {
+    opacity: 1; /* 悬停时显示 */
+}
+
+.settings-add-row {
+    display: flex;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+    align-items: center;
+}
+
+.settings-add-row input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    height: 36px;
+}
+
+.settings-add-row input:focus {
+    border-color: #1a1a1a;
+}
+
+.settings-add-row .btn {
+    height: 36px;
+    padding: 0 16px;
+}
