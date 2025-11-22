@@ -13,10 +13,22 @@
     display: flex;
     flex-direction: column;
     gap: 10px; /* Space between boxes */
-    max-height: 300px;
+    height: 240px; /* Fixed height as requested */
     overflow-y: auto;
     margin-bottom: 16px;
     padding: 4px; /* Prevent shadow clipping */
+}
+
+/* Scrollbar styling for webkit */
+.settings-list::-webkit-scrollbar {
+    width: 6px;
+}
+.settings-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+.settings-list::-webkit-scrollbar-thumb {
+    background-color: #e5e7eb;
+    border-radius: 3px;
 }
 
 .setting-item {
@@ -28,6 +40,7 @@
     border: 1px solid #1a1a1a; /* Darker border as per mockup */
     border-radius: 8px; /* Rounded corners */
     transition: all 0.2s;
+    flex-shrink: 0; /* Prevent shrinking */
 }
 
 .setting-item:hover {
@@ -73,7 +86,7 @@
     border: 1px solid #d1d5db;
     border-radius: 8px;
     padding: 0; /* No padding, handled by children */
-    margin-top: 4px;
+    margin-top: auto; /* Push to bottom if flex container */
     overflow: hidden; /* For border radius */
 }
 

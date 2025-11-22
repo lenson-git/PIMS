@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>PIMS 库存管理系统</title>
     <link rel="stylesheet" href="css/styles.css?v=20251121-dashboard-fix-v2">
-    <link rel="stylesheet" href="css/settings.css?v=5">
+    <link rel="stylesheet" href="css/settings.css?v=6">
     <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
 </head>
 <body>
@@ -596,11 +596,10 @@
                             <div class="settings-list" id="shop-list">
                                 <!-- 动态加载 -->
                             </div>
-                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                                <input type="text" id="shop-add-input" placeholder="添加新店铺..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                <button class="btn btn-primary" onclick="addSetting('shop')" style="white-space: nowrap;">
-                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    添加
+                            <div class="settings-add-row">
+                                <input type="text" id="shop-add-input" placeholder="Add new...">
+                                <button class="btn" onclick="addSetting('shop')">
+                                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </button>
                             </div>
                         </div>
@@ -611,11 +610,10 @@
                             <div class="settings-list" id="warehouse-list">
                                 <!-- 动态加载 -->
                             </div>
-                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                                <input type="text" id="warehouse-add-input" placeholder="添加新仓库..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                <button class="btn btn-primary" onclick="addSetting('warehouse')" style="white-space: nowrap;">
-                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    添加
+                            <div class="settings-add-row">
+                                <input type="text" id="warehouse-add-input" placeholder="Add new...">
+                                <button class="btn" onclick="addSetting('warehouse')">
+                                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </button>
                             </div>
                         </div>
@@ -626,11 +624,10 @@
                             <div class="settings-list" id="inbound_type-list">
                                 <!-- 动态加载 -->
                             </div>
-                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                                <input type="text" id="inbound_type-add-input" placeholder="添加新入库类型..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                <button class="btn btn-primary" onclick="addSetting('inbound_type')" style="white-space: nowrap;">
-                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    添加
+                            <div class="settings-add-row">
+                                <input type="text" id="inbound_type-add-input" placeholder="Add new...">
+                                <button class="btn" onclick="addSetting('inbound_type')">
+                                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </button>
                             </div>
                         </div>
@@ -641,11 +638,10 @@
                             <div class="settings-list" id="outbound_type-list">
                                 <!-- 动态加载 -->
                             </div>
-                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                                <input type="text" id="outbound_type-add-input" placeholder="添加新出库类型..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                <button class="btn btn-primary" onclick="addSetting('outbound_type')" style="white-space: nowrap;">
-                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    添加
+                            <div class="settings-add-row">
+                                <input type="text" id="outbound_type-add-input" placeholder="Add new...">
+                                <button class="btn" onclick="addSetting('outbound_type')">
+                                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </button>
                             </div>
                         </div>
@@ -656,11 +652,10 @@
                             <div class="settings-list" id="expense_type-list">
                                 <!-- 动态加载 -->
                             </div>
-                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                                <input type="text" id="expense_type-add-input" placeholder="添加新费用类型..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                <button class="btn btn-primary" onclick="addSetting('expense_type')" style="white-space: nowrap;">
-                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    添加
+                            <div class="settings-add-row">
+                                <input type="text" id="expense_type-add-input" placeholder="Add new...">
+                                <button class="btn" onclick="addSetting('expense_type')">
+                                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </button>
                             </div>
                         </div>
@@ -671,11 +666,10 @@
                             <div class="settings-list" id="status-list">
                                 <!-- 动态加载 -->
                             </div>
-                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                                <input type="text" id="status-add-input" placeholder="添加新状态..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                <button class="btn btn-primary" onclick="addSetting('status')" style="white-space: nowrap;">
-                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    添加
+                            <div class="settings-add-row">
+                                <input type="text" id="status-add-input" placeholder="Add new...">
+                                <button class="btn" onclick="addSetting('status')">
+                                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </button>
                             </div>
                         </div>
@@ -686,11 +680,10 @@
                             <div class="settings-list" id="sales_channel-list">
                                 <!-- 动态加载 -->
                             </div>
-                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                                <input type="text" id="sales_channel-add-input" placeholder="添加新销售渠道..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-                                <button class="btn btn-primary" onclick="addSetting('sales_channel')" style="white-space: nowrap;">
-                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    添加
+                            <div class="settings-add-row">
+                                <input type="text" id="sales_channel-add-input" placeholder="Add new...">
+                                <button class="btn" onclick="addSetting('sales_channel')">
+                                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                 </button>
                             </div>
                         </div>
@@ -1046,7 +1039,7 @@
     </div>
 
     <script src="js/barcode-scanner.js"></script>
-    <script type="module" src="js/app.js?v=20251122-settings-fix-v6"></script>
+    <script type="module" src="js/app.js?v=20251122-settings-fix-v7"></script>
 
 </body>
 </html>
