@@ -1404,7 +1404,10 @@ async function renderInboundList() {
                 <td>${idx + 1}</td>
                 <td>
                     <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${original}')">
-                        <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
+                        <div class="image-container">
+                            <div class="skeleton-image"></div>
+                            <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
+                        </div>
                     </div>
                 </td>
                 <td>
@@ -1431,6 +1434,7 @@ async function renderInboundList() {
 
     tbody.innerHTML = rows.join('');
     if (empty) empty.style.display = 'none';
+    setupImageLoading(); // 激活骨架屏加载
 }
 
 window.increaseInboundQty = function (code) {
@@ -1522,7 +1526,10 @@ async function appendInboundRowIfNeeded(code) {
             <td>${idx}</td>
             <td>
                 <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${original}')">
-                    <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
+                    <div class="image-container">
+                        <div class="skeleton-image"></div>
+                        <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
+                    </div>
                 </div>
             </td>
             <td>
@@ -1720,7 +1727,10 @@ async function renderOutboundList() {
                 <td>${idx + 1}</td>
                 <td>
                     <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${original}')">
-                        <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
+                        <div class="image-container">
+                            <div class="skeleton-image"></div>
+                            <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
+                        </div>
                     </div>
                 </td>
                 <td>
@@ -1746,6 +1756,7 @@ async function renderOutboundList() {
     }));
     tbody.innerHTML = rows.join('');
     if (empty) empty.style.display = 'none';
+    setupImageLoading(); // 激活骨架屏加载
 
     // 异步更新每行的当前库存
     codes.forEach(async (code) => {
@@ -1806,7 +1817,10 @@ async function appendOutboundRowIfNeeded(code) {
             <td>${idx}</td>
             <td>
                 <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${original}')">
-                    <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
+                    <div class="image-container">
+                        <div class="skeleton-image"></div>
+                        <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
+                    </div>
                 </div>
             </td>
             <td>
@@ -2061,7 +2075,10 @@ window.loadStockList = async function (query = '', warehouse = '') {
                     <td>${idx}</td>
                     <td>
                         <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${original}')">
-                            <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
+                            <div class="image-container">
+                                <div class="skeleton-image"></div>
+                                <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
+                            </div>
                         </div>
                     </td>
                     <td class="col-product-info">
@@ -2085,6 +2102,7 @@ window.loadStockList = async function (query = '', warehouse = '') {
         }
         tbody.innerHTML = rows.join('') || '<tr><td colspan="8" class="text-center">暂无数据</td></tr>';
         if (totalEl) totalEl.textContent = String(rows.length || 0);
+        setupImageLoading(); // 激活骨架屏加载
     } catch (error) {
         tbody.innerHTML = '<tr><td colspan="8" class="text-center text-error">加载失败</td></tr>';
     }
