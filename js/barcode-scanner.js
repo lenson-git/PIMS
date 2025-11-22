@@ -175,3 +175,37 @@ window.bindScanButtons = function () {
         });
     });
 };
+
+// 监听页面卸载/刷新事件，确保关闭摄像头
+window.addEventListener('beforeunload', function () {
+    if (isScanning) {
+        closeBarcodeScanner();
+    }
+});
+
+// 监听页面隐藏事件（切换标签页、最小化等）
+document.addEventListener('visibilitychange', function () {
+    if (document.hidden && isScanning) {
+        closeBarcodeScanner();
+    }
+});
+
+// 点击模态框外部关闭
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('barcode-scanner-modal');
+    if (modal) {
+        modal.addEventListener('click', function (e) {
+            // 如果点击的是遮罩层本身（不是模态框内容）
+            if (e.target === modal) {
+                closeBarcodeScanner();
+            }
+        });
+    }
+});
+
+// 监听 ESC 键关闭
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && isScanning) {
+        closeBarcodeScanner();
+    }
+});
