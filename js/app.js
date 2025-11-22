@@ -496,6 +496,8 @@ function navigate(viewName) {
     // 关闭可能打开的扫描器（防止摄像头一直开着）
     if (typeof window.closeBarcodeScanner === 'function') {
         window.closeBarcodeScanner();
+    } else if (viewName === 'settings') {
+        loadSystemSettings();
     }
 
     // 更新导航高亮
@@ -2924,7 +2926,157 @@ window.deleteExpenseAction = async function (id) {
         showSuccess('删除成功');
         loadExpenses();
     } catch (err) {
-        console.error(err);
-        showError('删除失败');
+        showError('删除失败: ' + err.message);
+    }
+}
+
+// ==========================================
+// System Settings Logic
+// ==========================================
+
+window.loadSystemSettings = async function () {
+    try {
+        // 使用现有的 fetchSettings 获取所有配置
+        // 注意：fetchSettings 返回的是 { type: { code: name } } 格式
+        // 我们需要更详细的信息（如 id, status），所以最好直接查询 settings 表
+        const { data, error } = await supabase
+            .from('settings')
+            .select('*')
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        // 分组
+        const groups = {
+            shop: [],
+            warehouse: [],
+            inbound_type: [],
+            outbound_type: [],
+            expense_type: [],
+            status: [],
+            sales_channel: []
+        };
+
+        data.forEach(item => {
+            if (groups[item.type]) {
+                groups[item.type].push(item);
+            }
+        });
+
+        // 渲染
+        Object.keys(groups).forEach(type => {
+            renderSettingList(type, groups[type]);
+        });
+
+    } catch (err) {
+        console.error('加载系统设置失败:', err);
+        showError('加载系统设置失败');
+    }
+}
+
+function renderSettingList(type, items) {
+    const container = document.getElementById(`${type}-list`);
+    if (!container) return;
+
+    if (items.length === 0) {
+        container.innerHTML = '<div class="text-center text-secondary text-sm" style="padding: 20px;">暂无数据</div>';
+        return;
+    }
+
+    container.innerHTML = items.map(item => {
+        const isDisabled = item.status === 'disabled';
+        return `
+            <div class="setting-item">
+                <span class="setting-name ${isDisabled ? 'disabled' : ''}">${item.name}</span>
+                <div class="setting-actions">
+                    <button class="btn-icon-only" title="编辑" onclick="editSetting('${item.id}', '${item.name}')">
+                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button class="btn-icon-only" title="${isDisabled ? '启用' : '禁用'}" onclick="toggleSettingStatus('${item.id}', '${isDisabled ? 'active' : 'disabled'}')">
+                        ${isDisabled
+                ? '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
+                : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>'}
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+window.addSetting = async function (type) {
+    const input = document.getElementById(`${type}-add-input`);
+    if (!input) return;
+
+    const name = input.value.trim();
+    if (!name) {
+        showError('请输入名称');
+        return;
+    }
+
+    try {
+        // 生成 code (简单的拼音或随机码，这里简化为随机)
+        const code = type + '_' + Math.random().toString(36).substr(2, 6);
+
+        const { error } = await supabase
+            .from('settings')
+            .insert([{
+                type: type,
+                code: code,
+                name: name,
+                status: 'active'
+            }]);
+
+        if (error) throw error;
+
+        showSuccess('添加成功');
+        input.value = '';
+        loadSystemSettings(); // 重新加载
+        // 同时更新全局缓存
+        loadSettings();
+
+    } catch (err) {
+        console.error('添加失败:', err);
+        showError('添加失败: ' + err.message);
+    }
+}
+
+window.toggleSettingStatus = async function (id, newStatus) {
+    try {
+        const { error } = await supabase
+            .from('settings')
+            .update({ status: newStatus })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        showSuccess(newStatus === 'active' ? '已启用' : '已禁用');
+        loadSystemSettings();
+        loadSettings(); // 更新全局缓存
+
+    } catch (err) {
+        showError('操作失败: ' + err.message);
+    }
+}
+
+window.editSetting = async function (id, currentName) {
+    const newName = prompt('请输入新名称:', currentName);
+    if (newName === null || newName.trim() === '') return;
+
+    if (newName === currentName) return;
+
+    try {
+        const { error } = await supabase
+            .from('settings')
+            .update({ name: newName.trim() })
+            .eq('id', id);
+
+        if (error) throw error;
+
+        showSuccess('修改成功');
+        loadSystemSettings();
+        loadSettings();
+
+    } catch (err) {
+        showError('修改失败: ' + err.message);
     }
 }
