@@ -555,6 +555,11 @@ function navigate(viewName) {
 
         loadExpenses();
     }
+
+    // 重新绑定扫描按钮（因为视图已更新）
+    if (typeof window.bindScanButtons === 'function') {
+        setTimeout(() => window.bindScanButtons(), 100);
+    }
 }
 
 

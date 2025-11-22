@@ -120,8 +120,9 @@ function showScannerError() {
 }
 
 // 绑定所有扫描按钮
-function bindScanButtons() {
+window.bindScanButtons = function () {
     const scanButtons = document.querySelectorAll('.scan-btn');
+    console.log('Binding scan buttons, found:', scanButtons.length);
     scanButtons.forEach(btn => {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -132,14 +133,10 @@ function bindScanButtons() {
             if (inputGroup) {
                 const input = inputGroup.querySelector('input[type="text"]');
                 if (input && input.id) {
+                    console.log('Opening scanner for input:', input.id);
                     openBarcodeScanner(input.id);
                 }
             }
         });
     });
-}
-
-// 在 DOMContentLoaded 后绑定扫描按钮
-document.addEventListener('DOMContentLoaded', () => {
-    bindScanButtons();
-});
+};
