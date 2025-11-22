@@ -2965,8 +2965,21 @@ window.loadSystemSettings = async function () {
         };
 
         data.forEach(item => {
-            if (groups[item.type]) {
-                groups[item.type].push(item);
+            // Normalize type: Convert 'Shop' to 'shop', 'InboundType' to 'inbound_type', etc.
+            // Simple strategy: convert to snake_case or just map known types
+            let typeKey = item.type.toLowerCase();
+
+            // Handle CamelCase to snake_case if needed (e.g. InboundType -> inbound_type)
+            if (item.type === 'InboundType') typeKey = 'inbound_type';
+            else if (item.type === 'OutboundType') typeKey = 'outbound_type';
+            else if (item.type === 'ExpenseType') typeKey = 'expense_type';
+            else if (item.type === 'SalesChannel') typeKey = 'sales_channel';
+            else if (item.type === 'Status') typeKey = 'status'; // SKU Status
+
+            if (groups[typeKey]) {
+                groups[typeKey].push(item);
+            } else {
+                console.warn('Unknown setting type:', item.type);
             }
         });
 
