@@ -984,8 +984,16 @@ window.resetForm = function () {
 
     const uploadArea = document.getElementById('sku-upload-area');
     if (uploadArea) {
-        uploadArea.innerHTML = ``;
-        document.getElementById('sku-img-input').addEventListener('change', handleImageSelect);
+        uploadArea.innerHTML = `
+            <input type="file" id="sku-img-input" accept="image/*" hidden>
+            <label for="sku-img-input" class="upload-label">
+                <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span>点击选择图片</span>
+                <span class="text-sm text-secondary">选择后将自动上传并重命名</span>
+            </label>
+        `;
+        const input = document.getElementById('sku-img-input');
+        if (input) input.addEventListener('change', handleImageSelect);
     }
 
     document.querySelectorAll('.floating-label-group').forEach(group => group.classList.remove('active'));
@@ -1368,9 +1376,16 @@ window.editSKU = async function (id) {
         const area = document.getElementById('sku-upload-area');
         if (area) {
             if (currentImageUrl) {
+                let displayUrl = currentImageUrl;
+                // 尝试获取签名 URL 以防私有桶无法访问
+                try {
+                    const signed = await createSignedUrlFromPublicUrl(currentImageUrl);
+                    if (signed) displayUrl = signed;
+                } catch (_) { }
+
                 area.innerHTML = `
     <div class="img-preview-wrapper" style="position: relative; width: 100%; height: 100%;" >
-                <img src="${currentImageBase64}" style="width: 100%; height: 100%; object-fit: contain;" />
+                <img src="${displayUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                 <button type="button" onclick="clearImageSelection()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">&times;</button>
             </div > `;
             } else {
