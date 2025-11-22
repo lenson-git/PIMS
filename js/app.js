@@ -575,10 +575,17 @@ console.log('window.navigate assigned:', typeof window.navigate);
 
 // 暴露给全局以便 HTML onclick 调用
 window.openModal = function (modalId) {
+    console.log('Opening modal:', modalId);
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.add('active');
-        setTimeout(initFloatingLabels, 50);
+        try {
+            setTimeout(initFloatingLabels, 50);
+        } catch (e) {
+            console.error('Error initializing floating labels:', e);
+        }
+    } else {
+        console.error('Modal not found:', modalId);
     }
 }
 
@@ -1135,6 +1142,7 @@ window.loadSKUs = async function (page = 1, search = '') {
             let thumb = null;
             if (p.pic) {
                 thumb = await createTransformedUrlFromPublicUrl(p.pic, 300, 300);
+                if (!thumb) thumb = await createSignedUrlFromPublicUrl(p.pic);
             }
             // 计算序号: (当前页 - 1) * 每页数量 + 当前索引 + 1
             const seqId = (page - 1) * 20 + index + 1;
@@ -1406,6 +1414,7 @@ async function renderInboundList() {
         let thumb = null;
         if (sku && sku.pic) {
             thumb = await createTransformedUrlFromPublicUrl(sku.pic, 300, 300);
+            if (!thumb) thumb = await createSignedUrlFromPublicUrl(sku.pic);
         }
         const qty = pendingInbound[code] || 0;
         const purchaseQty = inboundPurchaseQty[code] || 0;
@@ -1526,6 +1535,7 @@ async function appendInboundRowIfNeeded(code) {
     let thumb = null;
     if (sku && sku.pic) {
         thumb = await createTransformedUrlFromPublicUrl(sku.pic, 300, 300);
+        if (!thumb) thumb = await createSignedUrlFromPublicUrl(sku.pic);
         if (!thumb) thumb = original; // 变换失败时直接使用原图
     }
     const idx = tbody.querySelectorAll('tr').length + 1;
@@ -1728,6 +1738,7 @@ async function renderOutboundList() {
         let thumb = null;
         if (sku && sku.pic) {
             thumb = await createTransformedUrlFromPublicUrl(sku.pic, 300, 300);
+            if (!thumb) thumb = await createSignedUrlFromPublicUrl(sku.pic);
             if (!thumb) thumb = original;
         }
         const qty = pendingOutbound[code] || 0;
@@ -1818,6 +1829,7 @@ async function appendOutboundRowIfNeeded(code) {
     let thumb = null;
     if (sku && sku.pic) {
         thumb = await createTransformedUrlFromPublicUrl(sku.pic, 300, 300);
+        if (!thumb) thumb = await createSignedUrlFromPublicUrl(sku.pic);
         if (!thumb) thumb = original;
     }
     const idx = tbody.querySelectorAll('tr').length + 1;
