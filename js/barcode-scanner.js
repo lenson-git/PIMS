@@ -130,8 +130,8 @@ function onBarcodeDetected(result) {
         }
     }
 
-    // 关闭扫描器
-    closeBarcodeScanner();
+    // 不自动关闭扫描器，支持连续扫描
+    // 用户需要手动点击关闭按钮、ESC键或点击外部来关闭
 }
 
 // 显示扫描器错误
