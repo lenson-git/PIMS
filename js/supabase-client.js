@@ -1,17 +1,17 @@
 import { supabase } from './config.js'
 
-// 获取 SKU 列表
+// 获取 SKU 列表 (使用视图获取关联名称)
 export async function fetchSKUs(page = 1, pageSize = 20, search = '') {
   let query = supabase
-    .from('skus')
+    .from('v_skus')  // 使用视图,包含 shop_name, status_name
     .select('*')
     .order('created_at', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1)
-  
+
   if (search) {
     query = query.or(`external_barcode.ilike.%${search}%,product_info.ilike.%${search}%`)
   }
-  
+
   const { data, error } = await query
   if (error) throw error
   return data
@@ -23,24 +23,26 @@ export async function createSKU(skuData) {
     .from('skus')
     .insert([skuData])
     .select()
-  
+
   if (error) throw error
   return data[0]
 }
 
+// 根据条码获取 SKU (使用视图)
 export async function fetchSKUByBarcode(barcode) {
   const { data, error } = await supabase
-    .from('skus')
-    .select('id, external_barcode, purchase_price_rmb, selling_price_thb, pic, product_info, shop_code, status_code, url')
+    .from('v_skus')  // 使用视图,包含关联名称
+    .select('id, external_barcode, purchase_price_rmb, selling_price_thb, pic, product_info, shop_code, status_code, url, shop_name, status_name')
     .eq('external_barcode', barcode)
     .limit(1)
   if (error) throw error
   return data && data[0] ? data[0] : null
 }
 
+// 根据 ID 获取 SKU (使用视图)
 export async function fetchSKUById(id) {
   const { data, error } = await supabase
-    .from('skus')
+    .from('v_skus')  // 使用视图,包含关联名称
     .select('*')
     .eq('id', id)
     .limit(1)
@@ -51,7 +53,7 @@ export async function fetchSKUById(id) {
 export async function fetchStockTotalBySKU(id) {
   try {
     const { data, error } = await supabase
-      .from('current_stock')
+      .from('v_current_stock')
       .select('current_quantity')
       .eq('sku_id', id)
     if (error) throw error
@@ -60,6 +62,195 @@ export async function fetchStockTotalBySKU(id) {
   } catch (_) {
     return null
   }
+}
+
+// 获取指定仓库的库存（优先从视图读取，失败时回退按流水汇总）
+export async function fetchStockBySKUWarehouse(id, warehouseCode) {
+  if (!id || !warehouseCode) return null
+  try {
+    const { data, error } = await supabase
+      .from('v_current_stock')
+      .select('current_quantity')
+      .eq('sku_id', id)
+      .eq('warehouse_code', warehouseCode)
+      .limit(1)
+    if (!error && data && data[0]) {
+      const q = data[0].current_quantity
+      return (typeof q === 'number') ? q : (q == null ? null : Number(q))
+    }
+  } catch (_) { }
+
+  try {
+    const { data: inboundTypes } = await supabase
+      .from('settings')
+      .select('code')
+      .eq('type', 'InboundType')
+    const { data: outboundTypes } = await supabase
+      .from('settings')
+      .select('code')
+      .eq('type', 'OutboundType')
+    const inboundSet = new Set((inboundTypes || []).map(x => x.code))
+    const outboundSet = new Set((outboundTypes || []).map(x => x.code))
+
+    const { data, error } = await supabase
+      .from('stock_movements')
+      .select('quantity, movement_type_code')
+      .eq('sku_id', id)
+      .eq('warehouse_code', warehouseCode)
+    if (error) throw error
+    const list = Array.isArray(data) ? data : []
+    let total = 0
+    if (inboundSet.size === 0 && outboundSet.size === 0) {
+      total = list.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0)
+    } else {
+      for (const r of list) {
+        const qty = Number(r.quantity) || 0
+        if (inboundSet.has(r.movement_type_code)) total += qty
+        else if (outboundSet.has(r.movement_type_code)) total -= qty
+      }
+    }
+    return total
+  } catch (_) {
+    return null
+  }
+}
+
+export async function fetchWarehousesForSKU(id) {
+  try {
+    const { data, error } = await supabase
+      .from('v_current_stock')
+      .select('warehouse_code, current_quantity')
+      .eq('sku_id', id)
+    if (error) throw error
+    return Array.isArray(data) ? data : []
+  } catch (_) {
+    // 回退：从流水聚合出每个仓库的当前库存
+    try {
+      const { data: inboundTypes } = await supabase
+        .from('settings')
+        .select('code')
+        .eq('type', 'InboundType')
+      const { data: outboundTypes } = await supabase
+        .from('settings')
+        .select('code')
+        .eq('type', 'OutboundType')
+      const inboundSet = new Set((inboundTypes || []).map(x => x.code))
+      const outboundSet = new Set((outboundTypes || []).map(x => x.code))
+
+      const { data, error } = await supabase
+        .from('stock_movements')
+        .select('warehouse_code, quantity, movement_type_code')
+        .eq('sku_id', id)
+      if (error) throw error
+      const list = Array.isArray(data) ? data : []
+      const bucket = {}
+      if (inboundSet.size === 0 && outboundSet.size === 0) {
+        for (const r of list) {
+          const code = r.warehouse_code || ''
+          const qty = Number(r.quantity) || 0
+          bucket[code] = (bucket[code] || 0) + qty
+        }
+      } else {
+        for (const r of list) {
+          const code = r.warehouse_code || ''
+          const qty = Number(r.quantity) || 0
+          if (inboundSet.has(r.movement_type_code)) bucket[code] = (bucket[code] || 0) + qty
+          else if (outboundSet.has(r.movement_type_code)) bucket[code] = (bucket[code] || 0) - qty
+        }
+      }
+      return Object.entries(bucket).map(([warehouse_code, current_quantity]) => ({ warehouse_code, current_quantity }))
+    } catch (__) {
+      return []
+    }
+  }
+}
+
+export async function fetchWarehouseStockMap(warehouseCode) {
+  if (!warehouseCode) return {};
+  try {
+    const { data, error } = await supabase
+      .from('v_current_stock')
+      .select('sku_id, current_quantity')
+      .eq('warehouse_code', warehouseCode);
+    if (error) throw error;
+    const list = Array.isArray(data) ? data : [];
+    const map = {};
+    for (const r of list) {
+      map[r.sku_id] = (typeof r.current_quantity === 'number') ? r.current_quantity : Number(r.current_quantity) || 0;
+    }
+    return map;
+  } catch (_) { }
+
+  try {
+    const { data: inboundTypes } = await supabase
+      .from('settings')
+      .select('code')
+      .eq('type', 'InboundType');
+    const { data: outboundTypes } = await supabase
+      .from('settings')
+      .select('code')
+      .eq('type', 'OutboundType');
+    const inboundSet = new Set((inboundTypes || []).map(x => x.code));
+    const outboundSet = new Set((outboundTypes || []).map(x => x.code));
+    const { data, error } = await supabase
+      .from('stock_movements')
+      .select('sku_id, quantity, movement_type_code')
+      .eq('warehouse_code', warehouseCode);
+    if (error) throw error;
+    const list = Array.isArray(data) ? data : [];
+    const bucket = {};
+    if (inboundSet.size === 0 && outboundSet.size === 0) {
+      for (const r of list) {
+        const q = Number(r.quantity) || 0;
+        bucket[r.sku_id] = (bucket[r.sku_id] || 0) + q;
+      }
+    } else {
+      for (const r of list) {
+        const q = Number(r.quantity) || 0;
+        if (inboundSet.has(r.movement_type_code)) bucket[r.sku_id] = (bucket[r.sku_id] || 0) + q;
+        else if (outboundSet.has(r.movement_type_code)) bucket[r.sku_id] = (bucket[r.sku_id] || 0) - q;
+      }
+    }
+    return bucket;
+  } catch (__) {
+    return {};
+  }
+}
+
+export async function fetchAllStock() {
+  // Join with skus table to get price information
+  const { data, error } = await supabase
+    .from('v_current_stock')
+    .select(`
+      sku_id,
+      warehouse_code,
+      current_quantity,
+      skus:sku_id (
+        purchase_price_rmb,
+        selling_price_thb
+      )
+    `);
+
+  if (error) throw error;
+
+  // Flatten the structure for easier access
+  const flattenedData = (data || []).map(item => ({
+    sku_id: item.sku_id,
+    warehouse_code: item.warehouse_code,
+    quantity: item.current_quantity,
+    purchase_price_rmb: item.skus?.purchase_price_rmb || null,
+    selling_price_thb: item.skus?.selling_price_thb || null
+  }));
+
+  return flattenedData;
+}
+
+export async function fetchSafetyStock() {
+  const { data, error } = await supabase
+    .from('safety_stock_30d')
+    .select('*');
+  if (error) throw error;
+  return data || [];
 }
 
 export async function fetchSales30dBySKU(id) {
@@ -76,13 +267,40 @@ export async function fetchSales30dBySKU(id) {
   }
 }
 
+// 创建库存变动记录
 export async function createStockMovement(payload) {
   const { data, error } = await supabase
     .from('stock_movements')
-    .insert([payload])
+    .insert(payload)
     .select()
+
   if (error) throw error
   return data[0]
+}
+
+// 获取库存变动记录 (用于财务计算)
+export async function fetchStockMovements(filters = {}) {
+  let query = supabase
+    .from('stock_movements')
+    .select(`
+      *
+    `)
+    .order('created_at', { ascending: false })
+
+  if (filters.startDate) {
+    query = query.gte('created_at', filters.startDate)
+  }
+  if (filters.endDate) {
+    // 包含结束日期当天
+    query = query.lte('created_at', filters.endDate + 'T23:59:59')
+  }
+  if (filters.type) {
+    query = query.eq('movement_type_code', filters.type)
+  }
+
+  const { data, error } = await query
+  if (error) throw error
+  return data
 }
 
 export async function updateSKU(id, patch) {
@@ -235,7 +453,8 @@ export async function fetchSettings(type) {
     inbound_type: 'InboundType',
     outbound_type: 'OutboundType',
     expense_type: 'ExpenseType',
-    status: 'Status'
+    status: 'Status',
+    sales_channel: 'SalesChannel'
   }
 
   const normalized = typeMap[type] || type.replace(/(^|_)(\w)/g, (_, __, ch) => ch.toUpperCase()).replace(/_/g, '')
@@ -248,12 +467,84 @@ export async function fetchSettings(type) {
 
   if (error) throw error
 
-  if (!window._settingsCache[type]) {
-    window._settingsCache[type] = {}
-  }
-  data.forEach(item => {
-    window._settingsCache[type][item.code || item.name] = item.name
-  })
-
   return data
+}
+
+// 创建配置项
+export async function createSetting(code, name, type) {
+  const { data, error } = await supabase
+    .from('settings')
+    .insert([{ code, name, type }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// ==========================================
+// Expenses API
+// ==========================================
+
+export async function fetchExpenses(filters = {}) {
+  let query = supabase
+    .from('expenses')
+    .select('*')
+    .order('timestamp', { ascending: false });
+
+  if (filters.startDate) {
+    query = query.gte('timestamp', `${filters.startDate}T00:00:00`);
+  }
+  if (filters.endDate) {
+    query = query.lte('timestamp', `${filters.endDate}T23:59:59`);
+  }
+  if (filters.type) {
+    query = query.eq('expense_type_code', filters.type);
+  }
+  if (filters.minAmount) {
+    query = query.gte('amount', filters.minAmount);
+  }
+  if (filters.maxAmount) {
+    query = query.lte('amount', filters.maxAmount);
+  }
+  if (filters.currency) {
+    query = query.eq('currency', filters.currency);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+}
+
+export async function createExpense(expenseData) {
+  const { data, error } = await supabase
+    .from('expenses')
+    .insert([expenseData])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateExpense(id, updates) {
+  const { data, error } = await supabase
+    .from('expenses')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteExpense(id) {
+  const { error } = await supabase
+    .from('expenses')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return true;
 }

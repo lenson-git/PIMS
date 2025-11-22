@@ -1,6 +1,19 @@
 /* ============================================
    全局重置与基础样式
    ============================================ */
+
+/* 
+ * 全局图标设计规则
+ * ================
+ * 所有图标必须遵循以下设计原则:
+ * 1. 黑白配色 - 使用灰度色系 (#374151, #6b7280, #1a1a1a)
+ * 2. 扁平化设计 - 无渐变,无阴影
+ * 3. 线框化 - 使用 stroke 而非 fill
+ * 4. 统一尺寸 - 18x18px (stroke-width: 2)
+ * 5. 带边框按钮 - border: 1px solid #d1d5db
+ * 6. 悬停效果 - 背景变灰 (#f3f4f6), 可选旋转/缩放动画
+ */
+
 * {
     margin: 0;
     padding: 0;
@@ -26,6 +39,13 @@ body {
     width: 240px;
     background: #ffffff;
     border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
 }
 
 .sidebar-header {
@@ -44,6 +64,8 @@ body {
 
 .sidebar-nav {
     padding: 12px 0;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .nav-item {
@@ -80,6 +102,7 @@ body {
     display: flex;
     flex-direction: column;
     background: #f8f9fa;
+    margin-left: 240px;
 }
 
 .topbar {
@@ -89,6 +112,9 @@ body {
     display: flex;
     align-items: center;
     padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
 }
 
 .topbar h2 {
@@ -102,7 +128,6 @@ body {
 .content-area {
     flex: 1;
     padding: 24px;
-    overflow-y: auto;
 }
 
 /* 视图切换 */
@@ -380,6 +405,70 @@ body {
     stroke-width: 2;
 }
 
+.btn-icon-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon-action:hover {
+    background: #f3f4f6;
+    color: #1a1a1a;
+}
+
+.btn-icon-action svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+}
+
+/* URL 图标样式 - 黑白扁平线框风格,带悬停动画 */
+.btn-url-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #374151;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-url-icon:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    color: #1a1a1a;
+    transform: scale(1.05);
+}
+
+.btn-url-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    transition: transform 0.2s ease;
+}
+
+.btn-url-icon:hover svg {
+    transform: rotate(15deg);
+}
+
+
 /* 工具栏 */
 .toolbar {
     display: flex;
@@ -456,6 +545,21 @@ body {
     border-bottom: 1px solid #f3f4f6;
     vertical-align: middle;
     color: #1f2937;
+}
+
+.product-info-compact {
+    max-width: 560px;
+}
+.product-info-compact .info-line {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.icon-web {
+    font-size: 16px;
+    line-height: 1;
+    display: inline-block;
 }
 
 .data-table tr:last-child td {
@@ -937,7 +1041,7 @@ textarea.form-control {
 
 .sku-detail-fields { flex: 1; }
 .sku-detail-row { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
-.sku-detail-key { width: 160px; color: #6b7280; font-weight: 500; }
+.sku-detail-key { width: 120px; color: #6b7280; font-weight: 500; }
 .sku-detail-val { flex: 1; color: #1f2937; word-break: break-word; }
 
 /* 修复操作图标样式 */
@@ -989,9 +1093,16 @@ textarea.form-control {
 }
 
 .inbound-controls,
-.outbound-controls,
 .stock-controls {
     display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    width: 100%;
+}
+
+.outbound-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
     align-items: flex-end;
     width: 100%;
@@ -1331,6 +1442,10 @@ textarea.form-control {
     padding: 24px;
 }
 
+#expenses-view .expenses-entry-panel {
+    margin-top: -24px;
+}
+
 /* 三个区域的卡片 */
 
 
@@ -1398,25 +1513,30 @@ textarea.form-control {
 }
 
 .filter-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 12px;
-    align-items: end;
+    align-items: flex-end;
 }
 
 .expenses-filters .filter-row:first-of-type .control-group {
-    grid-column: span 2;
+    width: auto;
 }
 
 /* 筛选区域的输入框 */
-.filter-row .floating-label-group,
+.filter-row .floating-label-group {
+    min-width: 140px;
+    flex: 1;
+}
+
 .filter-row .control-group {
-    width: 100%;
+    width: auto;
 }
 
 .filter-row .floating-label-group input,
 .filter-row .floating-label-group select {
     height: 48px;
+    width: 100%;
 }
 
 /* 快捷日期按钮区域 */
@@ -1568,4 +1688,141 @@ textarea.form-control {
     0% { background-color: #f3f4f6; }
     50% { background-color: #e5e7eb; }
     100% { background-color: transparent; }
+}
+.icon-web-animated {
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    animation: spin 2.8s linear infinite;
+    animation-play-state: paused;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.icon-link { color: #374151; text-decoration: none; }
+.icon-link:hover { color: #1f2937; }
+.icon-link:hover .icon-web-animated { animation-play-state: running; }
+.icon-link .link-domain { margin-left: 6px; font-size: 14px; color: #374151; }
+.icon-link:hover .link-domain { color: #1f2937; }
+
+.product-info-compact.clickable { cursor: pointer; }
+
+.data-table th.text-center { text-align: center; }
+.no-wrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 库存表格产品信息列 - 自动宽度,防止页面过宽 */
+.stock-table th.col-product-info,
+.stock-table td.col-product-info { 
+    max-width: 300px;
+    min-width: 200px;
+    width: auto;
+    text-align: left;
+}
+
+.stock-table td.col-product-info {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+.stock-table th, .stock-table td { text-align: center; }
+.stock-table th.col-product-info, .stock-table td.col-product-info { text-align: left; }
+
+/* 加载提示 */
+.loader {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 15px 25px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 8px;
+    z-index: 9999;
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   登录遮罩层
+   ============================================ */
+.auth-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.auth-container {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 48px 40px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+.auth-logo {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 24px;
+    background: #1a1a1a;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-logo svg {
+    width: 32px;
+    height: 32px;
+    stroke: #ffffff;
+}
+
+.auth-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0 0 12px 0;
+}
+
+.auth-description {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0 0 32px 0;
+}
+
+.auth-overlay .btn-lg {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 16px;
+    justify-content: center;
+}
+
+.auth-loading {
+    margin-top: 24px;
+    color: #6b7280;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #1a1a1a;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
