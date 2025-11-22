@@ -147,8 +147,15 @@ function showScannerError() {
 window.bindScanButtons = function () {
     const scanButtons = document.querySelectorAll('.scan-btn');
     console.log('Binding scan buttons, found:', scanButtons.length);
+
     scanButtons.forEach(btn => {
-        btn.addEventListener('click', function (e) {
+        // 移除旧的事件监听器（通过克隆节点）
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+
+        // 添加新的事件监听器
+        newBtn.addEventListener('click', function (e) {
+            console.log('Scan button clicked!');
             e.preventDefault();
             e.stopPropagation();
 
@@ -159,7 +166,11 @@ window.bindScanButtons = function () {
                 if (input && input.id) {
                     console.log('Opening scanner for input:', input.id);
                     openBarcodeScanner(input.id);
+                } else {
+                    console.error('Input not found or has no ID');
                 }
+            } else {
+                console.error('Input group not found');
             }
         });
     });
