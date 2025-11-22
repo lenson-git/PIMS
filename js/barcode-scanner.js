@@ -15,8 +15,8 @@ window.openBarcodeScanner = function (inputId) {
 
     if (!modal || !container) return;
 
-    // 显示模态框
-    modal.style.display = 'flex';
+    // 显示模态框（使用 active 类）
+    modal.classList.add('active');
     container.style.display = 'block';
     errorDiv.style.display = 'none';
 
@@ -28,7 +28,7 @@ window.openBarcodeScanner = function (inputId) {
 window.closeBarcodeScanner = function () {
     console.log('Closing barcode scanner...');
     const modal = document.getElementById('barcode-scanner-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.classList.remove('active');
 
     // 停止 QuaggaJS
     if (isScanning && typeof Quagga !== 'undefined') {
