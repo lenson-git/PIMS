@@ -91,6 +91,13 @@
                     </svg>
                     <span>费用管理</span>
                 </div>
+                <div class="nav-item" onclick="navigate('settings')">
+                    <svg class="nav-icon" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+                    </svg>
+                    <span>系统设置</span>
+                </div>
             </nav>
         </aside>
         
@@ -575,6 +582,118 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+
+                <!-- 系统设置 -->
+                <div id="settings-view" class="view">
+                    <div class="settings-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+                        
+                        <!-- 店铺设置卡片 -->
+                        <div class="card">
+                            <div class="card-title">店铺</div>
+                            <div class="settings-list" id="shop-list">
+                                <!-- 动态加载 -->
+                            </div>
+                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                                <input type="text" id="shop-add-input" placeholder="添加新店铺..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                <button class="btn btn-primary" onclick="addSetting('shop')" style="white-space: nowrap;">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    添加
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 仓库设置卡片 -->
+                        <div class="card">
+                            <div class="card-title">仓库</div>
+                            <div class="settings-list" id="warehouse-list">
+                                <!-- 动态加载 -->
+                            </div>
+                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                                <input type="text" id="warehouse-add-input" placeholder="添加新仓库..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                <button class="btn btn-primary" onclick="addSetting('warehouse')" style="white-space: nowrap;">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    添加
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 入库类型设置卡片 -->
+                        <div class="card">
+                            <div class="card-title">入库类型</div>
+                            <div class="settings-list" id="inbound_type-list">
+                                <!-- 动态加载 -->
+                            </div>
+                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                                <input type="text" id="inbound_type-add-input" placeholder="添加新入库类型..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                <button class="btn btn-primary" onclick="addSetting('inbound_type')" style="white-space: nowrap;">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    添加
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 出库类型设置卡片 -->
+                        <div class="card">
+                            <div class="card-title">出库类型</div>
+                            <div class="settings-list" id="outbound_type-list">
+                                <!-- 动态加载 -->
+                            </div>
+                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                                <input type="text" id="outbound_type-add-input" placeholder="添加新出库类型..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                <button class="btn btn-primary" onclick="addSetting('outbound_type')" style="white-space: nowrap;">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    添加
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 费用类型设置卡片 -->
+                        <div class="card">
+                            <div class="card-title">费用类型</div>
+                            <div class="settings-list" id="expense_type-list">
+                                <!-- 动态加载 -->
+                            </div>
+                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                                <input type="text" id="expense_type-add-input" placeholder="添加新费用类型..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                <button class="btn btn-primary" onclick="addSetting('expense_type')" style="white-space: nowrap;">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    添加
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- SKU状态设置卡片 -->
+                        <div class="card">
+                            <div class="card-title">SKU 状态</div>
+                            <div class="settings-list" id="status-list">
+                                <!-- 动态加载 -->
+                            </div>
+                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                                <input type="text" id="status-add-input" placeholder="添加新状态..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                <button class="btn btn-primary" onclick="addSetting('status')" style="white-space: nowrap;">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    添加
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 销售渠道设置卡片 -->
+                        <div class="card">
+                            <div class="card-title">销售渠道</div>
+                            <div class="settings-list" id="sales_channel-list">
+                                <!-- 动态加载 -->
+                            </div>
+                            <div class="settings-add-row" style="display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                                <input type="text" id="sales_channel-add-input" placeholder="添加新销售渠道..." style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                <button class="btn btn-primary" onclick="addSetting('sales_channel')" style="white-space: nowrap;">
+                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    添加
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
         </main>
