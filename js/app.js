@@ -546,6 +546,9 @@ function navigate(viewName) {
     } else if (viewName === 'outbound') {
         renderOutboundList();
         setTimeout(() => document.getElementById('outbound-sku-input')?.focus(), 100);
+    } else if (viewName === 'settings') {
+        console.log('Navigating to settings, calling loadSystemSettings');
+        loadSystemSettings();
     } else if (viewName === 'stock') {
         loadStockList();
         setTimeout(() => document.getElementById('stock-search-input')?.focus(), 100);
@@ -2933,6 +2936,7 @@ window.deleteExpenseAction = async function (id) {
 // ==========================================
 
 window.loadSystemSettings = async function () {
+    console.log('loadSystemSettings called');
     try {
         // 使用现有的 fetchSettings 获取所有配置
         // 注意：fetchSettings 返回的是 { type: { code: name } } 格式
@@ -2942,7 +2946,12 @@ window.loadSystemSettings = async function () {
             .select('*')
             .order('created_at', { ascending: true });
 
-        if (error) throw error;
+        if (error) {
+            console.error('Error fetching settings:', error);
+            throw error;
+        }
+
+        console.log('Settings data loaded:', data);
 
         // 分组
         const groups = {
