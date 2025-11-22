@@ -496,8 +496,6 @@ function navigate(viewName) {
     // 关闭可能打开的扫描器（防止摄像头一直开着）
     if (typeof window.closeBarcodeScanner === 'function') {
         window.closeBarcodeScanner();
-    } else if (viewName === 'settings') {
-        loadSystemSettings();
     }
 
     // 更新导航高亮
