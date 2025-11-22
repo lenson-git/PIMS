@@ -12,32 +12,35 @@
 .settings-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
     max-height: 300px;
     overflow-y: auto;
-    margin-bottom: 16px;
+    margin-bottom: 0; /* Remove bottom margin */
 }
 
 .setting-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
-    background: #f9fafb;
-    border: 1px solid #f3f4f6;
-    border-radius: 6px;
+    padding: 12px 4px; /* Horizontal padding reduced, vertical increased slightly */
+    background: transparent; /* Remove background */
+    border: none; /* Remove border */
+    border-bottom: 1px solid #f3f4f6; /* Add separator */
+    border-radius: 0;
     transition: all 0.2s;
 }
 
+.setting-item:last-child {
+    border-bottom: none;
+}
+
 .setting-item:hover {
-    background: #f3f4f6;
-    border-color: #e5e7eb;
+    background: #f9fafb; /* Subtle hover effect */
 }
 
 .setting-name {
     font-size: 14px;
-    color: #1a1a1a;
-    font-weight: 500;
+    color: #374151;
+    font-weight: 400; /* Lighter font weight */
     flex: 1;
 }
 
@@ -48,56 +51,68 @@
 
 .setting-actions {
     display: flex;
-    gap: 4px;
-    opacity: 0; /* 默认隐藏操作按钮 */
+    gap: 8px; /* Increased gap */
+    opacity: 0;
     transition: opacity 0.2s;
 }
 
 .setting-item:hover .setting-actions {
-    opacity: 1; /* 悬停时显示 */
+    opacity: 1;
 }
 
+/* Inline Add Row - Seamless Integration */
 .settings-add-row {
     display: flex;
     gap: 8px;
-    padding-top: 12px;
+    padding: 12px 4px; /* Match item padding */
     border-top: 1px solid #f3f4f6;
     align-items: center;
+    margin-top: 0;
 }
 
 .settings-add-row input {
     flex: 1;
-    padding: 6px 10px;
-    border: 1px solid #e5e7eb;
-    border-radius: 4px;
-    font-size: 13px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    font-size: 14px; /* Match item font size */
+    height: 24px;
+    background: transparent;
     outline: none;
-    transition: border-color 0.2s;
-    height: 32px;
-    background: #f9fafb;
+    color: #374151;
+}
+
+.settings-add-row input::placeholder {
+    color: #9ca3af;
 }
 
 .settings-add-row input:focus {
-    border-color: #d1d5db;
-    background: #fff;
+    background: transparent;
 }
 
+/* Add Button - Minimalist */
 .settings-add-row .btn {
-    height: 32px;
-    padding: 0 12px;
-    font-size: 13px;
-    background: white;
+    height: 24px;
+    padding: 0 8px;
+    font-size: 12px;
+    background: transparent;
     border: 1px solid #e5e7eb;
-    color: #374151;
+    border-radius: 4px;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
 }
 
 .settings-add-row .btn:hover {
     background: #f3f4f6;
+    color: #111827;
     border-color: #d1d5db;
-    color: #1a1a1a;
 }
 
 .settings-add-row .btn svg {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
 }
+
