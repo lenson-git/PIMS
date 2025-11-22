@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>PIMS 库存管理系统</title>
     <link rel="stylesheet" href="css/styles.css?v=20251121-dashboard-fix-v2">
+    <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
 </head>
 <body>
     <!-- 登录遮罩层 -->
@@ -899,6 +900,32 @@
         </div>
     </div>
 
+    <!-- 条码扫描模态框 -->
+    <div id="barcode-scanner-modal" class="modal" style="display: none;">
+        <div class="modal-content scanner-modal">
+            <div class="modal-header">
+                <h3>扫描条码</h3>
+                <button class="btn-close" onclick="closeBarcodeScanner()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body scanner-body">
+                <div id="scanner-container">
+                    <div id="scanner-viewport"></div>
+                    <div class="scanner-overlay">
+                        <div class="scanner-frame"></div>
+                        <p class="scanner-hint">将条码对准扫描框</p>
+                    </div>
+                </div>
+                <div id="scanner-error" class="scanner-error" style="display: none;">
+                    <p>无法访问摄像头</p>
+                    <button class="btn btn-black" onclick="closeBarcodeScanner()">手动输入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/barcode-scanner.js"></script>
     <script type="module" src="js/app.js?v=20251122-dashboard-fix-v2"></script>
 
 </body>
