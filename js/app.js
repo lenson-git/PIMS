@@ -786,7 +786,7 @@ window.saveNewSetting = async function () {
             status: 'Active'
         };
 
-        await createSetting(payload);
+        await createSetting(code, name, dbType);
 
         showSuccess('创建成功');
         closeModal('add-setting-modal');
@@ -2313,63 +2313,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const channelGroup = document.getElementById('outbound-channel-group');
 
             if (outboundWarehouseSelect && outboundTypeSelect) {
-                outboundWarehouseSelect.addEventListener('change', async (e) => {
-                    const warehouseCode = e.target.value;
-                    if (!warehouseCode || warehouseCode === '__new__') {
-                        // 如果没有选择仓库，显示所有出库类型
-                        await loadSelectOptions('outbound_type_code', 'outbound_type');
-                        return;
-                    }
-
-                    // 根据仓库过滤出库类型
-                    const allTypes = await fetchSettings('outbound_type');
-                    const warehouseName = e.target.options[e.target.selectedIndex].text;
-
-                    let filteredTypes = [];
-                    if (warehouseName.includes('主仓库') || warehouseCode === 'MAIN') {
-                        // 主仓库：销售出库、换货出库
-                        filteredTypes = allTypes.filter(t =>
-                            t.name.includes('销售出库') || t.name.includes('换货出库')
-                        );
-                        // 排序：销售出库在前
-                        filteredTypes.sort((a, b) => {
-                            if (a.name.includes('销售出库')) return -1;
-                            if (b.name.includes('销售出库')) return 1;
-                            return 0;
-                        });
-                    } else if (warehouseName.includes('售后') || warehouseCode === 'AFTERSALES') {
-                        // 售后仓库：退货给供应商
-                        filteredTypes = allTypes.filter(t =>
-                            t.name.includes('退货') || t.name.includes('供应商')
-                        );
-                    } else {
-                        filteredTypes = allTypes;
-                    }
-
-                    // 更新出库类型下拉列表
-                    outboundTypeSelect.innerHTML = '<option value=""></option>';
-                    filteredTypes.forEach(item => {
-                        const option = document.createElement('option');
-                        option.value = item.code || item.name;
-                        option.textContent = item.name;
-                        outboundTypeSelect.appendChild(option);
-                    });
-                    // 添加"新建"选项
-                    const newOpt = document.createElement('option');
-                    newOpt.value = '__new__';
-                    newOpt.textContent = '+ 新建...';
-                    outboundTypeSelect.appendChild(newOpt);
-
-                    // 如果只有一个选项（不包括空选项和新建），自动选择
-                    if (filteredTypes.length === 1) {
-                        outboundTypeSelect.value = filteredTypes[0].code || filteredTypes[0].name;
-                        outboundTypeSelect.parentElement.classList.add('active');
-                    } else {
-                        // 重置出库类型选择
-                        outboundTypeSelect.value = '';
-                        outboundTypeSelect.parentElement.classList.remove('active');
-                    }
-                });
+                outboundWarehouseSelect.addEventListener('change', () => filterTypes(outboundWarehouseSelect.value, outboundTypeSelect, 'outbound'));
             }
 
             document.querySelectorAll('select').forEach(select => {
