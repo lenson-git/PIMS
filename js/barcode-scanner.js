@@ -159,8 +159,8 @@ window.bindScanButtons = function () {
             e.preventDefault();
             e.stopPropagation();
 
-            // 查找最近的输入框
-            const inputGroup = this.closest('.input-group, .floating-label-group');
+            // 查找最近的输入框容器（支持多种结构）
+            const inputGroup = this.closest('.input-group, .floating-label-group, .input-wrapper, .input-group-large');
             if (inputGroup) {
                 const input = inputGroup.querySelector('input[type="text"]');
                 if (input && input.id) {
