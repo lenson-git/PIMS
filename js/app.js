@@ -1,6 +1,6 @@
 import {
     fetchSKUs, createSKU, uploadImage, fetchSettings, createSignedUrlFromPublicUrl, fetchSKUByBarcode, createStockMovement, fetchStockMovements, fetchSKUById, fetchStockTotalBySKU, fetchSales30dBySKU, updateSKU, createTransformedUrlFromPublicUrl, deleteSKU, fetchWarehouseStockMap, fetchStockBySKUWarehouse, createSetting, fetchAllStock, fetchSafetyStock,
-    fetchExpenses, createExpense, updateExpense, deleteExpense
+    fetchExpenses, createExpense, updateExpense, deleteExpense, supabase
 } from './supabase-client.js';
 import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
 import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
