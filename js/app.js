@@ -1572,8 +1572,8 @@ async function appendInboundRowIfNeeded(code) {
                 </div>
             </td>
             <td>
-                <div class="sku-code">${(sku && sku.external_barcode) || code}</div>
-                <div class="sku-name">${(sku && (sku.product_info || '').split('\n')[0]) || ''}</div>
+                <div class="sku-code">${escapeHtml((sku && sku.external_barcode) || code)}</div>
+                <div class="sku-name">${escapeHtml((sku && (sku.product_info || '').split('\n')[0]) || '')}</div>
                 <div class="sku-meta">${(sku && getSettingName('shop', sku.shop_code)) || ''}</div>
             </td>
             <td><div class="form-control-plaintext" data-role="purchase-qty">${purchaseQty}</div></td>
@@ -1596,6 +1596,9 @@ async function appendInboundRowIfNeeded(code) {
     const tr = temp.firstElementChild;
     tbody.appendChild(tr);
     if (empty) empty.style.display = 'none';
+
+    // 重要：为新添加的图片设置加载监听
+    setupImageLoading();
 }
 window.submitInbound = async function () {
     const barcode = document.getElementById('inbound-sku-input')?.value?.trim();
