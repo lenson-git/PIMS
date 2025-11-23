@@ -1777,8 +1777,8 @@ async function renderOutboundList() {
                     </div>
                 </td>
                 <td>
-                    <div class="sku-code">${(sku && sku.external_barcode) || code}</div>
-                    <div class="sku-name">${(sku && (sku.product_info || '').split('\n')[0]) || ''}</div>
+                    <div class="sku-code">${escapeHtml((sku && sku.external_barcode) || code)}</div>
+                    <div class="sku-name">${escapeHtml((sku && (sku.product_info || '').split('\n')[0]) || '')}</div>
                     <div class="sku-meta">${(sku && getSettingName('shop', sku.shop_code)) || ''}</div>
                 </td>
                 ${stockCell}
