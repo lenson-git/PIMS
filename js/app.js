@@ -2148,7 +2148,7 @@ window.loadStockList = async function (query = '', warehouse = '') {
                         </div>
                     </td>
                     <td class="col-product-info">
-                        <div class="sku-code">${p.external_barcode || ''}</div>
+                        <div class="sku-code">${p.external_barcode || p.code || ''}</div>
                         <div class="sku-name">${(p.product_info || '').split('\n')[0]}</div>
                         <div class="sku-meta">${getSettingName('shop', p.shop_code) || ''}</div>
                     </td>
@@ -2158,7 +2158,7 @@ window.loadStockList = async function (query = '', warehouse = '') {
                     <td class="text-center">${p.url ? `<a href="${p.url}" target="_blank" title="打开链接" class="btn-url-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 0 20"></path><path d="M12 2a15.3 15.3 0 0 0 0 20"></path></svg></a>` : ''}</td>
                     <td class="text-center">
                         <div class="action-icons">
-                            <button class="btn-icon-action" title="调整" onclick="openAdjustModal('${p.external_barcode || ''}')">
+                            <button class="btn-icon-action" title="调整" onclick="openAdjustModal('${p.external_barcode || p.code || ''}')">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
                         </div>
