@@ -536,12 +536,10 @@ function navigate(viewName) {
     } else if (viewName === 'settings') {
         loadSystemSettings();
     } else if (viewName === 'stock') {
-        loadStockList().then(() => {
-            setTimeout(() => document.getElementById('stock-search-input')?.focus(), 100);
-        }).catch(() => {
-            // 即使加载失败也要聚焦输入框
-            setTimeout(() => document.getElementById('stock-search-input')?.focus(), 100);
-        });
+        // 立即聚焦输入框，不等待数据加载
+        setTimeout(() => document.getElementById('stock-search-input')?.focus(), 100);
+        // 异步加载数据
+        loadStockList();
     } else if (viewName === 'expenses') {
         // 设置默认日期为今天
         const today = new Date().toISOString().split('T')[0];
