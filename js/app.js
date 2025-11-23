@@ -786,18 +786,8 @@ window.saveNewSetting = async function () {
     }
 
     try {
-        // 映射类型名称到数据库存储的格式
-        const typeMap = {
-            shop: 'Shop',
-            warehouse: 'Warehouse',
-            inbound_type: 'InboundType',
-            outbound_type: 'OutboundType',
-            expense_type: 'ExpenseType',
-            status: 'Status'
-        };
-
-        // 如果是已知类型,使用映射值;否则尝试自动转换(首字母大写)
-        const dbType = typeMap[type] || type.replace(/(^|_)(\w)/g, (_, __, ch) => ch.toUpperCase()).replace(/_/g, '');
+        // 使用辅助函数获取正确的数据库类型 (PascalCase)
+        const dbType = getDBSettingType(type);
 
         const payload = {
             type: dbType,
@@ -3116,6 +3106,20 @@ async function initApp() {
 // 确保在页面加载完成后调用 initApp
 document.addEventListener('DOMContentLoaded', initApp);
 
+// 辅助函数：获取数据库存储的类型名称 (PascalCase)
+function getDBSettingType(type) {
+    const typeMap = {
+        shop: 'Shop',
+        warehouse: 'Warehouse',
+        inbound_type: 'InboundType',
+        outbound_type: 'OutboundType',
+        expense_type: 'ExpenseType',
+        status: 'Status',
+        sales_channel: 'SalesChannel'
+    };
+    return typeMap[type] || type.replace(/(^|_)(\w)/g, (_, __, ch) => ch.toUpperCase()).replace(/_/g, '');
+}
+
 window.addSetting = async function (type) {
     const input = document.getElementById(`${type}-add-input`);
     if (!input) return;
@@ -3127,13 +3131,14 @@ window.addSetting = async function (type) {
     }
 
     try {
-        // 生成 code (简单的拼音或随机码，这里简化为随机)
+        // 生成 code
         const code = type + '_' + Math.random().toString(36).substr(2, 6);
+        const dbType = getDBSettingType(type);
 
         const { error } = await supabase
             .from('settings')
             .insert([{
-                type: type,
+                type: dbType,
                 code: code,
                 name: name,
                 status: 'active'
