@@ -770,6 +770,7 @@ textarea.form-control {
 }
 
 /* 响应式 */
+/* 响应式 */
 @media (max-width: 768px) {
     .sidebar {
         position: fixed;
@@ -778,11 +779,68 @@ textarea.form-control {
         bottom: 0;
         z-index: 1000;
         transform: translateX(-100%);
-        transition: transform 0.3s;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.1);
     }
     
     .sidebar.open {
         transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 16px;
+    }
+
+    .mobile-only {
+        display: flex !important;
+    }
+
+    /* 表格水平滚动 */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+
+    table {
+        min-width: 800px; /* 强制表格最小宽度，触发滚动 */
+    }
+
+    /* 调整仪表盘网格 */
+    .dashboard-grid {
+        grid-template-columns: 1fr; /* 单列显示 */
+    }
+
+    /* 调整 Topbar */
+    .topbar {
+        padding: 12px 16px;
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        background: var(--bg-color);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    /* 遮罩层 (当侧边栏打开时) */
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
     }
 }
 

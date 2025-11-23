@@ -3055,9 +3055,47 @@ function renderSettingList(type, items) {
                     </button>
                 </div>
             </div>
-        `;
+            `;
     }).join('');
 }
+
+// 切换侧边栏 (移动端)
+window.toggleSidebar = function () {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+
+    if (sidebar) sidebar.classList.toggle('open');
+    if (overlay) overlay.classList.toggle('active');
+}
+
+// 初始化移动端菜单
+function initMobileMenu() {
+    const menuToggle = document.getElementById('menu-toggle');
+    if (menuToggle) {
+        menuToggle.addEventListener('click', toggleSidebar);
+    }
+
+    // 点击菜单项自动关闭侧边栏
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        });
+    });
+}
+
+// 初始化应用
+async function initApp() {
+    // This function is intended to be called on page load to initialize various components.
+    // For now, it's empty, but can be expanded later.
+    console.log('App initialized.');
+    initMobileMenu(); // Initialize mobile menu functionality
+}
+
+// 确保在页面加载完成后调用 initApp
+document.addEventListener('DOMContentLoaded', initApp);
 
 window.addSetting = async function (type) {
     const input = document.getElementById(`${type}-add-input`);

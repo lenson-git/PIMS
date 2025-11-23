@@ -105,7 +105,12 @@
         <!-- 主内容区 -->
         <main class="main-content">
             <div class="topbar flex-row flex-between">
-                <h2 id="page-title">仪表盘</h2>
+                <div class="flex-row flex-gap-12">
+                    <button id="menu-toggle" class="btn-icon mobile-only" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
+                    <h2 id="page-title">仪表盘</h2>
+                </div>
                 <div class="auth-bar flex-row flex-gap-12">
                     <span id="user-email" class="text-secondary" style="font-size:13px;"></span>
                     <button id="login-btn" class="btn btn-outline" onclick="loginWithGoogle()">登录</button>
@@ -1059,6 +1064,9 @@
             </div>
         </div>
     </div>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <script src="js/barcode-scanner.js"></script>
     <script type="module" src="js/app.js?v=20251123-extract-styles-v14"></script>
