@@ -2365,7 +2365,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // 为所有扫码输入框添加自动清空功能，防止重复输入
-    const barcodeInputs = ['inbound-sku-input', 'outbound-sku-input'];
+    const barcodeInputs = ['inbound-sku-input', 'outbound-sku-input', 'stock-search-input'];
     barcodeInputs.forEach(inputId => {
         const input = document.getElementById(inputId);
         if (input) {
