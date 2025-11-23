@@ -2976,6 +2976,25 @@ window.deleteExpenseAction = async function (id) {
 // System Settings Logic
 // ==========================================
 
+// 加载全局配置缓存
+window.loadSettings = async function () {
+    try {
+        const types = ['shop', 'warehouse', 'inbound_type', 'outbound_type', 'expense_type', 'status', 'sales_channel'];
+        await Promise.all(types.map(async type => {
+            const data = await fetchSettings(type);
+            if (!window._settingsCache[type]) window._settingsCache[type] = {};
+            // 清空旧缓存以防万一? 或者直接覆盖
+            // window._settingsCache[type] = {}; 
+            data.forEach(item => {
+                window._settingsCache[type][item.code] = item.name;
+            });
+        }));
+        console.log('Settings cache updated');
+    } catch (err) {
+        console.error('Failed to load settings cache:', err);
+    }
+}
+
 window.loadSystemSettings = async function () {
     try {
         // 使用现有的 fetchSettings 获取所有配置
