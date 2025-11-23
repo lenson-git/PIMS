@@ -536,8 +536,9 @@ function navigate(viewName) {
     } else if (viewName === 'settings') {
         loadSystemSettings();
     } else if (viewName === 'stock') {
-        loadStockList();
-        setTimeout(() => document.getElementById('stock-search-input')?.focus(), 100);
+        loadStockList().then(() => {
+            setTimeout(() => document.getElementById('stock-search-input')?.focus(), 100);
+        });
     } else if (viewName === 'expenses') {
         // 设置默认日期为今天
         const today = new Date().toISOString().split('T')[0];
