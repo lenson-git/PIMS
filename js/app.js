@@ -1460,25 +1460,58 @@ async function renderInboundList() {
     setupImageLoading(); // 激活骨架屏加载
 }
 
-window.increaseInboundQty = function (code) {
-    if (!pendingInbound[code]) pendingInbound[code] = 0;
-    pendingInbound[code] += 1;
-    const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
+// 通用数量调整函数 - 用于入库和出库
+function updateQuantity(type, code, delta) {
+    const config = {
+        inbound: {
+            data: pendingInbound,
+            listBody: 'inbound-list-body',
+            inputRole: 'inbound-qty'
+        },
+        outbound: {
+            data: pendingOutbound,
+            listBody: 'outbound-list-body',
+            inputRole: 'outbound-qty',
+            checkStock: true
+        }
+    };
+
+    const cfg = config[type];
+    if (!cfg) return;
+
+    // 初始化数量
+    if (!cfg.data[code]) cfg.data[code] = 0;
+
+    let next = cfg.data[code] + delta;
+
+    // 出库需要检查库存上限
+    if (cfg.checkStock && delta > 0) {
+        const row = document.querySelector(`#${cfg.listBody} tr[data-code="${code}"]`);
+        if (row) {
+            const cell = row.querySelector('[data-role="current-stock"]');
+            const max = cell ? parseInt(cell.textContent, 10) : NaN;
+            if (!Number.isNaN(max) && next > max) {
+                next = max;
+                showError('超过当前库存，已回退到最大可用值');
+            }
+        }
+    }
+
+    // 数量不能小于 1
+    next = Math.max(1, next);
+    cfg.data[code] = next;
+
+    // 更新 UI
+    const row = document.querySelector(`#${cfg.listBody} tr[data-code="${code}"]`);
     if (row) {
-        const input = row.querySelector('input[data-role="inbound-qty"]');
-        if (input) input.value = pendingInbound[code];
+        const input = row.querySelector(`input[data-role="${cfg.inputRole}"]`);
+        if (input) input.value = next;
     }
 }
 
-window.decreaseInboundQty = function (code) {
-    if (!pendingInbound[code]) return;
-    pendingInbound[code] = Math.max(1, pendingInbound[code] - 1);
-    const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
-    if (row) {
-        const input = row.querySelector('input[data-role="inbound-qty"]');
-        if (input) input.value = pendingInbound[code];
-    }
-}
+// 入库数量调整（使用通用函数）
+window.increaseInboundQty = (code) => updateQuantity('inbound', code, 1);
+window.decreaseInboundQty = (code) => updateQuantity('inbound', code, -1);
 
 
 window.removeInboundItem = function (code) {
@@ -1907,32 +1940,9 @@ function flashOutboundRow(code) {
     row.classList.add('row-flash');
 }
 
-window.increaseOutboundQty = function (code) {
-    if (!pendingOutbound[code]) pendingOutbound[code] = 0;
-    let next = pendingOutbound[code] + 1;
-    const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
-    if (row) {
-        const cell = row.querySelector('[data-role="current-stock"]');
-        const max = cell ? parseInt(cell.textContent, 10) : NaN;
-        if (!Number.isNaN(max) && next > max) {
-            next = max;
-            showError('超过当前库存，已回退到最大可用值');
-        }
-        const input = row.querySelector('input[data-role="outbound-qty"]');
-        if (input) input.value = next;
-    }
-    pendingOutbound[code] = next;
-};
-
-window.decreaseOutboundQty = function (code) {
-    if (!pendingOutbound[code]) return;
-    pendingOutbound[code] = Math.max(1, pendingOutbound[code] - 1);
-    const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
-    if (row) {
-        const input = row.querySelector('input[data-role="outbound-qty"]');
-        if (input) input.value = pendingOutbound[code];
-    }
-};
+// 出库数量调整（使用通用函数）
+window.increaseOutboundQty = (code) => updateQuantity('outbound', code, 1);
+window.decreaseOutboundQty = (code) => updateQuantity('outbound', code, -1);
 
 window.removeOutboundItem = function (code) {
     if (pendingOutbound[code] != null) delete pendingOutbound[code];
