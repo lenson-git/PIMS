@@ -1868,8 +1868,8 @@ async function appendOutboundRowIfNeeded(code) {
                 </div>
             </td>
             <td>
-                <div class="sku-code">${(sku && sku.external_barcode) || code}</div>
-                <div class="sku-name">${(sku && (sku.product_info || '').split('\n')[0]) || ''}</div>
+                <div class="sku-code">${escapeHtml((sku && sku.external_barcode) || code)}</div>
+                <div class="sku-name">${escapeHtml((sku && (sku.product_info || '').split('\n')[0]) || '')}</div>
                 <div class="sku-meta">${(sku && getSettingName('shop', sku.shop_code)) || ''}</div>
             </td>
             <td class="font-num" data-role="current-stock">-</td>
@@ -1892,6 +1892,9 @@ async function appendOutboundRowIfNeeded(code) {
     const tr = temp.firstElementChild;
     tbody.appendChild(tr);
     if (empty) empty.style.display = 'none';
+
+    // 重要：为新添加的图片设置加载监听
+    setupImageLoading();
 
     // 异步填充当前库存
     if (sku && sku.id) {
