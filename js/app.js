@@ -719,7 +719,8 @@ window.openAddSettingModal = function (type, targetSelectId) {
         inbound_type: '入库类型',
         outbound_type: '出库类型',
         expense_type: '费用类型',
-        status: '状态'
+        status: '状态',
+        sales_channel: '销售渠道'
     };
     const typeName = typeNameMap[type] || '配置';
     document.querySelector('#add-setting-modal h3').textContent = '新建' + typeName;
@@ -757,16 +758,9 @@ window.saveNewSetting = async function () {
         return;
     }
 
-    // 如果代码为空, 尝试自动生成
     if (!code) {
-        // 自动生成逻辑: 转大写, 空格变下划线, 移除非字母数字字符
-        code = name.toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_]/g, '');
-
-        // 如果自动生成后还是为空(例如纯中文), 则提示用户输入
-        if (!code) {
-            showError('无法自动生成代码, 请手动输入代码 (大写字母、数字、下划线)');
-            return;
-        }
+        showError('请输入代码');
+        return;
     }
 
     // 强制转大写
@@ -801,77 +795,78 @@ window.saveNewSetting = async function () {
         showSuccess('创建成功');
         closeModal('add-setting-modal');
 
-        // 刷新缓存并重新加载下拉框
-        window._settingsCache[type] = null; // 清除缓存
+        // 刷新缓存
+        window._settingsCache[type] = null;
 
-        // 查找所有使用该类型的下拉框并重新加载
-        // 这里我们简单地重新加载特定的下拉框,或者重新加载所有同类型的
-        // 为了简单起见,我们重新调用 loadSelectOptions
-        // 注意: 我们需要找到所有使用该 type 的 selectName
-        const selectMap = {
-            'shop': 'shop_code',
-            'warehouse': 'warehouse_code',
-            'inbound_type': 'inbound_type_code',
-            'outbound_type': 'outbound_type_code',
-            'expense_type': 'expense_type',
-            'status': 'status_code'
-        };
+        // 如果有 targetSelectId，说明是下拉框触发的，刷新对应下拉框
+        if (targetSelectId) {
+            // 查找所有使用该类型的下拉框并重新加载
+            const selectMap = {
+                'shop': 'shop_code',
+                'warehouse': 'warehouse_code',
+                'inbound_type': 'inbound_type_code',
+                'outbound_type': 'outbound_type_code',
+                'expense_type': 'expense_type',
+                'status': 'status_code',
+                'sales_channel': 'sales_channel_code'
+            };
 
-        // 如果能找到对应的 selectName,则刷新所有该类型的下拉框
-        // 否则只刷新触发的那个(如果有 name 属性)
-        const selectName = selectMap[type];
-        if (selectName) {
-            await loadSelectOptions(selectName, type, code);
-        } else {
-            // 尝试刷新触发的特定下拉框
-            const targetSelect = document.getElementById(targetSelectId);
-            if (targetSelect) {
-                const nameAttr = targetSelect.getAttribute('name');
-                if (nameAttr) {
-                    await loadSelectOptions(nameAttr, type, code);
+            const selectName = selectMap[type];
+            if (selectName) {
+                await loadSelectOptions(selectName, type, code);
+            } else {
+                // 尝试刷新触发的特定下拉框
+                const targetSelect = document.getElementById(targetSelectId);
+                if (targetSelect) {
+                    const nameAttr = targetSelect.getAttribute('name');
+                    if (nameAttr) {
+                        await loadSelectOptions(nameAttr, type, code);
+                    }
                 }
             }
-        }
 
-        // 如果是库存调整模态框中的仓库选择器(它的ID是 adjust-warehouse, name可能没有), 特殊处理
-        if (targetSelectId === 'adjust-warehouse' && type === 'warehouse') {
-            // 重新填充 adjust-warehouse
-            const warehouseSelect = document.getElementById('adjust-warehouse');
-            if (warehouseSelect) {
-                // 重新获取数据
+            // 特殊处理库存调整模态框中的仓库选择器
+            if (targetSelectId === 'adjust-warehouse' && type === 'warehouse') {
+                // ... (原有逻辑保持不变，如果需要可以简化，这里暂时保留以防万一)
+                // 其实 loadSelectOptions 应该能处理大部分情况，这里简化处理：
+                // 重新获取数据并手动更新 adjust-warehouse
                 const data = await fetchSettings('warehouse');
-                // 更新缓存
                 if (!window._settingsCache['warehouse']) window._settingsCache['warehouse'] = {};
                 data.forEach(item => {
                     window._settingsCache['warehouse'][item.code || item.name] = item.name;
                 });
-
-                // 重新构建选项
-                warehouseSelect.innerHTML = '<option value="">请选择仓库</option>';
-                data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item.code || item.name;
-                    option.textContent = item.name;
-                    warehouseSelect.appendChild(option);
-                });
-
-                // 添加新建选项
-                const newOpt = document.createElement('option');
-                newOpt.value = '__new__';
-                newOpt.textContent = '+ 新建...';
-                warehouseSelect.appendChild(newOpt);
-
-                // 选中新建的项
-                warehouseSelect.value = code;
-                // 触发 change 事件以更新库存显示
-                warehouseSelect.dispatchEvent(new Event('change'));
+                const warehouseSelect = document.getElementById('adjust-warehouse');
+                if (warehouseSelect) {
+                    warehouseSelect.innerHTML = '<option value="">请选择仓库</option>';
+                    data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.code || item.name;
+                        option.textContent = item.name;
+                        warehouseSelect.appendChild(option);
+                    });
+                    // 添加新建选项
+                    const newOpt = document.createElement('option');
+                    newOpt.value = '__new__';
+                    newOpt.textContent = '+ 新建...';
+                    warehouseSelect.appendChild(newOpt);
+                    warehouseSelect.value = code;
+                    warehouseSelect.dispatchEvent(new Event('change'));
+                }
             }
+        } else {
+            // 如果没有 targetSelectId，说明是在系统设置页面，刷新整个列表
+            loadSystemSettings();
+            // 同时更新全局缓存以便其他地方使用
+            loadSettings();
         }
 
     } catch (err) {
         showError('创建失败: ' + err.message);
     }
 }
+
+// 移除 addSetting 函数，因为它已被模态框取代
+// window.addSetting = ... (deleted)
 
 // 根据选中的仓库过滤入/出库类型选项，仅显示允许的集合（选项值为代码）
 /**
@@ -3120,43 +3115,7 @@ function getDBSettingType(type) {
     return typeMap[type] || type.replace(/(^|_)(\w)/g, (_, __, ch) => ch.toUpperCase()).replace(/_/g, '');
 }
 
-window.addSetting = async function (type) {
-    const input = document.getElementById(`${type}-add-input`);
-    if (!input) return;
-
-    const name = input.value.trim();
-    if (!name) {
-        showError('请输入名称');
-        return;
-    }
-
-    try {
-        // 生成 code
-        const code = type + '_' + Math.random().toString(36).substr(2, 6);
-        const dbType = getDBSettingType(type);
-
-        const { error } = await supabase
-            .from('settings')
-            .insert([{
-                type: dbType,
-                code: code,
-                name: name,
-                status: 'active'
-            }]);
-
-        if (error) throw error;
-
-        showSuccess('添加成功');
-        input.value = '';
-        loadSystemSettings(); // 重新加载
-        // 同时更新全局缓存
-        loadSettings();
-
-    } catch (err) {
-        console.error('添加失败:', err);
-        showError('添加失败: ' + err.message);
-    }
-}
+// window.addSetting has been removed and replaced by openAddSettingModal
 
 window.toggleSettingStatus = async function (id, newStatus) {
     try {
