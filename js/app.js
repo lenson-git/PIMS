@@ -746,6 +746,35 @@ document.getElementById('new-setting-name').addEventListener('input', function (
     }
 });
 
+// 针对特定类型刷新设置列表 (比全量刷新更高效且可靠)
+async function reloadSettingsByType(type) {
+    try {
+        const dbType = getDBSettingType(type);
+        console.log(`Reloading settings for type: ${type} (DB: ${dbType})`);
+
+        const { data, error } = await supabase
+            .from('settings')
+            .select('*')
+            .eq('type', dbType)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        renderSettingList(type, data);
+        console.log(`Refreshed ${data.length} items for ${type}`);
+
+        // 同时更新全局缓存
+        if (!window._settingsCache[type]) window._settingsCache[type] = {};
+        data.forEach(item => {
+            window._settingsCache[type][item.code] = item.name;
+        });
+
+    } catch (err) {
+        console.error(`Failed to reload settings for ${type}:`, err);
+        showError('刷新列表失败');
+    }
+}
+
 // 保存新配置
 window.saveNewSetting = async function () {
     const type = document.getElementById('new-setting-type').value;
@@ -828,9 +857,6 @@ window.saveNewSetting = async function () {
 
             // 特殊处理库存调整模态框中的仓库选择器
             if (targetSelectId === 'adjust-warehouse' && type === 'warehouse') {
-                // ... (原有逻辑保持不变，如果需要可以简化，这里暂时保留以防万一)
-                // 其实 loadSelectOptions 应该能处理大部分情况，这里简化处理：
-                // 重新获取数据并手动更新 adjust-warehouse
                 const data = await fetchSettings('warehouse');
                 if (!window._settingsCache['warehouse']) window._settingsCache['warehouse'] = {};
                 data.forEach(item => {
@@ -855,12 +881,9 @@ window.saveNewSetting = async function () {
                 }
             }
         } else {
-            console.log('Refreshing full system settings list...');
-            // 如果没有 targetSelectId，说明是在系统设置页面，刷新整个列表
-            await loadSystemSettings();
-            console.log('System settings list refreshed.');
-            // 同时更新全局缓存以便其他地方使用
-            loadSettings();
+            console.log('Refreshing settings list for type:', type);
+            // 针对性刷新当前类型的列表
+            await reloadSettingsByType(type);
         }
 
     } catch (err) {
