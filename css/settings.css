@@ -99,62 +99,50 @@
     stroke-width: 1.5;
 }
 
-/* Inline Add Row - Boxed Input Group */
+/* Inline Add Row - Container */
 .settings-add-row {
     display: flex;
+    justify-content: flex-end; /* Align to right */
     align-items: center;
-    background: #fff; /* White background for better contrast with black border */
-    border: 1px solid #1a1a1a; /* Distinct black border */
-    border-radius: 8px;
-    padding: 0; /* No padding, handled by children */
-    margin-top: auto; /* Push to bottom if flex container */
-    overflow: hidden; /* For border radius */
+    background: transparent;
+    border: none;
+    padding: 8px 0 0 0;
+    margin-top: auto;
 }
 
 .settings-add-row input {
-    flex: 1;
-    padding: 10px 12px;
-    border: none;
-    background: transparent;
-    font-size: 14px;
-    height: 40px; /* Taller touch target */
-    outline: none;
-    color: #1a1a1a; /* Darker text */
+    display: none; /* Hide input if present */
 }
 
-.settings-add-row input::placeholder {
-    color: #9ca3af;
-}
-
-.settings-add-row input:focus {
-    background: #fff;
-}
-
-/* Add Button - Attached to right */
+/* Add Button - Standalone Outline Style */
 .settings-add-row .btn {
-    height: 40px;
-    width: 40px; /* Square button */
-    padding: 0;
+    height: 32px;
+    width: auto; /* Auto width */
+    padding: 0 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent;
-    border: none;
-    border-left: 1px solid #1a1a1a; /* Vertical separator matches border */
-    border-radius: 0;
-    color: #1a1a1a; /* Dark icon */
+    gap: 6px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #374151;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .settings-add-row .btn:hover {
-    background: #f3f4f6;
-    color: #111827;
+    background: #f9fafb;
+    border-color: #d1d5db;
+    color: #1a1a1a;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .settings-add-row .btn svg {
-    width: 20px;
-    height: 20px;
+    width: 14px;
+    height: 14px;
     stroke: currentColor;
     fill: none;
     stroke-width: 2;
