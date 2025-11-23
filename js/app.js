@@ -3079,25 +3079,51 @@ window.toggleSettingStatus = async function (id, newStatus) {
     }
 }
 
-window.editSetting = async function (id, currentName) {
-    const newName = prompt('请输入新名称:', currentName);
-    if (newName === null || newName.trim() === '') return;
+let currentEditingSettingId = null;
 
-    if (newName === currentName) return;
-
-    try {
-        const { error } = await supabase
-            .from('settings')
-            .update({ name: newName.trim() })
-            .eq('id', id);
-
-        if (error) throw error;
-
-        showSuccess('修改成功');
-        loadSystemSettings();
-        loadSettings();
-
-    } catch (err) {
-        showError('修改失败: ' + err.message);
+window.editSetting = function (id, currentName) {
+    currentEditingSettingId = id;
+    const input = document.getElementById('edit-setting-input');
+    if (input) {
+        input.value = currentName;
+        openModal('edit-setting-modal');
+        // Focus input after a short delay to ensure modal is visible
+        setTimeout(() => input.focus(), 100);
     }
+}
+
+// Bind save button event
+// Note: We need to ensure this event is bound only once or handle it appropriately.
+// Since this is a module, top-level code runs once.
+const saveBtn = document.getElementById('save-setting-btn');
+if (saveBtn) {
+    saveBtn.onclick = async function () {
+        if (!currentEditingSettingId) return;
+
+        const input = document.getElementById('edit-setting-input');
+        const newName = input.value.trim();
+
+        if (!newName) {
+            showError('名称不能为空');
+            return;
+        }
+
+        try {
+            const { error } = await supabase
+                .from('settings')
+                .update({ name: newName })
+                .eq('id', currentEditingSettingId);
+
+            if (error) throw error;
+
+            showSuccess('更新成功');
+            closeModal('edit-setting-modal');
+            loadSystemSettings();
+            loadSettings(); // Update global cache
+
+        } catch (err) {
+            console.error('Update failed:', err);
+            showError('更新失败: ' + err.message);
+        }
+    };
 }
