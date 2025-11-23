@@ -110,3 +110,16 @@ export function getSettingName(type, code) {
   }
   return code
 }
+
+/**
+ * HTML 转义函数 - 防止 XSS 攻击
+ * 将特殊字符转换为 HTML 实体
+ * @param {string} text - 需要转义的文本
+ * @returns {string} 转义后的安全文本
+ */
+export function escapeHtml(text) {
+  if (!text) return ''
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}

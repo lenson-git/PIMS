@@ -4,7 +4,7 @@ import {
 } from './supabase-client.js';
 import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
 import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
-import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate } from './utils.js'
+import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
 
 // ==========================================
 // Core Logic
@@ -1185,10 +1185,10 @@ function renderSKUTable(products) {
                     </div>
                 </div>
             </td>
-            <td class="font-mono">${p.external_barcode || '-'}</td>
+            <td class="font-mono">${escapeHtml(p.external_barcode) || '-'}</td>
             <td>
                 <div class="product-info-compact clickable" onclick="event.stopPropagation(); showSKUDetails('${p.id}')">
-                    ${((p.product_info || '')).split('\n').filter(Boolean).map(l => `<div class="info-line">${l}</div>`).join('')}
+                    ${((p.product_info || '')).split('\n').filter(Boolean).map(l => `<div class="info-line">${escapeHtml(l)}</div>`).join('')}
                 </div>
             </td>
             <td class="font-num">¥ ${p.purchase_price_rmb || 0}</td>
