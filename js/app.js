@@ -885,6 +885,32 @@ window.saveNewSetting = async function () {
             console.log('Refreshing settings list for type:', type);
             // 针对性刷新当前类型的列表
             await reloadSettingsByType(type);
+
+            // 同时刷新页面上所有相关的下拉框
+            const selectMap = {
+                'shop': 'shop_code',
+                'warehouse': 'warehouse_code',
+                'inbound_type': 'inbound_type_code',
+                'outbound_type': 'outbound_type_code',
+                'expense_type': 'expense_type',
+                'status': 'status_code',
+                'sales_channel': 'sales_channel_code'
+            };
+
+            const selectName = selectMap[type];
+            if (selectName) {
+                // 查找所有 name 属性匹配的 select 元素并刷新
+                const selects = document.querySelectorAll(`select[name="${selectName}"]`);
+                console.log(`Found ${selects.length} select elements with name="${selectName}", refreshing...`);
+
+                for (const select of selects) {
+                    const currentValue = select.value;
+                    await loadSelectOptions(selectName, type, currentValue);
+                }
+            }
+
+            // 更新全局缓存以便其他地方使用
+            loadSettings();
         }
 
     } catch (err) {
