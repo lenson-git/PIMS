@@ -800,6 +800,7 @@ window.saveNewSetting = async function () {
 
         // 如果有 targetSelectId，说明是下拉框触发的，刷新对应下拉框
         if (targetSelectId) {
+            console.log('Refreshing select options for:', targetSelectId);
             // 查找所有使用该类型的下拉框并重新加载
             const selectMap = {
                 'shop': 'shop_code',
@@ -854,8 +855,10 @@ window.saveNewSetting = async function () {
                 }
             }
         } else {
+            console.log('Refreshing full system settings list...');
             // 如果没有 targetSelectId，说明是在系统设置页面，刷新整个列表
-            loadSystemSettings();
+            await loadSystemSettings();
+            console.log('System settings list refreshed.');
             // 同时更新全局缓存以便其他地方使用
             loadSettings();
         }
