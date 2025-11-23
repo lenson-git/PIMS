@@ -3,6 +3,37 @@
  * 功能：从 Excel 批量导入 SKU，支持数据验证、重复检测和智能对比
  */
 
+// 辅助函数：如果全局没有定义，则使用本地实现
+if (typeof window.showError === 'undefined') {
+    window.showError = function (message) {
+        alert('错误: ' + message);
+    };
+}
+
+if (typeof window.showSuccess === 'undefined') {
+    window.showSuccess = function (message) {
+        alert(message);
+    };
+}
+
+if (typeof window.openModal === 'undefined') {
+    window.openModal = function (modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    };
+}
+
+if (typeof window.closeModal === 'undefined') {
+    window.closeModal = function (modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
 // 全局变量：存储当前导入的数据
 let currentImportData = null;
 let currentValidationResult = null;
@@ -628,13 +659,18 @@ window.confirmBulkImport = async function () {
                 } else if (duplicate.action === 'overwrite') {
                     // 更新现有 SKU
                     try {
-                        await updateSKU(duplicate.existing.id, {
-                            product_info: row.product_info,
-                            purchase_price_rmb: parseFloat(row.purchase_price_rmb || 0),
-                            selling_price_thb: parseFloat(row.selling_price_thb || 0),
-                            shop_code: row.shop_code,
-                            status_code: row.status_code || '上架'
-                        });
+                        const { error } = await supabase
+                            .from('skus')
+                            .update({
+                                product_info: row.product_info,
+                                purchase_price_rmb: parseFloat(row.purchase_price_rmb || 0),
+                                selling_price_thb: parseFloat(row.selling_price_thb || 0),
+                                shop_code: row.shop_code,
+                                status_code: row.status_code || '上架'
+                            })
+                            .eq('id', duplicate.existing.id);
+
+                        if (error) throw error;
                         updateCount++;
                     } catch (error) {
                         console.error('更新 SKU 失败:', sku, error);
@@ -646,15 +682,19 @@ window.confirmBulkImport = async function () {
 
             // 新增 SKU
             try {
-                await createSKU({
-                    external_barcode: row.external_barcode,
-                    product_info: row.product_info,
-                    purchase_price_rmb: parseFloat(row.purchase_price_rmb || 0),
-                    selling_price_thb: parseFloat(row.selling_price_thb || 0),
-                    shop_code: row.shop_code,
-                    status_code: row.status_code || '上架',
-                    domestic_shipping: parseFloat(row.domestic_shipping || 0)
-                });
+                const { error } = await supabase
+                    .from('skus')
+                    .insert({
+                        external_barcode: row.external_barcode,
+                        product_info: row.product_info,
+                        purchase_price_rmb: parseFloat(row.purchase_price_rmb || 0),
+                        selling_price_thb: parseFloat(row.selling_price_thb || 0),
+                        shop_code: row.shop_code,
+                        status_code: row.status_code || '上架',
+                        domestic_shipping: parseFloat(row.domestic_shipping || 0)
+                    });
+
+                if (error) throw error;
                 successCount++;
             } catch (error) {
                 console.error('创建 SKU 失败:', sku, error);
@@ -665,13 +705,17 @@ window.confirmBulkImport = async function () {
         // 创建运费记录
         if (currentValidationResult.totalShipping > 0) {
             try {
-                await createExpense({
-                    expense_type_code: 'DOMESTIC_SHIPPING',
-                    amount: currentValidationResult.totalShipping,
-                    currency: 'CNY',
-                    timestamp: new Date().toISOString(),
-                    description: `批量导入 SKU - 国内运费汇总 (共 ${currentImportData.length} 条)`
-                });
+                const { error } = await supabase
+                    .from('expenses')
+                    .insert({
+                        expense_type_code: 'DOMESTIC_SHIPPING',
+                        amount: currentValidationResult.totalShipping,
+                        currency: 'CNY',
+                        timestamp: new Date().toISOString(),
+                        description: `批量导入 SKU - 国内运费汇总 (共 ${currentImportData.length} 条)`
+                    });
+
+                if (error) throw error;
             } catch (error) {
                 console.error('创建运费记录失败:', error);
             }
