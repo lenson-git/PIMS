@@ -1997,3 +1997,49 @@ textarea.form-control {
     margin-bottom: 16px;
     font-size: 18px;
 }
+
+/* ============================================
+   工具类 (Utility Classes)
+   用于替换内联样式，提升可维护性
+   ============================================ */
+
+/* Flex 布局工具类 */
+.flex-row {
+    display: flex;
+    align-items: center;
+}
+
+.flex-between {
+    justify-content: space-between;
+}
+
+.flex-gap-12 {
+    gap: 12px;
+}
+
+.flex-fixed {
+    flex: 0 0 auto;
+}
+
+/* 输入框扫描按钮样式 */
+.input-with-scan {
+    padding-right: 40px;
+}
+
+/* 表格列宽工具类 */
+.col-id { width: 50px; }
+.col-seq { width: 60px; }
+.col-url { width: 64px; }
+.col-status { width: 64px; }
+.col-action { width: 80px; }
+.col-img { width: 100px; }
+.col-price { width: 100px; }
+.col-qty-sm { width: 100px; }
+.col-action-lg { width: 100px; }
+.col-img-lg { width: 120px; }
+.col-date { width: 120px; }
+.col-qty { width: 120px; }
+.col-barcode { width: 140px; }
+.col-type { width: 150px; }
+.col-warehouse { width: 160px; }
+
