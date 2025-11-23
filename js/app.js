@@ -708,7 +708,8 @@ async function loadSelectOptions(selectName, type, selectedValue) {
 // 打开新增配置模态框
 window.openAddSettingModal = function (type, targetSelectId) {
     document.getElementById('new-setting-type').value = type;
-    document.getElementById('new-setting-target-select').value = targetSelectId;
+    // 如果 targetSelectId 是 undefined，设置为空字符串
+    document.getElementById('new-setting-target-select').value = targetSelectId || '';
     document.getElementById('new-setting-name').value = '';
     document.getElementById('new-setting-code').value = '';
 
