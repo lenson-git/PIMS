@@ -2043,3 +2043,66 @@ textarea.form-control {
 .col-type { width: 150px; }
 .col-warehouse { width: 160px; }
 
+/* =========================================
+   Icon Animations & Micro-interactions
+   ========================================= */
+
+/* 基础过渡效果 */
+.nav-item svg,
+.btn-icon svg,
+.btn-icon-action svg,
+button svg {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); /* 弹性效果 */
+}
+
+/* 侧边栏图标悬停 */
+.nav-item:hover svg {
+    transform: scale(1.15);
+    color: var(--primary-color);
+}
+
+/* 侧边栏激活状态 */
+.nav-item.active svg {
+    transform: scale(1.1);
+}
+
+/* 按钮图标悬停 */
+.btn-icon:hover svg,
+.btn-icon-action:hover svg {
+    transform: scale(1.15);
+}
+
+/* 点击按下效果 */
+.nav-item:active svg,
+.btn-icon:active svg,
+.btn-icon-action:active svg,
+button:active svg {
+    transform: scale(0.92);
+}
+
+/* 旋转动画 (用于刷新/加载) */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.icon-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* 刷新按钮特定动画 */
+.btn-refresh:hover svg {
+    transform: rotate(180deg);
+}
+
+/* 删除按钮特定动画 */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px) rotate(-5deg); }
+    75% { transform: translateX(2px) rotate(5deg); }
+}
+
+.btn-delete:hover svg,
+.text-error:hover svg {
+    animation: shake 0.4s ease-in-out;
+}

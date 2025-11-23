@@ -2177,9 +2177,9 @@ window.loadStockList = async function (query = '', warehouse = '') {
  * 处理库存搜索功能
  * 支持按条码、商品信息、店铺等多维度搜索
  */
-window.searchStock = function () {
+window.searchStock = function (queryOverride) {
     try {
-        const query = document.getElementById('stock-search-input').value;
+        const query = queryOverride !== undefined ? queryOverride : document.getElementById('stock-search-input').value;
         const warehouse = document.getElementById('stock-warehouse').value;
         loadStockList(query, warehouse);
     } catch (error) {
@@ -2398,37 +2398,30 @@ document.addEventListener('DOMContentLoaded', async function () {
         filterTypes(outboundWarehouse.value, outboundType, 'outbound');
     }
 
-    // 为所有扫码输入框添加自动清空功能，防止重复输入
-    const barcodeInputs = ['inbound-sku-input', 'outbound-sku-input', 'stock-search-input'];
-    barcodeInputs.forEach(inputId => {
-        const input = document.getElementById(inputId);
-        if (input) {
-            input.addEventListener('focus', function () {
-                // 聚焦时自动清空，防止重复输入
-                this.value = '';
-            });
-        }
-    });
+    // 移除 focus 事件监听器，避免干扰扫码
+    // const barcodeInputs = ['inbound-sku-input', 'outbound-sku-input', 'stock-search-input'];
+    // ...
 
     const inboundInput = document.getElementById('inbound-sku-input');
     if (inboundInput) {
-        inboundInput.addEventListener('focus', () => {
-            if (inboundInput.value && inboundInput.value.trim() !== '') {
-                inboundInput.value = '';
-            }
-        });
+        // 移除 focus 自动清空，避免误操作
+        // inboundInput.addEventListener('focus', ...);
+
         inboundInput.addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault(); // 阻止默认提交行为
                 const code = inboundInput.value.trim();
+                // 立即清空输入框，防止重复或叠加
+                inboundInput.value = '';
+
                 if (!code) return;
-                if (inboundScanLock) { e.preventDefault(); return; }
+                if (inboundScanLock) return;
+
                 inboundScanLock = true;
                 try {
                     const sku = await getSKUByBarcodeCached(code);
                     if (!sku) {
                         showError('该产品不存在或已下架，禁止入库');
-                        inboundInput.value = '';
-                        inboundInput.focus();
                         inboundLastCode = code;
                         return;
                     }
@@ -2436,39 +2429,32 @@ document.addEventListener('DOMContentLoaded', async function () {
                     const isDown = sku.status_code === 'down' || sku.status_code === 'inactive' || statusName.includes('下架');
                     if (isDown) {
                         window._inboundCreateBarcode = code;
-                        inboundInput.value = '';
                         editSKU(sku.id);
                         return;
                     }
-                    if (pendingInbound[code]) {
-                        pendingInbound[code] += 1;
-                        await appendInboundRowIfNeeded(code);
-                        const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
-                        if (row) {
-                            const input = row.querySelector('input[data-role="inbound-qty"]');
-                            if (input) input.value = pendingInbound[code];
-                        }
-                        flashRow(code);
-                        playBeep();
-                        inboundInput.value = '';
-                        inboundInput.focus();
-                        inboundLastCode = code;
-                        return;
-                    }
-                    pendingInbound[code] = 1;
+
+                    // 更新数量或新增行
+                    if (!pendingInbound[code]) pendingInbound[code] = 0;
+                    pendingInbound[code] += 1;
+
                     await appendInboundRowIfNeeded(code);
+
                     const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
                     if (row) {
                         const input = row.querySelector('input[data-role="inbound-qty"]');
                         if (input) input.value = pendingInbound[code];
                     }
+
                     flashRow(code);
                     playBeep();
-                    inboundInput.value = '';
-                    inboundInput.focus();
                     inboundLastCode = code;
-                } catch (err) { showError('扫描入库失败: ' + err.message); }
-                finally { setTimeout(() => { inboundScanLock = false; }, 200); }
+                } catch (err) {
+                    showError('扫描入库失败: ' + err.message);
+                    // 如果失败，可能需要把码放回去？通常不需要，让用户重扫即可
+                } finally {
+                    setTimeout(() => { inboundScanLock = false; }, 200);
+                    inboundInput.focus(); // 保持聚焦
+                }
             }
         });
     }
@@ -2477,16 +2463,19 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (outboundInput) {
         outboundInput.addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault(); // 阻止默认提交
                 const code = outboundInput.value.trim();
+                // 立即清空
+                outboundInput.value = '';
+
                 if (!code) return;
-                if (outboundScanLock) { e.preventDefault(); return; }
+                if (outboundScanLock) return;
+
                 outboundScanLock = true;
                 try {
                     const sku = await getSKUByBarcodeCached(code);
                     if (!sku) {
                         showError('未找到该条码的 SKU');
-                        outboundInput.value = '';
-                        outboundInput.focus();
                         outboundLastCode = code;
                         return;
                     }
@@ -2494,46 +2483,44 @@ document.addEventListener('DOMContentLoaded', async function () {
                     const isDown = sku.status_code === 'down' || sku.status_code === 'inactive' || statusName.includes('下架');
                     if (isDown) {
                         showError('该产品已下架，禁止出库');
-                        outboundInput.value = '';
-                        outboundInput.focus();
                         outboundLastCode = code;
                         return;
                     }
-                    if (pendingOutbound[code]) {
-                        pendingOutbound[code] += 1;
-                        await appendOutboundRowIfNeeded(code);
-                        const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
-                        if (row) {
-                            const cell = row.querySelector('[data-role="current-stock"]');
-                            const max = cell ? parseInt(cell.textContent, 10) : NaN;
-                            if (!Number.isNaN(max) && pendingOutbound[code] > max) {
-                                pendingOutbound[code] = max;
-                                showError('超过当前库存，已回退到最大可用值');
-                            }
-                            const input = row.querySelector('input[data-role="outbound-qty"]');
-                            if (input) input.value = pendingOutbound[code];
-                        }
-                        flashOutboundRow(code);
-                        playBeep();
-                        outboundInput.value = '';
-                        outboundInput.focus();
-                        outboundLastCode = code;
-                        return;
-                    }
-                    pendingOutbound[code] = 1;
+
+                    // 更新数量或新增行
+                    if (!pendingOutbound[code]) pendingOutbound[code] = 0;
+
+                    // 预先检查库存（如果是已有行）
+                    // 注意：如果是新行，appendOutboundRowIfNeeded 会处理库存显示，但这里我们先增加数量
+                    // 为了安全，先增加，然后检查
+                    pendingOutbound[code] += 1;
+
                     await appendOutboundRowIfNeeded(code);
+
                     const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
                     if (row) {
+                        const cell = row.querySelector('[data-role="current-stock"]');
+                        const max = cell ? parseInt(cell.textContent, 10) : NaN;
+
+                        // 检查库存上限
+                        if (!Number.isNaN(max) && pendingOutbound[code] > max) {
+                            pendingOutbound[code] = max;
+                            showError('超过当前库存，已回退到最大可用值');
+                        }
+
                         const input = row.querySelector('input[data-role="outbound-qty"]');
                         if (input) input.value = pendingOutbound[code];
                     }
+
                     flashOutboundRow(code);
                     playBeep();
-                    outboundInput.value = '';
-                    outboundInput.focus();
                     outboundLastCode = code;
-                } catch (err) { showError('扫描出库失败: ' + err.message); }
-                finally { setTimeout(() => { outboundScanLock = false; }, 200); }
+                } catch (err) {
+                    showError('扫描出库失败: ' + err.message);
+                } finally {
+                    setTimeout(() => { outboundScanLock = false; }, 200);
+                    outboundInput.focus();
+                }
             }
         });
     }
@@ -2542,12 +2529,35 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (stockInput) {
         stockInput.addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
+                e.preventDefault(); // 阻止默认提交
                 const q = stockInput.value.trim();
+                // 立即清空
+                stockInput.value = '';
+
                 if (!q) return;
-                if (window._stockLastQuery === q) { showInfo('已搜索过该条码或关键词'); return; }
+                // 允许重复搜索相同的码（如果用户想重新定位）
+                // if (window._stockLastQuery === q) { showInfo('已搜索过该条码或关键词'); return; }
                 window._stockLastQuery = q;
                 try {
-                    searchStock();
+                    // 注意：searchStock 通常会读取 input 的值，我们需要修改它以接受参数
+                    // 或者我们临时把值放回去？
+                    // 更好的做法是修改 searchStock 函数接受参数，或者在这里临时设置回去
+                    // 但由于我们已经清空了，searchStock 如果只读 DOM 就会失败
+
+                    // 让我们先看看 searchStock 的实现
+                    // 假设 searchStock 读取 DOM，我们需要传递参数
+                    // 如果 searchStock 不支持参数，我们需要重构它
+
+                    // 暂时方案：手动设置 input 值供 searchStock 读取，但在 UI 上看起来是清空的？
+                    // 不，这很奇怪。
+                    // 正确做法：searchStock 应该支持参数。
+
+                    // 让我们先假设 searchStock 需要重构支持参数
+                    // 如果不支持，我们在这里调用它之前，先不清空？
+                    // 不，不清空就会有重复输入问题。
+
+                    // 让我们先检查 searchStock 的实现
+                    await searchStock(q);
                     stockInput.focus();
                 } catch (err) { showError('库存搜索失败: ' + err.message); }
             }
