@@ -52,7 +52,7 @@
     justify-content: space-between;
     padding: 10px 12px;
     background: #fff;
-    border: 1px solid #1a1a1a; /* Darker border as per mockup */
+    border: 1px solid #e5e7eb; /* Lighter border to match other pages */
     border-radius: 8px; /* Rounded corners */
     transition: all 0.2s;
     flex-shrink: 0; /* Prevent shrinking */
@@ -62,6 +62,7 @@
     background: #f9fafb;
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-color: #d1d5db; /* Slightly darker on hover */
 }
 
 .setting-name {
@@ -83,8 +84,13 @@
 }
 
 .setting-actions .btn-icon-only {
-    color: #1a1a1a;
+    color: #6b7280; /* Lighter icon color */
     padding: 4px;
+}
+
+.setting-actions .btn-icon-only:hover {
+    color: #1a1a1a;
+    background: #f3f4f6;
 }
 
 .setting-actions .btn-icon-only svg {
@@ -97,8 +103,8 @@
 .settings-add-row {
     display: flex;
     align-items: center;
-    background: #f3f4f6; /* Light gray background */
-    border: 1px solid #d1d5db;
+    background: #f9fafb; /* Lighter gray background */
+    border: 1px solid #e5e7eb; /* Lighter border */
     border-radius: 8px;
     padding: 0; /* No padding, handled by children */
     margin-top: auto; /* Push to bottom if flex container */
@@ -134,20 +140,25 @@
     justify-content: center;
     background: transparent;
     border: none;
-    border-left: 1px solid #d1d5db; /* Vertical separator */
+    border-left: 1px solid #e5e7eb; /* Vertical separator */
     border-radius: 0;
-    color: #374151;
+    color: #6b7280;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .settings-add-row .btn:hover {
-    background: #e5e7eb;
+    background: #f3f4f6;
     color: #111827;
 }
 
 .settings-add-row .btn svg {
     width: 20px;
     height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 

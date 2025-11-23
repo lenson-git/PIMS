@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>PIMS 库存管理系统</title>
     <link rel="stylesheet" href="css/styles.css?v=20251121-dashboard-fix-v2">
-    <link rel="stylesheet" href="css/settings.css?v=7">
+    <link rel="stylesheet" href="css/settings.css?v=8">
     <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
 </head>
 <body>
@@ -902,11 +902,33 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div id="confirm-message" class="text-secondary"></div>
+                <p id="confirm-message"></p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="confirm-cancel">取消</button>
-                <button class="btn btn-black" id="confirm-ok">确认</button>
+                <button class="btn btn-black" id="confirm-ok">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑设置模态框 -->
+    <div id="edit-setting-modal" class="modal-overlay">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 id="edit-setting-title">编辑</h3>
+                <button class="btn-close" onclick="closeModal('edit-setting-modal')">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="floating-label-group full-width">
+                    <input type="text" id="edit-setting-input" placeholder=" " autocomplete="off">
+                    <label>名称</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('edit-setting-modal')">取消</button>
+                <button class="btn btn-black" id="save-setting-btn">保存</button>
             </div>
         </div>
     </div>
@@ -1039,7 +1061,7 @@
     </div>
 
     <script src="js/barcode-scanner.js"></script>
-    <script type="module" src="js/app.js?v=20251122-settings-fix-v8"></script>
+    <script type="module" src="js/app.js?v=20251122-settings-fix-v10"></script>
 
 </body>
 </html>

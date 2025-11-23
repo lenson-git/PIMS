@@ -530,6 +530,7 @@ function navigate(viewName) {
         'inbound': '入库',
         'outbound': '出库',
         'stock': '库存管理',
+        'settings': '系统设置',
         'expenses': '费用管理'
     };
     const titleEl = document.getElementById('page-title');
