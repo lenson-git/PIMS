@@ -45,50 +45,42 @@ async function fetchExchangeRate() {
     }
 }
 
-// 计算仪表盘财务数据
-async function calculateDashboardMetrics() {
-    // 1. 获取汇率
-    await fetchExchangeRate();
-    const rateCnyToThb = currentExchangeRate;
-    const rateThbToCny = 1 / rateCnyToThb;
+// ==========================================
+// 仪表盘辅助函数
+// ==========================================
 
-    // 2. 获取本月时间范围
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+// 获取仪表盘所需的所有数据
+async function fetchDashboardData(startDate, endDate) {
+    const [movements, expenses, allSkus, shops, allStock, salesChannels, warehouses, safetyStock] =
+        await Promise.all([
+            fetchStockMovements({ startDate, endDate }),
+            fetchExpenses({ startDate, endDate }),
+            fetchSKUs(1, 10000),
+            fetchSettings('shop'),
+            fetchAllStock(),
+            fetchSettings('sales_channel').catch(() => []),
+            fetchSettings('warehouse').catch(() => []),
+            fetchSafetyStock().catch(() => [])
+        ]);
 
-    // 3. 并行获取数据
-    const [movementsData, expensesData, allSkusData, shopsData, allStockData, salesChannelsData, warehousesData, safetyStockData] = await Promise.all([
-        fetchStockMovements({ startDate: startOfMonth, endDate: endOfMonth }),
-        fetchExpenses({ startDate: startOfMonth, endDate: endOfMonth }),
-        fetchSKUs(1, 10000), // 获取所有 SKU
-        fetchSettings('shop'), // 获取店铺列表
-        fetchAllStock(), // 获取所有库存记录 (分仓库)
-        fetchSettings('sales_channel').catch(err => { return []; }), // 获取销售渠道配置 (允许失败)
-        fetchSettings('warehouse').catch(err => { return []; }), // 获取仓库列表
-        fetchSafetyStock().catch(err => { return []; }) // 获取安全库存数据
-    ]);
+    return {
+        movements: movements || [],
+        expenses: expenses || [],
+        allSkus: allSkus || [],
+        shops: shops || [],
+        allStock: allStock || [],
+        salesChannels: salesChannels || [],
+        warehouses: warehouses || [],
+        safetyStock: safetyStock || []
+    };
+}
 
-    const movements = movementsData || [];
-    const expenses = expensesData || [];
-    const allSkus = allSkusData || [];
-    const shops = shopsData || [];
-    const allStock = allStockData || [];
-    const salesChannels = salesChannelsData || [];
-    const warehouses = warehousesData || [];
-    const safetyStock = safetyStockData || [];
-
-
-
-    // 4. 计算指标
-    let salesRevenueTHB = 0;
-    let cogsRMB = 0;
-    let totalExpensesRMB = 0;
-    let inventoryValueRMB = 0;
-    let totalInventoryQty = 0;
-
-    // 店铺维度统计 (Sales & Profit & Low Stock)
+// 初始化店铺和仓库指标
+function initializeMetrics(shops, salesChannels, warehouses) {
     const shopMetrics = {};
+    const warehouseMetrics = {};
+
+    // 初始化店铺指标
     if (shops.length > 0) {
         shops.forEach(shop => {
             shopMetrics[shop.code] = {
@@ -97,7 +89,7 @@ async function calculateDashboardMetrics() {
                 profitTHB: 0,
                 cogsRMB: 0,
                 lowStockCount: 0,
-                channels: {} // 渠道细分
+                channels: {}
             };
             // 初始化所有配置的渠道为 0
             if (salesChannels.length > 0) {
@@ -108,13 +100,9 @@ async function calculateDashboardMetrics() {
         });
     }
 
-    // 仓库维度统计 (Inventory Value & Qty)
-    const warehouseMetrics = {};
-
-    // 初始化所有仓库
+    // 初始化仓库指标
     if (warehouses.length > 0) {
         warehouses.forEach(wh => {
-            // 统一映射名称
             let whName = wh.name;
             if (wh.code === 'MAIN' || wh.code === 'Main') whName = '主仓库';
             else if (wh.code === 'AFTERSALES' || wh.code === 'AfterSales') whName = '售后仓库';
@@ -127,10 +115,17 @@ async function calculateDashboardMetrics() {
         warehouseMetrics['AFTERSALES'] = { name: '售后仓库', valueRMB: 0, qty: 0 };
     }
 
-    // 4.1 销售额 & 成本
+    return { shopMetrics, warehouseMetrics };
+}
+
+// 计算销售额和成本
+function calculateSalesMetrics(movements, allSkus, shopMetrics) {
+    let salesRevenueTHB = 0;
+    let cogsRMB = 0;
+
     movements.forEach(m => {
         const qty = m.quantity;
-        const sku = allSkus ? allSkus.find(s => s.id === m.sku_id) : null;
+        const sku = allSkus.find(s => s.id === m.sku_id);
         const costRMB = sku ? (sku.purchase_price_rmb || 0) : 0;
         const shopCode = sku ? sku.shop_code : null;
 
@@ -151,7 +146,6 @@ async function calculateDashboardMetrics() {
                 if (shopMetrics[shopCode].channels[channel] !== undefined) {
                     shopMetrics[shopCode].channels[channel] += revenue;
                 } else {
-                    // 如果是未配置的渠道，也记录下来
                     shopMetrics[shopCode].channels[channel] = (shopMetrics[shopCode].channels[channel] || 0) + revenue;
                 }
             }
@@ -191,107 +185,137 @@ async function calculateDashboardMetrics() {
         }
     });
 
-    // 4.2 费用
+    return { salesRevenueTHB, cogsRMB };
+}
+
+// 计算库存价值和数量
+function calculateInventoryMetrics(allStock, warehouseMetrics, rateThbToCny) {
+    let inventoryValueRMB = 0;
+    let totalInventoryQty = 0;
+
+    allStock.forEach(stock => {
+        let cost = stock.purchase_price_rmb || 0;
+        if (!cost && stock.selling_price_thb) {
+            cost = stock.selling_price_thb * rateThbToCny;
+        }
+        const qty = stock.quantity || 0;
+        const val = cost * qty;
+
+        inventoryValueRMB += val;
+        totalInventoryQty += qty;
+
+        // 分仓库统计
+        const whCode = stock.warehouse_code;
+        if (!warehouseMetrics[whCode]) {
+            let whName = whCode;
+            if (whCode === 'MAIN' || whCode === 'Main') whName = '主仓库';
+            else if (whCode === 'AFTERSALES' || whCode === 'AfterSales') whName = '售后仓库';
+
+            warehouseMetrics[whCode] = { name: whName, valueRMB: 0, qty: 0 };
+        }
+
+        warehouseMetrics[whCode].valueRMB += val;
+        warehouseMetrics[whCode].qty += qty;
+    });
+
+    return { inventoryValueRMB, totalInventoryQty };
+}
+
+// 计算低库存预警
+function calculateLowStockWarnings(allSkus, allStock, safetyStock, shopMetrics) {
+    // 计算每个 SKU 的总库存数量
+    const skuStockMap = {};
+    allStock.forEach(stock => {
+        const skuId = stock.sku_id;
+        const qty = stock.quantity || 0;
+        skuStockMap[skuId] = (skuStockMap[skuId] || 0) + qty;
+    });
+
+    // 创建安全库存映射表
+    const safetyStockMap = {};
+    safetyStock.forEach(ss => {
+        safetyStockMap[ss.sku_id] = ss.suggested_safety_stock || 0;
+    });
+
+    // 检查每个 SKU
+    allSkus.forEach(sku => {
+        const totalQty = skuStockMap[sku.id] || 0;
+        const threshold = safetyStockMap[sku.id] || 0;
+
+        // 统计 SKU 数量
+        if (sku.shop_code && shopMetrics[sku.shop_code]) {
+            if (!shopMetrics[sku.shop_code].skuCount) shopMetrics[sku.shop_code].skuCount = 0;
+            shopMetrics[sku.shop_code].skuCount += 1;
+        }
+
+        // 只有当库存数量低于安全库存阈值时才计入低库存
+        if (threshold > 0 && totalQty < threshold) {
+            if (sku.shop_code && shopMetrics[sku.shop_code]) {
+                shopMetrics[sku.shop_code].lowStockCount += 1;
+            }
+        }
+    });
+}
+
+// 计算仪表盘财务数据
+// 计算仪表盘财务数据
+async function calculateDashboardMetrics() {
+    // 1. 获取汇率
+    await fetchExchangeRate();
+    const rateCnyToThb = currentExchangeRate;
+    const rateThbToCny = 1 / rateCnyToThb;
+
+    // 2. 获取本月时间范围
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+    // 3. 并行获取数据
+    const data = await fetchDashboardData(startOfMonth, endOfMonth);
+
+    // 4. 初始化指标
+    const { shopMetrics, warehouseMetrics } = initializeMetrics(
+        data.shops,
+        data.salesChannels,
+        data.warehouses
+    );
+
+    // 5. 计算销售指标
+    const { salesRevenueTHB, cogsRMB } = calculateSalesMetrics(
+        data.movements,
+        data.allSkus,
+        shopMetrics
+    );
+
+    // 6. 计算费用
     // Re-calculate expenses in THB
     let totalExpensesTHB = 0;
-    expenses.forEach(e => {
+    data.expenses.forEach(e => {
         if (e.currency === 'THB') {
             totalExpensesTHB += e.amount;
         } else {
-            // Wait, rateCnyToThb is e.g. 4.7. 100 RMB * 4.7 = 470 THB. Correct.
             totalExpensesTHB += (e.amount * rateCnyToThb);
         }
     });
 
-    // 4.3 纯利润 (THB)
-    // Sales is THB. COGS is RMB. Expenses is mixed.
-    // We need everything in THB.
+    // 7. 计算纯利润 (THB)
     const cogsTHB = cogsRMB * rateCnyToThb;
     const netProfitTHB = salesRevenueTHB - cogsTHB - totalExpensesTHB;
 
-    // 计算各店铺毛利 (THB)
+    // 8. 计算各店铺毛利 (THB)
     Object.values(shopMetrics).forEach(m => {
-        // m.cogsRMB is in RMB. Convert to THB.
         m.profitTHB = m.salesTHB - (m.cogsRMB * rateCnyToThb);
     });
 
-    // 4.4 库存总价值 (RMB) - Keep in RMB as requested
-    if (allStock.length > 0) {
-        allStock.forEach(stock => {
-            // 计算库存价值 (RMB)
-            // 优先使用 purchase_price_rmb
-            // 如果没有，尝试用 selling_price_thb / 汇率 (估算)
-            let cost = stock.purchase_price_rmb || 0;
-            if (!cost && stock.selling_price_thb) {
-                cost = stock.selling_price_thb * rateThbToCny;
-            }
-            const qty = stock.quantity || 0;
-            const val = cost * qty;
+    // 9. 计算库存指标
+    const { inventoryValueRMB, totalInventoryQty } = calculateInventoryMetrics(
+        data.allStock,
+        warehouseMetrics,
+        rateThbToCny
+    );
 
-            inventoryValueRMB += val;
-            totalInventoryQty += qty;
-
-            // 分仓库统计
-            const whCode = stock.warehouse_code;
-            if (!warehouseMetrics[whCode]) {
-                // 映射仓库名称
-                let whName = whCode;
-                if (whCode === 'MAIN' || whCode === 'Main') whName = '主仓库';
-                else if (whCode === 'AFTERSALES' || whCode === 'AfterSales') whName = '售后仓库';
-
-                warehouseMetrics[whCode] = { name: whName, valueRMB: 0, qty: 0 };
-            }
-
-            warehouseMetrics[whCode].valueRMB += val;
-            warehouseMetrics[whCode].qty += qty;
-        });
-    }
-
-    // 4.5 低库存预警 & SKU 数量
-    if (allSkus) {
-        // 首先计算每个 SKU 的总库存数量
-        const skuStockMap = {};
-        if (allStock.length > 0) {
-            allStock.forEach(stock => {
-                const skuId = stock.sku_id;
-                const qty = stock.quantity || 0;
-                if (!skuStockMap[skuId]) {
-                    skuStockMap[skuId] = 0;
-                }
-                skuStockMap[skuId] += qty;
-            });
-        }
-
-        // 创建安全库存映射表 (SKU ID -> 建议安全库存)
-        const safetyStockMap = {};
-        if (safetyStock.length > 0) {
-            safetyStock.forEach(ss => {
-                // suggested_safety_stock 是基于30天销量计算的建议安全库存
-                safetyStockMap[ss.sku_id] = ss.suggested_safety_stock || 0;
-            });
-        }
-
-        allSkus.forEach(sku => {
-            const totalQty = skuStockMap[sku.id] || 0;
-            // 使用30天销量作为安全库存阈值，如果没有数据则默认为0（不触发预警）
-            const threshold = safetyStockMap[sku.id] || 0;
-
-            // 统计 SKU 数量
-            if (sku.shop_code && shopMetrics[sku.shop_code]) {
-                // 确保 skuCount 属性存在
-                if (!shopMetrics[sku.shop_code].skuCount) shopMetrics[sku.shop_code].skuCount = 0;
-                shopMetrics[sku.shop_code].skuCount += 1;
-            }
-
-            // 只有当库存数量低于安全库存阈值时才计入低库存
-            // 如果阈值为0（没有销售历史），则不触发预警
-            if (threshold > 0 && totalQty < threshold) {
-                if (sku.shop_code && shopMetrics[sku.shop_code]) {
-                    shopMetrics[sku.shop_code].lowStockCount += 1;
-                }
-            }
-        });
-    }
+    // 10. 计算低库存预警
+    calculateLowStockWarnings(data.allSkus, data.allStock, data.safetyStock, shopMetrics);
 
     return {
         salesRevenueTHB,
@@ -301,7 +325,7 @@ async function calculateDashboardMetrics() {
         rateCnyToThb,
         shopMetrics,
         warehouseMetrics,
-        skuCount: allSkus ? allSkus.length : 0
+        skuCount: data.allSkus ? data.allSkus.length : 0
     };
 }
 
