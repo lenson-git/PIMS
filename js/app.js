@@ -538,6 +538,9 @@ function navigate(viewName) {
     } else if (viewName === 'stock') {
         loadStockList().then(() => {
             setTimeout(() => document.getElementById('stock-search-input')?.focus(), 100);
+        }).catch(() => {
+            // 即使加载失败也要聚焦输入框
+            setTimeout(() => document.getElementById('stock-search-input')?.focus(), 100);
         });
     } else if (viewName === 'expenses') {
         // 设置默认日期为今天
@@ -2362,6 +2365,18 @@ document.addEventListener('DOMContentLoaded', async function () {
         outboundWarehouse.addEventListener('change', () => filterTypes(outboundWarehouse.value, outboundType, 'outbound'));
         filterTypes(outboundWarehouse.value, outboundType, 'outbound');
     }
+
+    // 为所有扫码输入框添加自动清空功能，防止重复输入
+    const barcodeInputs = ['inbound-sku-input', 'outbound-sku-input'];
+    barcodeInputs.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('focus', function () {
+                // 聚焦时自动清空，防止重复输入
+                this.value = '';
+            });
+        }
+    });
 
     const inboundInput = document.getElementById('inbound-sku-input');
     if (inboundInput) {
