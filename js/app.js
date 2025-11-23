@@ -827,8 +827,8 @@ window.saveNewSetting = async function () {
         // 刷新缓存
         window._settingsCache[type] = null;
 
-        // 如果有 targetSelectId，说明是下拉框触发的，刷新对应下拉框
-        if (targetSelectId) {
+        // 如果有 targetSelectId 且不为空，说明是下拉框触发的，刷新对应下拉框
+        if (targetSelectId && targetSelectId !== '') {
             console.log('Refreshing select options for:', targetSelectId);
             // 查找所有使用该类型的下拉框并重新加载
             const selectMap = {
