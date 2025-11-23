@@ -2164,3 +2164,260 @@ button:active svg {
 .text-error:hover svg {
     animation: shake 0.4s ease-in-out;
 }
+
+/* ============================================
+   批量导入 SKU 功能样式
+   ============================================ */
+
+/* 预览表格 */
+.preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 16px 0;
+}
+
+.preview-table thead tr.system-fields th {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 8px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.preview-table thead tr.excel-fields th {
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: 6px 8px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 11px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.preview-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.preview-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.preview-table tbody td {
+    padding: 8px;
+    color: #374151;
+}
+
+.preview-note {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 8px;
+    text-align: center;
+}
+
+/* 验证结果 */
+.validation-summary {
+    margin: 16px 0;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 6px;
+}
+
+.validation-item {
+    margin: 8px 0;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.validation-item.success {
+    color: #059669;
+}
+
+.validation-item.error {
+    color: #dc2626;
+}
+
+.validation-item.warning {
+    color: #f59e0b;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #2563eb;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+}
+
+.btn-link:hover {
+    color: #1d4ed8;
+}
+
+/* 验证错误列表 */
+.validation-errors {
+    padding: 16px;
+}
+
+.validation-errors h4 {
+    margin-bottom: 12px;
+    color: #1a1a1a;
+}
+
+.validation-errors ul {
+    list-style: none;
+    padding: 0;
+}
+
+.validation-errors li {
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
+    color: #374151;
+    font-size: 14px;
+}
+
+/* 重复列表 */
+.duplicate-list {
+    padding: 16px;
+}
+
+.duplicate-list p {
+    margin-bottom: 16px;
+    color: #374151;
+}
+
+.duplicate-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.duplicate-items {
+    list-style: none;
+    padding: 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.duplicate-items li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.duplicate-items li.identical {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.duplicate-items li.different {
+    background: #fef3c7;
+    border-color: #fde68a;
+}
+
+.dup-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.dup-sku {
+    font-weight: 600;
+    color: #1a1a1a;
+    min-width: 120px;
+}
+
+.dup-info {
+    flex: 1;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.dup-status {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* 对比卡片 */
+.duplicate-comparison {
+    padding: 16px;
+}
+
+.comparison-progress {
+    text-align: center;
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 16px;
+}
+
+.comparison-section {
+    margin-bottom: 24px;
+}
+
+.comparison-section h4 {
+    margin-bottom: 12px;
+    color: #1a1a1a;
+    font-size: 14px;
+}
+
+.comparison-card {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.comparison-card.existing {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.comparison-card.importing {
+    border-color: #f59e0b;
+    background: #fffbeb;
+}
+
+.comparison-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.comparison-img-placeholder {
+    width: 80px;
+    height: 80px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.comparison-details {
+    flex: 1;
+}
+
+.comparison-details p {
+    margin: 6px 0;
+    font-size: 13px;
+    color: #374151;
+}
+
+.comparison-details strong {
+    color: #1a1a1a;
+    font-weight: 600;
+}

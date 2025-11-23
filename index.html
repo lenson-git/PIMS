@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="css/styles.css?v=20251121-dashboard-fix-v2">
     <link rel="stylesheet" href="css/settings.css?v=9">
     <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <!-- 登录遮罩层 -->
@@ -1065,10 +1066,93 @@
         </div>
     </div>
 
+    <!-- 批量导入 SKU 模态框 -->
+    <div id="bulk-import-modal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3>批量导入 SKU</h3>
+                <button class="modal-close" onclick="closeModal('bulk-import-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>选择 Excel 文件</label>
+                    <input type="file" id="bulk-import-file" accept=".xlsx,.xls" onchange="handleBulkImportFile(event)">
+                    <p class="form-hint">支持 .xlsx 和 .xls 格式</p>
+                </div>
+
+                <!-- 预览区域 -->
+                <div id="import-preview-container" style="display: none;">
+                    <h4>数据预览（前 10 行）</h4>
+                    <div id="import-preview-table" class="table-container"></div>
+                </div>
+
+                <!-- 验证结果 -->
+                <div id="import-validation-result" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('bulk-import-modal')">取消</button>
+                <button id="confirm-bulk-import-btn" class="btn btn-black" onclick="confirmBulkImport()" disabled>确认导入</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 验证错误详情模态框 -->
+    <div id="validation-error-modal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>数据验证结果</h3>
+                <button class="modal-close" onclick="closeModal('validation-error-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="validation-error-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-black" onclick="closeModal('validation-error-modal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 重复 SKU 列表模态框 -->
+    <div id="duplicate-list-modal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>发现重复 SKU</h3>
+                <button class="modal-close" onclick="closeModal('duplicate-list-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="duplicate-list-content"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 重复 SKU 详细对比模态框 -->
+    <div id="duplicate-comparison-modal" class="modal-overlay">
+        <div class="modal-container" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>SKU 冲突对比</h3>
+                <button class="modal-close" onclick="closeModal('duplicate-comparison-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="duplicate-comparison-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="handleCurrentDuplicate('skip')">跳过此条</button>
+                <button class="btn btn-outline" onclick="handleCurrentDuplicate('overwrite')">覆盖更新</button>
+                <button class="btn btn-outline" onclick="handleRemainingDuplicates('skip')">全部跳过</button>
+                <button class="btn btn-black" onclick="handleRemainingDuplicates('overwrite')">全部覆盖</button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- 侧边栏遮罩 -->
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <script src="js/barcode-scanner.js"></script>
+    <script src="js/sku-bulk-import.js"></script>
     <script type="module" src="js/app.js?v=20251123-fix-settings-v8"></script>
 
 </body>
