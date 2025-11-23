@@ -34,7 +34,6 @@ async function fetchExchangeRate() {
         const data = await response.json();
         if (data && data.rates && data.rates.THB) {
             currentExchangeRate = data.rates.THB;
-            console.log('当前汇率 (CNY -> THB):', currentExchangeRate);
 
             // 更新 UI 显示
             const rateEl = document.getElementById('dashboard-rate');
@@ -59,16 +58,15 @@ async function calculateDashboardMetrics() {
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
 
     // 3. 并行获取数据
-    console.log('Fetching dashboard data for range:', startOfMonth, 'to', endOfMonth);
     const [movementsData, expensesData, allSkusData, shopsData, allStockData, salesChannelsData, warehousesData, safetyStockData] = await Promise.all([
         fetchStockMovements({ startDate: startOfMonth, endDate: endOfMonth }),
         fetchExpenses({ startDate: startOfMonth, endDate: endOfMonth }),
         fetchSKUs(1, 10000), // 获取所有 SKU
         fetchSettings('shop'), // 获取店铺列表
         fetchAllStock(), // 获取所有库存记录 (分仓库)
-        fetchSettings('sales_channel').catch(err => { console.warn('Failed to fetch channels', err); return []; }), // 获取销售渠道配置 (允许失败)
-        fetchSettings('warehouse').catch(err => { console.warn('Failed to fetch warehouses', err); return []; }), // 获取仓库列表
-        fetchSafetyStock().catch(err => { console.warn('Failed to fetch safety stock', err); return []; }) // 获取安全库存数据
+        fetchSettings('sales_channel').catch(err => { return []; }), // 获取销售渠道配置 (允许失败)
+        fetchSettings('warehouse').catch(err => { return []; }), // 获取仓库列表
+        fetchSafetyStock().catch(err => { return []; }) // 获取安全库存数据
     ]);
 
     const movements = movementsData || [];
@@ -80,17 +78,7 @@ async function calculateDashboardMetrics() {
     const warehouses = warehousesData || [];
     const safetyStock = safetyStockData || [];
 
-    console.log('Dashboard Data Fetched:', {
-        movementsCount: movements.length,
-        expensesCount: expenses.length,
-        skusCount: allSkus.length,
-        shopsCount: shops.length,
-        stockCount: allStock.length,
-        salesChannelsCount: salesChannels.length,
-        warehousesCount: warehouses.length,
-        safetyStockCount: safetyStock.length,
-        exchangeRate: rateCnyToThb
-    });
+
 
     // 4. 计算指标
     let salesRevenueTHB = 0;
@@ -491,7 +479,6 @@ function formatNumber(num) {
 
 // 页面导航控制
 function navigate(viewName) {
-    console.log('navigate called with:', viewName);
 
     // 关闭可能打开的扫描器（防止摄像头一直开着）
     if (typeof window.closeBarcodeScanner === 'function') {
@@ -518,7 +505,6 @@ function navigate(viewName) {
     const view = document.getElementById(viewName + '-view');
     if (view) {
         view.classList.add('active');
-        console.log('Activated view:', viewName + '-view');
     } else {
         console.error('View not found:', viewName + '-view');
     }
@@ -548,7 +534,6 @@ function navigate(viewName) {
         renderOutboundList();
         setTimeout(() => document.getElementById('outbound-sku-input')?.focus(), 100);
     } else if (viewName === 'settings') {
-        console.log('Navigating to settings, calling loadSystemSettings');
         loadSystemSettings();
     } else if (viewName === 'stock') {
         loadStockList();
@@ -575,11 +560,9 @@ function navigate(viewName) {
 
 // 明确暴露到全局
 window.navigate = navigate;
-console.log('window.navigate assigned:', typeof window.navigate);
 
 // 暴露给全局以便 HTML onclick 调用
 window.openModal = function (modalId) {
-    console.log('Opening modal:', modalId);
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.add('active');
@@ -1279,8 +1262,8 @@ window.showSKUDetails = async function (skuId) {
 
         // 展示字段（按顺序），隐藏 id、name、原始 code 字段
         if (sku.created_at) pushRow(labels.created_at || '创建时间', fmtDate(sku.created_at));
-        if (sku.external_barcode) pushRow(labels.external_barcode || '产品条码', sku.external_barcode);
-        if (sku.product_info) pushRow(labels.product_info || '产品信息', (sku.product_info || '').split('\n').map(l => `<div> ${l}</div > `).join(''));
+        if (sku.external_barcode) pushRow(labels.external_barcode || '产品条码', escapeHtml(sku.external_barcode));
+        if (sku.product_info) pushRow(labels.product_info || '产品信息', (sku.product_info || '').split('\n').map(l => `<div> ${escapeHtml(l)}</div > `).join(''));
         pushRow('产品链接', sku.url ? `<a class="icon-link" href="${sku.url}" target="_blank" rel="noopener" title="${sku.url}" >
             <svg class="icon-web-animated" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -2313,7 +2296,6 @@ window.openAdjustModal = function (sku) {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', async function () {
-    console.log('DOMContentLoaded fired')
 
     // Init Floating Labels
     initFloatingLabels();
@@ -2322,14 +2304,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     initAuth();
 
     // 初始化用户状态
-    console.log('Initializing user state...')
     await checkAuth()
 
     // 强制认证检查
-    console.log('Starting enforceAuth...')
     try {
         const isAuthenticated = await enforceAuth();
-        console.log('enforceAuth result:', isAuthenticated)
 
         // 只有认证通过才加载数据
         if (isAuthenticated) {
@@ -2835,14 +2814,11 @@ window.addExpense = async function () {
 window.openEditExpenseModal = async function (id) {
     try {
         // 获取最新数据 (或者从当前列表中查找, 这里简单起见重新获取或从DOM获取? 最好是从缓存或重新获取)
-        // 为了简单, 我们假设 fetchExpenses 返回了所有字段. 
-        // 实际项目中可能需要 fetchExpenseById, 但这里我们先遍历当前列表缓存? 
+        // 为了简单, 我们假设 fetchExpenses 返回了所有字段.
+        // 实际项目中可能需要 fetchExpenseById, 但这里我们先遍历当前列表缓存?
         // 暂时没有全局缓存 expenses, 所以重新 fetch 或者从行数据取不太方便.
         // 让我们添加 fetchExpenseById 或者直接在 render 时把数据绑定到 button?
         // 最稳妥是 fetchExpenseById, 但 supabase-client 没加.
-        // 变通: 重新 fetch 列表开销大. 
-        // 让我们临时加一个 fetchExpenseById 到 supabase-client? 或者直接用 supabase js client 在这里调用?
-        // 既然 supabase-client 已经有了 updateExpense, 那就加一个 fetchExpenseById 吧.
         // 等等, 我不能改 supabase-client 了 (tool limit).
         // 那就用 fetchExpenses 过滤 id? 不, fetchExpenses 是列表查询.
         // 既然我刚刚加了 fetchExpenses, 我可以在 render 时把数据存到 window._expensesCache.
@@ -2943,7 +2919,6 @@ window.deleteExpenseAction = async function (id) {
 // ==========================================
 
 window.loadSystemSettings = async function () {
-    console.log('loadSystemSettings called');
     try {
         // 使用现有的 fetchSettings 获取所有配置
         // 注意：fetchSettings 返回的是 { type: { code: name } } 格式
@@ -2957,8 +2932,6 @@ window.loadSystemSettings = async function () {
             console.error('Error fetching settings:', error);
             throw error;
         }
-
-        console.log('Settings data loaded:', data);
 
         // 分组
         const groups = {
@@ -2985,8 +2958,6 @@ window.loadSystemSettings = async function () {
 
             if (groups[typeKey]) {
                 groups[typeKey].push(item);
-            } else {
-                console.warn('Unknown setting type:', item.type);
             }
         });
 

@@ -26,7 +26,6 @@ window.openBarcodeScanner = function (inputId) {
 
 // 关闭条码扫描器
 window.closeBarcodeScanner = function () {
-    console.log('Closing barcode scanner...');
     const modal = document.getElementById('barcode-scanner-modal');
     if (modal) modal.classList.remove('active');
 
@@ -34,14 +33,12 @@ window.closeBarcodeScanner = function () {
     if (isScanning && typeof Quagga !== 'undefined') {
         Quagga.stop();
         isScanning = false;
-        console.log('QuaggaJS stopped');
     }
 
     // 停止所有媒体轨道（关闭摄像头）
     if (mediaStream) {
         mediaStream.getTracks().forEach(track => {
             track.stop();
-            console.log('Media track stopped:', track.kind);
         });
         mediaStream = null;
     }
@@ -92,7 +89,7 @@ function initQuagga() {
             return;
         }
 
-        console.log("QuaggaJS initialized");
+
 
         // 保存媒体流引用
         const stream = Quagga.CameraAccess.getActiveStreamLabel();
@@ -101,7 +98,6 @@ function initQuagga() {
             const videoElement = document.querySelector('#scanner-viewport video');
             if (videoElement && videoElement.srcObject) {
                 mediaStream = videoElement.srcObject;
-                console.log('Media stream captured');
             }
         }
 
@@ -118,7 +114,6 @@ function onBarcodeDetected(result) {
     if (!result || !result.codeResult) return;
 
     const code = result.codeResult.code;
-    console.log('Barcode detected:', code);
 
     // 填充到目标输入框
     if (currentScannerTarget) {
@@ -146,7 +141,6 @@ function showScannerError() {
 // 绑定所有扫描按钮
 window.bindScanButtons = function () {
     const scanButtons = document.querySelectorAll('.scan-btn');
-    console.log('Binding scan buttons, found:', scanButtons.length);
 
     scanButtons.forEach(btn => {
         // 移除旧的事件监听器（通过克隆节点）
@@ -155,7 +149,6 @@ window.bindScanButtons = function () {
 
         // 添加新的事件监听器
         newBtn.addEventListener('click', function (e) {
-            console.log('Scan button clicked!');
             e.preventDefault();
             e.stopPropagation();
 
@@ -164,7 +157,6 @@ window.bindScanButtons = function () {
             if (inputGroup) {
                 const input = inputGroup.querySelector('input[type="text"]');
                 if (input && input.id) {
-                    console.log('Opening scanner for input:', input.id);
                     openBarcodeScanner(input.id);
                 } else {
                     console.error('Input not found or has no ID');
