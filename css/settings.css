@@ -103,8 +103,8 @@
 .settings-add-row {
     display: flex;
     align-items: center;
-    background: #f9fafb; /* Lighter gray background */
-    border: 1px solid #e5e7eb; /* Lighter border */
+    background: #fff; /* White background for better contrast with black border */
+    border: 1px solid #1a1a1a; /* Distinct black border */
     border-radius: 8px;
     padding: 0; /* No padding, handled by children */
     margin-top: auto; /* Push to bottom if flex container */
@@ -119,7 +119,7 @@
     font-size: 14px;
     height: 40px; /* Taller touch target */
     outline: none;
-    color: #374151;
+    color: #1a1a1a; /* Darker text */
 }
 
 .settings-add-row input::placeholder {
@@ -140,9 +140,9 @@
     justify-content: center;
     background: transparent;
     border: none;
-    border-left: 1px solid #e5e7eb; /* Vertical separator */
+    border-left: 1px solid #1a1a1a; /* Vertical separator matches border */
     border-radius: 0;
-    color: #6b7280;
+    color: #1a1a1a; /* Dark icon */
     cursor: pointer;
     transition: all 0.2s;
 }
