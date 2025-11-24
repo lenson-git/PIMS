@@ -242,6 +242,18 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- 分页控件 -->
+                    <div class="pagination-footer">
+                        <div class="pagination-info">
+                            共 <span id="sku-total-count">0</span> 条记录
+                        </div>
+                        <div class="pagination-controls">
+                            <button class="btn btn-outline btn-sm" id="btn-prev-page" onclick="changeSKUPage(-1)" disabled>上一页</button>
+                            <span class="page-current">第 <span id="sku-current-page">1</span> 页</span>
+                            <button class="btn btn-outline btn-sm" id="btn-next-page" onclick="changeSKUPage(1)" disabled>下一页</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 入库视图 -->

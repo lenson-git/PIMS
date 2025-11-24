@@ -13,9 +13,9 @@ export async function fetchSKUs(page = 1, pageSize = 20, search = '') {
     query = query.or(`external_barcode.ilike.%${search}%,product_info.ilike.%${search}%`)
   }
 
-  const { data, error } = await query
+  const { data, error, count } = await query.select('*', { count: 'exact' })
   if (error) throw error
-  return data
+  return { data, count }
 }
 
 // 创建 SKU

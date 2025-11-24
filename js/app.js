@@ -58,7 +58,7 @@ async function fetchDashboardData(startDate, endDate) {
         await Promise.all([
             fetchStockMovements({ startDate, endDate }),
             fetchExpenses({ startDate, endDate }),
-            fetchSKUs(1, 10000),
+            fetchSKUs(1, 10000).then(res => res.data),
             fetchSettings('shop'),
             fetchAllStock(),
             fetchSettings('sales_channel').catch(() => []),
@@ -1191,14 +1191,37 @@ window.saveSKU = async function () {
     }
 }
 
+window.currentSKUPage = 1;
+window.totalSKUCount = 0;
+
+window.changeSKUPage = function (delta) {
+    const newPage = window.currentSKUPage + delta;
+    if (newPage < 1) return;
+    const maxPage = Math.ceil(window.totalSKUCount / 20);
+    if (newPage > maxPage) return;
+
+    window.loadSKUs(newPage, document.getElementById('sku-main-input').value);
+}
+
 window.loadSKUs = async function (page = 1, search = '') {
     const tbody = document.querySelector('.sku-table-compact tbody');
     if (!tbody) return;
 
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center">加载中...</td></tr>';
+    window.currentSKUPage = page;
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center">加载中...</td></tr>';
 
     try {
-        const products = await fetchSKUs(page, 20, search);
+        const { data: products, count } = await fetchSKUs(page, 20, search);
+        window.totalSKUCount = count || 0;
+
+        // 更新分页控件
+        document.getElementById('sku-total-count').textContent = window.totalSKUCount;
+        document.getElementById('sku-current-page').textContent = page;
+
+        const maxPage = Math.ceil(window.totalSKUCount / 20);
+        document.getElementById('btn-prev-page').disabled = page <= 1;
+        document.getElementById('btn-next-page').disabled = page >= maxPage;
+
         const withThumbs = await Promise.all(products.map(async (p, index) => {
             const original = p.pic || 'https://via.placeholder.com/300';
             let thumb = null;
@@ -1213,7 +1236,7 @@ window.loadSKUs = async function (page = 1, search = '') {
         renderSKUTable(withThumbs);
     } catch (error) {
         console.error('loadSKUs error:', error);
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-error">加载失败: ' + error.message + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-error">加载失败: ' + error.message + '</td></tr>';
     }
 }
 
@@ -1311,6 +1334,7 @@ function handleImageError(container, img) {
 
 window.showSKUDetails = async function (skuId) {
     try {
+        const { data: allSkus } = await fetchSKUs(1, 10000);
         const sku = await fetchSKUById(skuId);
         if (!sku) { showError('未找到该 SKU'); return; }
         const mapName = (t, c) => (window._settingsCache[t] && window._settingsCache[t][c]) ? window._settingsCache[t][c] : c;
@@ -2119,7 +2143,7 @@ window.loadStockList = async function (query = '', warehouse = '') {
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="8" class="text-center">加载中...</td></tr>';
     try {
-        const products = await fetchSKUs(1, 50, query);
+        const { data: products } = await fetchSKUs(1, 50, query);
         const rows = [];
         let warehouseStockMap = null;
         if (warehouse) {
