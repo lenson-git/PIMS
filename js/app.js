@@ -6,6 +6,9 @@ import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
 import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
 import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
 
+// 将 supabase 暴露到全局作用域，供非模块脚本使用
+window.supabase = supabase;
+
 // ==========================================
 // Core Logic
 // ==========================================
