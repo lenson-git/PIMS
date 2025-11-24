@@ -170,6 +170,35 @@ function addToPendingInbound(data, skuDetails) {
     renderPendingInboundList();
 }
 
+// 盒子图标 SVG 常量
+const BOX_ICON_SVG = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="40"%3E📦%3C/text%3E%3C/svg%3E';
+
+// 初始化默认值
+document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(() => {
+        const warehouseSelect = document.getElementById('inbound-warehouse');
+        const typeSelect = document.getElementById('inbound-type');
+
+        if (warehouseSelect) {
+            // 尝试选中"主仓库"，如果不存在则选中第一个非空选项
+            const options = Array.from(warehouseSelect.options);
+            const mainWarehouse = options.find(opt => opt.text.includes('主仓库') || opt.value === '主仓库');
+            if (mainWarehouse) {
+                warehouseSelect.value = mainWarehouse.value;
+            }
+        }
+
+        if (typeSelect) {
+            // 尝试选中"采购入库"
+            const options = Array.from(typeSelect.options);
+            const purchaseType = options.find(opt => opt.text.includes('采购入库') || opt.value === '采购入库');
+            if (purchaseType) {
+                typeSelect.value = purchaseType.value;
+            }
+        }
+    }, 1000); // 延迟执行以确保选项已加载
+});
+
 /**
  * 渲染待入库清单
  */
@@ -192,16 +221,16 @@ function renderPendingInboundList() {
 
     let html = '';
     pendingInboundList.forEach((item, index) => {
-        // 盒子图标 SVG
-        const boxIcon = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="40"%3E📦%3C/text%3E%3Csvg%3E';
-
-        // 如果有图片URL则使用,否则使用盒子图标
-        const imgSrc = (item.pic && item.pic.trim() !== '') ? item.pic : boxIcon;
+        // 检查图片 URL 是否有效
+        let imgSrc = BOX_ICON_SVG;
+        if (item.pic && typeof item.pic === 'string' && item.pic.trim() !== '' && item.pic !== 'null' && item.pic !== 'undefined') {
+            imgSrc = item.pic;
+        }
 
         html += `
             <tr>
                 <td>${index + 1}</td>
-                <td><img src="${imgSrc}" alt="产品图片" onerror="this.src='${boxIcon}'" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"></td>
+                <td><img src="${imgSrc}" alt="产品图片" onerror="this.onerror=null;this.src='${BOX_ICON_SVG}'" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"></td>
                 <td>
                     <div style="font-weight: 500;">${item.external_barcode}</div>
                     <div style="color: #6b7280; font-size: 14px; margin-top: 4px;">${item.product_info || '-'}</div>
@@ -271,6 +300,23 @@ window.submitInbound = async function () {
         return;
     }
 
+    // 获取仓库和入库类型
+    const warehouseSelect = document.getElementById('inbound-warehouse');
+    const typeSelect = document.getElementById('inbound-type');
+
+    const warehouseCode = warehouseSelect ? warehouseSelect.value : '';
+    const typeCode = typeSelect ? typeSelect.value : '';
+
+    if (!warehouseCode) {
+        showError('请选择入库仓库');
+        return;
+    }
+
+    if (!typeCode) {
+        showError('请选择入库类型');
+        return;
+    }
+
     try {
         console.log('[DEBUG] 开始批量入库...');
 
@@ -283,8 +329,8 @@ window.submitInbound = async function () {
             if (quantity > 0) {
                 records.push({
                     sku_id: item.sku_id,
-                    warehouse_code: '主仓库',
-                    movement_type_code: '采购入库',
+                    warehouse_code: warehouseCode, // 使用选择的仓库
+                    movement_type_code: typeCode,  // 使用选择的类型
                     quantity: quantity,
                     movement_date: new Date().toISOString().split('T')[0]
                 });
