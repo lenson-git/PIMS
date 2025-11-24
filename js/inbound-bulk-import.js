@@ -56,7 +56,7 @@ window.handleInboundImportFile = async function (event) {
         } else {
             // 添加到待入库清单
             addToPendingInbound(data, validation.skuDetails);
-            showSuccess(`成功添加 ${data.length} 个商品到待入库清单`);
+            // 移除成功提示
         }
 
     } catch (error) {
@@ -193,7 +193,7 @@ function renderPendingInboundList() {
     let html = '';
     pendingInboundList.forEach((item, index) => {
         // 盒子图标 SVG
-        const boxIcon = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="40"%3E📦%3C/text%3E%3C/svg%3E';
+        const boxIcon = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="40"%3E📦%3C/text%3E%3Csvg%3E';
 
         // 如果有图片URL则使用,否则使用盒子图标
         const imgSrc = (item.pic && item.pic.trim() !== '') ? item.pic : boxIcon;
@@ -254,15 +254,12 @@ window.removePendingInboundItem = function (index) {
  */
 window.clearPendingInbound = function () {
     if (pendingInboundList.length === 0) {
-        showError('待入库清单为空');
         return;
     }
 
-    if (confirm('确定要清空待入库清单吗?')) {
-        pendingInboundList = [];
-        renderPendingInboundList();
-        showSuccess('已清空待入库清单');
-    }
+    // 直接清空，不弹出确认框
+    pendingInboundList = [];
+    renderPendingInboundList();
 };
 
 /**
