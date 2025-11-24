@@ -5,7 +5,7 @@ export { supabase }
 export async function fetchSKUs(page = 1, pageSize = 20, search = '') {
   let query = supabase
     .from('v_skus')  // 使用视图,包含 shop_name, status_name
-    .select('*')
+    .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1)
 
@@ -13,7 +13,7 @@ export async function fetchSKUs(page = 1, pageSize = 20, search = '') {
     query = query.or(`external_barcode.ilike.%${search}%,product_info.ilike.%${search}%`)
   }
 
-  const { data, error, count } = await query.select('*', { count: 'exact' })
+  const { data, error, count } = await query
   if (error) throw error
   return { data, count }
 }
