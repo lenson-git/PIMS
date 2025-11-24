@@ -1328,7 +1328,7 @@ function renderSKUTable(products, append = false) {
             </td>
             <td class="font-mono">${escapeHtml(p.external_barcode) || '-'}</td>
             <td>
-                <div class="product-info-compact clickable" onclick="event.stopPropagation(); showSKUDetails('${p.id}')">
+                <div class="product-info-compact">
                     ${((p.product_info || '')).split('\n').filter(Boolean).map(l => `<div class="info-line">${escapeHtml(l)}</div>`).join('')}
                 </div>
             </td>
@@ -1589,7 +1589,7 @@ async function renderInboundList() {
     <tr data-code="${code}">
                 <td>${idx + 1}</td>
                 <td>
-                    <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${original}')">
+                    <div class="img-thumbnail-small">
                         <div class="image-container">
                             <div class="skeleton-image"></div>
                             <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
@@ -1745,7 +1745,7 @@ async function appendInboundRowIfNeeded(code) {
     <tr data-code="${code}">
             <td>${idx}</td>
             <td>
-                <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${original}')">
+                <div class="img-thumbnail-small">
                     <div class="image-container">
                         <div class="skeleton-image"></div>
                         <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
@@ -1950,7 +1950,7 @@ async function renderOutboundList() {
     <tr data-code="${code}" data-sku-id="${(sku && sku.id) || ''}" >
                 <td>${idx + 1}</td>
                 <td>
-                    <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${original}')">
+                    <div class="img-thumbnail-small">
                         <div class="image-container">
                             <div class="skeleton-image"></div>
                             <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
@@ -2041,7 +2041,7 @@ async function appendOutboundRowIfNeeded(code) {
     <tr data-code="${code}" data-sku-id="${(sku && sku.id) || ''}" >
             <td>${idx}</td>
             <td>
-                <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${original}')">
+                <div class="img-thumbnail-small">
                     <div class="image-container">
                         <div class="skeleton-image"></div>
                         <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
@@ -2356,7 +2356,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
     <tr>
                     <td>${idx}</td>
                     <td>
-                        <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
+                        <div class="img-thumbnail-small">
                             <div class="image-container">
                                 ${thumb ? `
                                     <div class="skeleton-image"></div>
