@@ -246,99 +246,95 @@ async function renderPendingInboundList() {
 
     emptyState.style.display = 'none';
 
-    // 并行处理所有图片 URL（带超时机制）
+    // 并行处理所有图片 URL
     const rows = await Promise.all(pendingInboundList.map(async (item, index) => {
         let imgHtml = '';
 
         try {
             if (item.pic && typeof item.pic === 'string') {
                 const cleanPic = item.pic.trim();
+                console.log(`[批量入库] 处理图片 ${index + 1}: `, cleanPic);
+
                 if (cleanPic !== '' && cleanPic.toLowerCase() !== 'null' && cleanPic.toLowerCase() !== 'undefined') {
-                    // 创建超时 Promise（2 秒）
-                    const timeoutPromise = new Promise((resolve) => {
-                        setTimeout(() => resolve(null), 2000);
-                    });
+                    // 尝试转换为缩略图（无超时限制）
+                    let thumb = null;
 
-                    // 创建图片转换 Promise
-                    const transformPromise = (async () => {
-                        if (typeof window.createTransformedUrlFromPublicUrl === 'function') {
-                            try {
-                                const thumb = await window.createTransformedUrlFromPublicUrl(cleanPic, 100, 100);
-                                if (thumb) return thumb;
+                    if (typeof window.createTransformedUrlFromPublicUrl === 'function') {
+                        try {
+                            thumb = await window.createTransformedUrlFromPublicUrl(cleanPic, 100, 100);
+                            console.log(`[批量入库] 缩略图转换结果 ${index + 1}: `, thumb ? '成功' : '失败');
 
-                                // 如果缩略图失败，尝试签名 URL
-                                if (typeof window.createSignedUrlFromPublicUrl === 'function') {
-                                    const signed = await window.createSignedUrlFromPublicUrl(cleanPic);
-                                    return signed;
-                                }
-                            } catch (e) {
-                                console.warn('Image transform failed for:', cleanPic, e);
+                            // 如果缩略图失败，尝试签名 URL
+                            if (!thumb && typeof window.createSignedUrlFromPublicUrl === 'function') {
+                                thumb = await window.createSignedUrlFromPublicUrl(cleanPic);
+                                console.log(`[批量入库] 签名 URL 结果 ${index + 1}: `, thumb ? '成功' : '失败');
                             }
+                        } catch (e) {
+                            console.error(`[批量入库] 图片转换失败 ${index + 1}: `, cleanPic, e);
                         }
-                        return null;
-                    })();
-
-                    // 竞速：转换 vs 超时
-                    const thumb = await Promise.race([transformPromise, timeoutPromise]);
+                    }
 
                     if (thumb) {
                         // 转换成功：显示骨架屏 + 缩略图
                         imgHtml = `
-                            <div class="skeleton-image"></div>
-                            <img src="${thumb}" alt="产品图片" loading="lazy" 
-                                 onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>📦</div>'"
-                                 style="width: 100%; height: 100%; object-fit: cover;">
-                        `;
+            < div class="skeleton-image" ></div >
+                <img src="${thumb}" alt="产品图片" loading="lazy"
+                    onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>📦</div>'"
+                    style="width: 100%; height: 100%; object-fit: cover;">
+                    `;
                     } else {
-                        // 转换失败或超时：显示盒子
+                        // 转换失败：显示盒子
+                        console.warn(`[批量入库] 显示盒子图标 ${index + 1}`);
                         imgHtml = '<div class="image-placeholder">📦</div>';
                     }
                 } else {
                     // 无效图片：显示盒子
+                    console.warn(`[批量入库] 无效图片 URL ${index + 1}:`, item.pic);
                     imgHtml = '<div class="image-placeholder">📦</div>';
                 }
             } else {
                 // 没有图片：显示盒子
+                console.warn(`[批量入库] 没有图片 ${index + 1}`);
                 imgHtml = '<div class="image-placeholder">📦</div>';
             }
         } catch (err) {
-            console.error('Error processing image for item:', index, err);
+            console.error(`[批量入库] 处理图片异常 ${index + 1}:`, err);
             imgHtml = '<div class="image-placeholder">📦</div>';
         }
 
         return `
-            <tr>
-                <td>${index + 1}</td>
-                <td>
-                    <div class="img-thumbnail-small">
-                        <div class="image-container" data-img-id="bulk-${index}">
-                            ${imgHtml}
-                        </div>
-                    </div>
-                </td>
-                <td>
-                    <div style="font-weight: 500;">${item.external_barcode}</div>
-                    <div style="color: #6b7280; font-size: 14px; margin-top: 4px;">${item.product_info || '-'}</div>
-                </td>
-                <td>${item.quantity}</td>
-                <td>
-                    <input type="number" class="quantity-input" 
-                           value="0" min="0" 
-                           onchange="updatePendingQuantity(${index}, this.value)"
-                           style="width: 80px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px;">
-                </td>
-                <td class="text-center">
-                    <button class="btn-icon-only" onclick="removePendingInboundItem(${index})" title="删除">
-                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            <line x1="10" y1="11" x2="10" y2="17"></line>
-                            <line x1="14" y1="11" x2="14" y2="17"></line>
-                        </svg>
-                    </button>
-                </td>
-            </tr>
-        `;
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            <div class="img-thumbnail-small">
+                                <div class="image-container" data-img-id="bulk-${index}">
+                                    ${imgHtml}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 500;">${item.external_barcode}</div>
+                            <div style="color: #6b7280; font-size: 14px; margin-top: 4px;">${item.product_info || '-'}</div>
+                        </td>
+                        <td>${item.quantity}</td>
+                        <td>
+                            <input type="number" class="quantity-input"
+                                value="0" min="0"
+                                onchange="updatePendingQuantity(${index}, this.value)"
+                                style="width: 80px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                        </td>
+                        <td class="text-center">
+                            <button class="btn-icon-only" onclick="removePendingInboundItem(${index})" title="删除">
+                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                    `;
     }));
 
     tbody.innerHTML = rows.join('');
