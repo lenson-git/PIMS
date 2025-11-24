@@ -243,16 +243,10 @@
                         </table>
                     </div>
                     
-                    <!-- 分页控件 -->
-                    <div class="pagination-footer">
-                        <div class="pagination-info">
-                            共 <span id="sku-total-count">0</span> 条记录
-                        </div>
-                        <div class="pagination-controls">
-                            <button class="btn btn-outline btn-sm" id="btn-prev-page" onclick="changeSKUPage(-1)" disabled>上一页</button>
-                            <span class="page-current">第 <span id="sku-current-page">1</span> 页</span>
-                            <button class="btn btn-outline btn-sm" id="btn-next-page" onclick="changeSKUPage(1)" disabled>下一页</button>
-                        </div>
+                    <!-- 加载更多/到底提示 -->
+                    <div id="sku-loading-sentinel" class="text-center py-4 text-secondary">
+                        <span class="loading-text" style="display: none;">加载中...</span>
+                        <span class="no-more-data" style="display: none;">已经显示全部数据,没有了.</span>
                     </div>
                 </div>
 

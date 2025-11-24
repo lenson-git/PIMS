@@ -1193,34 +1193,69 @@ window.saveSKU = async function () {
 
 window.currentSKUPage = 1;
 window.totalSKUCount = 0;
+window.isLoadingSKUs = false;
+window.skuObserver = null;
 
-window.changeSKUPage = function (delta) {
-    const newPage = window.currentSKUPage + delta;
-    if (newPage < 1) return;
-    const maxPage = Math.ceil(window.totalSKUCount / 20);
-    if (newPage > maxPage) return;
+// 初始化无限滚动观察器
+function initSKUObserver() {
+    if (window.skuObserver) {
+        window.skuObserver.disconnect();
+    }
 
-    window.loadSKUs(newPage, document.getElementById('sku-main-input').value);
+    const options = {
+        root: null,
+        rootMargin: '100px',
+        threshold: 0.1
+    };
+
+    window.skuObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !window.isLoadingSKUs) {
+                const maxPage = Math.ceil(window.totalSKUCount / 20);
+                if (window.currentSKUPage < maxPage) {
+                    window.loadSKUs(window.currentSKUPage + 1, document.getElementById('sku-main-input').value, false);
+                }
+            }
+        });
+    }, options);
+
+    const sentinel = document.getElementById('sku-loading-sentinel');
+    if (sentinel) {
+        window.skuObserver.observe(sentinel);
+    }
 }
 
-window.loadSKUs = async function (page = 1, search = '') {
+window.loadSKUs = async function (page = 1, search = '', reset = true) {
     const tbody = document.querySelector('.sku-table-compact tbody');
-    if (!tbody) return;
+    const sentinel = document.getElementById('sku-loading-sentinel');
+    const loadingText = sentinel ? sentinel.querySelector('.loading-text') : null;
+    const noMoreData = sentinel ? sentinel.querySelector('.no-more-data') : null;
 
-    window.currentSKUPage = page;
-    tbody.innerHTML = '<tr><td colspan="9" class="text-center">加载中...</td></tr>';
+    if (!tbody) return;
+    if (window.isLoadingSKUs) return;
+
+    window.isLoadingSKUs = true;
+    if (loadingText) loadingText.style.display = 'inline-block';
+    if (noMoreData) noMoreData.style.display = 'none';
+
+    if (reset) {
+        window.currentSKUPage = 1;
+        tbody.innerHTML = ''; // 清空现有数据
+        // 初始加载显示 loading 行
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center">加载中...</td></tr>';
+    }
 
     try {
         const { data: products, count } = await fetchSKUs(page, 20, search);
         window.totalSKUCount = count || 0;
+        window.currentSKUPage = page;
 
-        // 更新分页控件
-        document.getElementById('sku-total-count').textContent = window.totalSKUCount;
-        document.getElementById('sku-current-page').textContent = page;
-
-        const maxPage = Math.ceil(window.totalSKUCount / 20);
-        document.getElementById('btn-prev-page').disabled = page <= 1;
-        document.getElementById('btn-next-page').disabled = page >= maxPage;
+        if (reset) {
+            tbody.innerHTML = ''; // 清除初始 loading
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">暂无数据</td></tr>';
+            }
+        }
 
         const withThumbs = await Promise.all(products.map(async (p, index) => {
             const original = p.pic || 'https://via.placeholder.com/300';
@@ -1233,21 +1268,40 @@ window.loadSKUs = async function (page = 1, search = '') {
             const seqId = (page - 1) * 20 + index + 1;
             return { ...p, __thumb: thumb || 'https://via.placeholder.com/100', __original: original, __seqId: seqId };
         }));
-        renderSKUTable(withThumbs);
+
+        renderSKUTable(withThumbs, !reset); // !reset 表示追加模式
+
+        // 检查是否还有更多数据
+        const maxPage = Math.ceil(window.totalSKUCount / 20);
+        if (page >= maxPage && window.totalSKUCount > 0) {
+            if (noMoreData) noMoreData.style.display = 'inline-block';
+            if (window.skuObserver) window.skuObserver.disconnect();
+        } else if (page < maxPage) {
+            // 重新连接观察器以加载下一页
+            initSKUObserver();
+        }
+
     } catch (error) {
         console.error('loadSKUs error:', error);
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-error">加载失败: ' + error.message + '</td></tr>';
+        if (reset) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center text-error">加载失败: ' + error.message + '</td></tr>';
+        }
+    } finally {
+        window.isLoadingSKUs = false;
+        if (loadingText) loadingText.style.display = 'none';
     }
 }
 
-function renderSKUTable(products) {
+function renderSKUTable(products, append = false) {
     const tbody = document.querySelector('.sku-table-compact tbody');
     if (!products || products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="text-center">暂无数据</td></tr>';
+        if (!append) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center">暂无数据</td></tr>';
+        }
         return;
     }
 
-    tbody.innerHTML = products.map(p => `
+    const html = products.map(p => `
     <tr class="sku-row" >
             <td>${p.__seqId}</td>
             <td>
@@ -1296,9 +1350,15 @@ function renderSKUTable(products) {
         </tr >
     `).join('');
 
-    // 为所有图片添加加载事件监听
-    setupImageLoading();
+    if (append) {
+        tbody.insertAdjacentHTML('beforeend', html);
+    } else {
+        tbody.innerHTML = html;
+    }
 }
+
+// 为所有图片添加加载事件监听
+setupImageLoading();
 
 // 设置图片加载监听
 function setupImageLoading() {
