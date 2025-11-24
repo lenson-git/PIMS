@@ -1258,7 +1258,7 @@ window.loadSKUs = async function (page = 1, search = '', reset = true) {
         }
 
         const withThumbs = await Promise.all(products.map(async (p, index) => {
-            const original = p.pic || 'https://via.placeholder.com/300';
+            const original = p.pic || null;
             let thumb = null;
             if (p.pic) {
                 thumb = await createTransformedUrlFromPublicUrl(p.pic, 300, 300);
@@ -1266,7 +1266,7 @@ window.loadSKUs = async function (page = 1, search = '', reset = true) {
             }
             // 计算序号: (当前页 - 1) * 每页数量 + 当前索引 + 1
             const seqId = (page - 1) * 20 + index + 1;
-            return { ...p, __thumb: thumb || 'https://via.placeholder.com/100', __original: original, __seqId: seqId };
+            return { ...p, __thumb: thumb, __original: original, __seqId: seqId };
         }));
 
         renderSKUTable(withThumbs, !reset); // !reset 表示追加模式
@@ -1276,9 +1276,6 @@ window.loadSKUs = async function (page = 1, search = '', reset = true) {
         if (page >= maxPage && window.totalSKUCount > 0) {
             if (noMoreData) noMoreData.style.display = 'inline-block';
             if (window.skuObserver) window.skuObserver.disconnect();
-        } else if (page < maxPage) {
-            // 重新连接观察器以加载下一页
-            initSKUObserver();
         }
 
     } catch (error) {
@@ -1289,6 +1286,12 @@ window.loadSKUs = async function (page = 1, search = '', reset = true) {
     } finally {
         window.isLoadingSKUs = false;
         if (loadingText) loadingText.style.display = 'none';
+
+        // 在状态重置后重新初始化观察器，避免竞态条件
+        const maxPage = Math.ceil(window.totalSKUCount / 20);
+        if (page < maxPage) {
+            initSKUObserver();
+        }
     }
 }
 
@@ -1305,10 +1308,14 @@ function renderSKUTable(products, append = false) {
     <tr class="sku-row" >
             <td>${p.__seqId}</td>
             <td>
-                <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${p.__original}')">
+                <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${p.__original ? `showLightbox('${p.__original}')` : ''}">
                     <div class="image-container" data-img-id="${p.id}">
-                        <div class="skeleton-image"></div>
-                        <img src="${p.__thumb}" alt="Product" loading="lazy" onerror="window.handleImgError && window.handleImgError(this)">
+                        ${p.__thumb ? `
+                            <div class="skeleton-image"></div>
+                            <img src="${p.__thumb}" alt="Product" loading="lazy" onerror="window.handleImgError && window.handleImgError(this)">
+                        ` : `
+                            <div class="image-placeholder">📦</div>
+                        `}
                     </div>
                 </div>
             </td>
