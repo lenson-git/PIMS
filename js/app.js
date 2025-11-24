@@ -1369,6 +1369,9 @@ function renderSKUTable(products, append = false) {
     } else {
         tbody.innerHTML = html;
     }
+
+    // 重新绑定图片加载事件
+    setupImageLoading();
 }
 
 // 为所有图片添加加载事件监听
