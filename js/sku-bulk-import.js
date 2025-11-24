@@ -106,8 +106,7 @@ window.handleBulkImportFile = async function (event) {
     }
 
     try {
-        // 显示加载状态
-        showSuccess('正在解析文件...');
+        // 显示加载状态（使用控制台日志代替阻塞性提示）
         console.log('[DEBUG] 开始解析 Excel...');
 
         // 解析 Excel
