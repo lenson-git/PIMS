@@ -207,8 +207,11 @@ function renderImportPreview(data) {
     // 显示预览容器
     previewContainer.style.display = 'block';
 
-    // 获取所有字段
-    const fields = Object.keys(EXCEL_TO_DB_MAPPING).filter(k => EXCEL_TO_DB_MAPPING[k]);
+    // 获取所有字段（排除数量和状态）
+    const fields = Object.keys(EXCEL_TO_DB_MAPPING).filter(k => {
+        const dbField = EXCEL_TO_DB_MAPPING[k];
+        return dbField && dbField !== 'status_code';  // 排除 null 和 status_code
+    });
 
     // 构建表格 HTML
     let html = '<table class="preview-table"><thead>';
