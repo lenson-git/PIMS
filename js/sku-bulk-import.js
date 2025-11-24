@@ -479,6 +479,8 @@ async function validateImportData(data) {
     const shopCodes = [...new Set(data.map(row => row.shop_code).filter(Boolean))];
     if (shopCodes.length > 0 && window._settingsCache && window._settingsCache.shop) {
         const validShops = Object.keys(window._settingsCache.shop);
+        console.log('[DEBUG] 有效店铺列表:', validShops);
+        console.log('[DEBUG] 待验证店铺:', shopCodes);
         shopCodes.forEach(code => {
             if (!validShops.includes(code)) {
                 const rows = data.filter(d => d.shop_code === code).map(d => d._rowNumber);
