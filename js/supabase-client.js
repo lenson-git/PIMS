@@ -141,39 +141,6 @@ export async function fetchStockBySKUsWarehouse(ids, warehouseCode) {
     return {}
   }
 }
-const { data: inboundTypes } = await supabase
-  .from('settings')
-  .select('code')
-  .eq('type', 'InboundType')
-const { data: outboundTypes } = await supabase
-  .from('settings')
-  .select('code')
-  .eq('type', 'OutboundType')
-const inboundSet = new Set((inboundTypes || []).map(x => x.code))
-const outboundSet = new Set((outboundTypes || []).map(x => x.code))
-
-const { data, error } = await supabase
-  .from('stock_movements')
-  .select('quantity, movement_type_code')
-  .eq('sku_id', id)
-  .eq('warehouse_code', warehouseCode)
-if (error) throw error
-const list = Array.isArray(data) ? data : []
-let total = 0
-if (inboundSet.size === 0 && outboundSet.size === 0) {
-  total = list.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0)
-} else {
-  for (const r of list) {
-    const qty = Number(r.quantity) || 0
-    if (inboundSet.has(r.movement_type_code)) total += qty
-    else if (outboundSet.has(r.movement_type_code)) total -= qty
-  }
-}
-return total
-} catch (_) {
-  return null
-}
-}
 
 export async function fetchWarehousesForSKU(id) {
   try {
