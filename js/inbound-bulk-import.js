@@ -4,6 +4,25 @@
  * 复用 SKU 批量导入的核心逻辑,针对入库场景定制
  */
 
+// 备用函数：如果全局没有定义，则使用本地实现
+if (typeof window.openModal === 'undefined') {
+    window.openModal = function (modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'flex';
+        }
+    };
+}
+
+if (typeof window.closeModal === 'undefined') {
+    window.closeModal = function (modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+
 // 全局状态
 let currentInboundData = null;
 let currentValidationResult = null;
