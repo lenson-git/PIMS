@@ -150,12 +150,41 @@ async function parseExcelFile(file) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
 
-                // 读取第一个工作表
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
+                console.log('[DEBUG] 工作表列表:', workbook.SheetNames);
+
+                // 智能检测包含正确列名的工作表
+                let targetSheet = null;
+                let targetSheetName = null;
+
+                for (const sheetName of workbook.SheetNames) {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    if (jsonData.length < 2) continue;
+
+                    const headers = jsonData[0];
+                    console.log(`[DEBUG] 工作表 "${sheetName}" 的列名:`, headers);
+
+                    // 检查是否包含必需的列名
+                    const hasRequiredColumns = headers.includes('SKU ID') &&
+                        headers.includes('货品标题') &&
+                        headers.includes('单价(元)');
+
+                    if (hasRequiredColumns) {
+                        targetSheet = worksheet;
+                        targetSheetName = sheetName;
+                        console.log(`[DEBUG] 找到目标工作表: "${sheetName}"`);
+                        break;
+                    }
+                }
+
+                if (!targetSheet) {
+                    reject(new Error('未找到包含必需列名（SKU ID、货品标题、单价(元)）的工作表'));
+                    return;
+                }
 
                 // 转换为 JSON
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                const jsonData = XLSX.utils.sheet_to_json(targetSheet, { header: 1 });
 
                 if (jsonData.length < 2) {
                     reject(new Error('Excel 文件至少需要包含表头和一行数据'));
