@@ -343,10 +343,12 @@ async function renderPendingInboundList() {
 
     tbody.innerHTML = rows.join('');
 
-    // 激活图片渐变加载效果
-    if (typeof window.setupImageLoading === 'function') {
-        window.setupImageLoading();
-    }
+    // 激活图片渐变加载效果（延迟调用确保 DOM 已渲染）
+    setTimeout(() => {
+        if (typeof window.setupImageLoading === 'function') {
+            window.setupImageLoading();
+        }
+    }, 100);
 }
 
 /**
