@@ -246,7 +246,7 @@ async function renderPendingInboundList() {
 
     emptyState.style.display = 'none';
 
-    // 并行处理所有图片 URL
+    // 并行处理所有图片 URL（带超时机制）
     const rows = await Promise.all(pendingInboundList.map(async (item, index) => {
         let imgHtml = '';
 
@@ -254,21 +254,35 @@ async function renderPendingInboundList() {
             if (item.pic && typeof item.pic === 'string') {
                 const cleanPic = item.pic.trim();
                 if (cleanPic !== '' && cleanPic.toLowerCase() !== 'null' && cleanPic.toLowerCase() !== 'undefined') {
-                    // 尝试转换为缩略图
-                    let thumb = null;
-                    if (typeof window.createTransformedUrlFromPublicUrl === 'function') {
-                        try {
-                            thumb = await window.createTransformedUrlFromPublicUrl(cleanPic, 100, 100);
-                            if (!thumb && typeof window.createSignedUrlFromPublicUrl === 'function') {
-                                thumb = await window.createSignedUrlFromPublicUrl(cleanPic);
-                            }
-                        } catch (e) {
-                            console.warn('Image transform failed for:', cleanPic, e);
-                        }
-                    }
+                    // 创建超时 Promise（2 秒）
+                    const timeoutPromise = new Promise((resolve) => {
+                        setTimeout(() => resolve(null), 2000);
+                    });
 
-                    // 有图片：显示骨架屏 + 图片（渐变加载）
+                    // 创建图片转换 Promise
+                    const transformPromise = (async () => {
+                        if (typeof window.createTransformedUrlFromPublicUrl === 'function') {
+                            try {
+                                const thumb = await window.createTransformedUrlFromPublicUrl(cleanPic, 100, 100);
+                                if (thumb) return thumb;
+
+                                // 如果缩略图失败，尝试签名 URL
+                                if (typeof window.createSignedUrlFromPublicUrl === 'function') {
+                                    const signed = await window.createSignedUrlFromPublicUrl(cleanPic);
+                                    return signed;
+                                }
+                            } catch (e) {
+                                console.warn('Image transform failed for:', cleanPic, e);
+                            }
+                        }
+                        return null;
+                    })();
+
+                    // 竞速：转换 vs 超时
+                    const thumb = await Promise.race([transformPromise, timeoutPromise]);
+
                     if (thumb) {
+                        // 转换成功：显示骨架屏 + 缩略图
                         imgHtml = `
                             <div class="skeleton-image"></div>
                             <img src="${thumb}" alt="产品图片" loading="lazy" 
@@ -276,7 +290,7 @@ async function renderPendingInboundList() {
                                  style="width: 100%; height: 100%; object-fit: cover;">
                         `;
                     } else {
-                        // 转换失败：显示盒子
+                        // 转换失败或超时：显示盒子
                         imgHtml = '<div class="image-placeholder">📦</div>';
                     }
                 } else {
