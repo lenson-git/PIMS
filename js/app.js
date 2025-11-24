@@ -1392,9 +1392,6 @@ window.deleteSKUConfirm = async function (id) {
     }
 }
 
-window.importSKU = function () {
-    showInfo('批量导入功能即将上线');
-}
 
 window.editSKU = async function (id) {
     try {
