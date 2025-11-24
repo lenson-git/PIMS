@@ -3201,6 +3201,14 @@ window.updateExpenseAction = async function () {
     }
 }
 
+// 确认操作对话框
+async function confirmAction(message) {
+    return new Promise((resolve) => {
+        const result = window.confirm(message);
+        resolve(result);
+    });
+}
+
 window.deleteExpenseAction = async function (id) {
     const ok = await confirmAction('确定要删除这条费用记录吗?');
     if (!ok) return;
