@@ -192,13 +192,16 @@ function renderPendingInboundList() {
 
     let html = '';
     pendingInboundList.forEach((item, index) => {
-        // 使用盒子图标作为默认图片
-        const imgSrc = item.pic || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="40"%3E📦%3C/text%3E%3C/svg%3E';
+        // 盒子图标 SVG
+        const boxIcon = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="40"%3E📦%3C/text%3E%3C/svg%3E';
+
+        // 如果有图片URL则使用,否则使用盒子图标
+        const imgSrc = (item.pic && item.pic.trim() !== '') ? item.pic : boxIcon;
 
         html += `
             <tr>
                 <td>${index + 1}</td>
-                <td><img src="${imgSrc}" alt="产品图片" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"></td>
+                <td><img src="${imgSrc}" alt="产品图片" onerror="this.src='${boxIcon}'" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"></td>
                 <td>
                     <div style="font-weight: 500;">${item.external_barcode}</div>
                     <div style="color: #6b7280; font-size: 14px; margin-top: 4px;">${item.product_info || '-'}</div>
