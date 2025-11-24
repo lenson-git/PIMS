@@ -24,8 +24,8 @@ if (typeof window.closeModal === 'undefined') {
 }
 
 // 全局状态
-let currentInboundData = null;
-let currentValidationResult = null;
+let inboundImportData = null;
+let inboundValidationResult = null;
 
 console.log('Inbound Bulk Import Script Loaded');
 
@@ -43,8 +43,8 @@ window.openInboundBulkImportModal = function () {
     }
 
     // 重置状态
-    currentInboundData = null;
-    currentValidationResult = null;
+    inboundImportData = null;
+    inboundValidationResult = null;
 
     // 清空文件输入
     const fileInput = document.getElementById('inbound-import-file');
@@ -91,7 +91,7 @@ window.handleInboundImportFile = async function (event) {
         console.log('[DEBUG] Excel 解析完成，数据行数:', data.length);
 
         // 保存数据
-        currentInboundData = data;
+        inboundImportData = data;
         console.log('[DEBUG] 数据已保存');
 
         // 验证数据
@@ -208,7 +208,7 @@ async function validateInboundData(data) {
         validationResult.innerHTML = html;
 
         // 保存验证结果
-        currentValidationResult = {
+        inboundValidationResult = {
             valid: errors.length === 0,
             errors,
             skuDetails: existingSKUs
@@ -273,8 +273,8 @@ function renderInboundPreview(data, skuDetails) {
         input.addEventListener('change', function () {
             const index = parseInt(this.dataset.index);
             const newQuantity = parseInt(this.value);
-            if (currentInboundData[index]) {
-                currentInboundData[index].quantity = newQuantity;
+            if (inboundImportData[index]) {
+                inboundImportData[index].quantity = newQuantity;
             }
         });
 
@@ -299,7 +299,7 @@ function renderInboundPreview(data, skuDetails) {
  * 确认入库
  */
 window.confirmInboundImport = async function () {
-    if (!currentInboundData || !currentValidationResult || !currentValidationResult.valid) {
+    if (!inboundImportData || !inboundValidationResult || !inboundValidationResult.valid) {
         showError('请先上传并验证文件');
         return;
     }
@@ -312,8 +312,8 @@ window.confirmInboundImport = async function () {
         confirmBtn.textContent = '入库中...';
 
         // 准备入库记录
-        const skuMap = new Map(currentValidationResult.skuDetails.map(s => [s.external_barcode, s]));
-        const records = currentInboundData
+        const skuMap = new Map(inboundValidationResult.skuDetails.map(s => [s.external_barcode, s]));
+        const records = inboundImportData
             .filter(row => skuMap.has(row.sku_id))
             .map(row => ({
                 sku_id: skuMap.get(row.sku_id).id,
