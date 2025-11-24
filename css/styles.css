@@ -2433,3 +2433,9 @@ button:active svg {
     color: #1a1a1a;
     font-weight: 600;
 }
+
+#sku-loading-sentinel {
+    min-height: 20px;
+    width: 100%;
+    clear: both;
+}

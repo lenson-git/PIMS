@@ -1198,6 +1198,7 @@ window.skuObserver = null;
 
 // 初始化无限滚动观察器
 function initSKUObserver() {
+    console.log('[DEBUG] initSKUObserver called');
     if (window.skuObserver) {
         window.skuObserver.disconnect();
     }
@@ -1210,8 +1211,10 @@ function initSKUObserver() {
 
     window.skuObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
+            console.log('[DEBUG] Observer entry:', entry.isIntersecting, window.isLoadingSKUs);
             if (entry.isIntersecting && !window.isLoadingSKUs) {
                 const maxPage = Math.ceil(window.totalSKUCount / 20);
+                console.log('[DEBUG] Loading next page:', window.currentSKUPage + 1, 'Max:', maxPage);
                 if (window.currentSKUPage < maxPage) {
                     window.loadSKUs(window.currentSKUPage + 1, document.getElementById('sku-main-input').value, false);
                 }
@@ -1221,7 +1224,10 @@ function initSKUObserver() {
 
     const sentinel = document.getElementById('sku-loading-sentinel');
     if (sentinel) {
+        console.log('[DEBUG] Sentinel found, observing');
         window.skuObserver.observe(sentinel);
+    } else {
+        console.error('[DEBUG] Sentinel NOT found');
     }
 }
 
@@ -1273,8 +1279,10 @@ window.loadSKUs = async function (page = 1, search = '', reset = true) {
 
         // 检查是否还有更多数据
         const maxPage = Math.ceil(window.totalSKUCount / 20);
+        console.log('[DEBUG] Page loaded:', page, 'Total:', window.totalSKUCount, 'MaxPage:', maxPage);
+
         if (page >= maxPage && window.totalSKUCount > 0) {
-            if (noMoreData) noMoreData.style.display = 'inline-block';
+            if (noMoreData) noMoreData.style.display = 'block'; // Ensure block display
             if (window.skuObserver) window.skuObserver.disconnect();
         }
 
