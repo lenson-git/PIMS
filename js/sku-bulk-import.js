@@ -340,13 +340,16 @@ async function validateAndShowResult(data) {
         // 重复 SKU 统计
         const duplicateCount = result.duplicates.length;
         const newCount = data.length - duplicateCount;  // 新增数量 = 总数 - 重复数
+        const identicalCount = result.duplicates.filter(d => d.isIdentical).length;
+        const differentCount = duplicateCount - identicalCount;
 
-        if (duplicateCount > 0) {
-            const identicalCount = result.duplicates.filter(d => d.isIdentical).length;
-            const differentCount = duplicateCount - identicalCount;
+        // 只显示有意义的信息
+        if (identicalCount > 0) {
+            html += `<p class="validation-item success">✓ ${identicalCount} 个一致 SKU 将跳过</p>`;
+        }
 
-            html += `<p class="validation-item warning">⚠ 发现 ${duplicateCount} 个重复 SKU `;
-            html += `(${identicalCount} 个一致将跳过, ${differentCount} 个不同将自动更新) `;
+        if (differentCount > 0) {
+            html += `<p class="validation-item warning">⚠ ${differentCount} 个不同 SKU 将自动更新 `;
             html += `<button class="btn-link" onclick="showDuplicateList()">查看详情</button></p>`;
         }
 
@@ -569,10 +572,18 @@ window.showValidationErrors = function () {
 window.showDuplicateList = function () {
     if (!currentValidationResult || currentValidationResult.duplicates.length === 0) return;
 
-    duplicateComparisonData = currentValidationResult.duplicates;
+    // 只显示不同的 SKU
+    const differentDuplicates = currentValidationResult.duplicates.filter(d => !d.isIdentical);
+
+    if (differentDuplicates.length === 0) {
+        showSuccess('所有重复 SKU 数据一致，将自动跳过');
+        return;
+    }
+
+    duplicateComparisonData = differentDuplicates;
 
     let html = '<div class="duplicate-list">';
-    html += '<p>以下 SKU 在系统中已存在，请选择处理方式：</p>';
+    html += '<p>以下 SKU 在系统中已存在且数据不同，将自动更新：</p>';
     html += '<div class="duplicate-actions">';
     html += '<button class="btn btn-outline" onclick="handleAllDuplicates(\'skip\')">全部跳过</button>';
     html += '<button class="btn btn-outline" onclick="handleAllDuplicates(\'overwrite\')">全部覆盖</button>';
@@ -580,16 +591,12 @@ window.showDuplicateList = function () {
     html += '</div>';
     html += '<ul class="duplicate-items">';
 
-    duplicateComparisonData.forEach((dup, index) => {
-        const icon = dup.isIdentical ? '✓' : '⚠';
-        const className = dup.isIdentical ? 'identical' : 'different';
-        const statusText = dup.isIdentical ? '数据一致，将跳过' : '数据不一致，需要确认';
-
-        html += `<li class="${className}">`;
-        html += `<span class="dup-icon">${icon}</span>`;
+    differentDuplicates.forEach((dup, index) => {
+        html += `<li class="different">`;
+        html += `<span class="dup-icon">⚠</span>`;
         html += `<span class="dup-sku">${dup.sku}</span>`;
         html += `<span class="dup-info">${dup.existing.product_info}</span>`;
-        html += `<span class="dup-status">${statusText}</span>`;
+        html += `<span class="dup-status">数据不一致，将自动更新</span>`;
         html += '</li>';
     });
 
