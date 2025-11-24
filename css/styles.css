@@ -2228,12 +2228,38 @@ button:active svg {
     text-align: center;
 }
 
+
+/* 导入布局 - 两列设计 */
+.import-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    min-height: 400px;
+}
+
+.import-upload-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.import-validation-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e5e7eb;
+}
+
+.import-validation-section #import-validation-result {
+    display: block !important;
+}
+
 /* 验证结果 */
 .validation-summary {
-    margin: 16px 0;
-    padding: 12px;
-    background: #f9fafb;
-    border-radius: 6px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
 }
 
 .validation-item {

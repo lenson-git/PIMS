@@ -1080,26 +1080,32 @@
 
     <!-- 批量导入 SKU 模态框 -->
     <div id="bulk-import-modal" class="modal-overlay" style="z-index: 9999;">
-        <div class="modal-container" style="max-width: 900px;">
+        <div class="modal-container" style="max-width: 1000px;">
             <div class="modal-header">
                 <h3>批量导入 SKU</h3>
                 <button class="modal-close" onclick="closeModal('bulk-import-modal')">×</button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>选择 Excel 文件</label>
-                    <input type="file" id="bulk-import-file" accept=".xlsx,.xls" onchange="handleBulkImportFile(event)">
-                    <p class="form-hint">支持 .xlsx 和 .xls 格式</p>
+                <div class="import-layout">
+                    <!-- 左侧：文件上传 -->
+                    <div class="import-upload-section">
+                        <div class="form-group">
+                            <label>选择 Excel 文件</label>
+                            <input type="file" id="bulk-import-file" accept=".xlsx,.xls" onchange="handleBulkImportFile(event)">
+                        </div>
+                        
+                        <!-- 预览区域 -->
+                        <div id="import-preview-container" style="display: none;">
+                            <h4>数据预览（前 10 行）</h4>
+                            <div id="import-preview-table" class="table-container"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 右侧：验证结果 -->
+                    <div class="import-validation-section">
+                        <div id="import-validation-result" style="display: none;"></div>
+                    </div>
                 </div>
-
-                <!-- 预览区域 -->
-                <div id="import-preview-container" style="display: none;">
-                    <h4>数据预览（前 10 行）</h4>
-                    <div id="import-preview-table" class="table-container"></div>
-                </div>
-
-                <!-- 验证结果 -->
-                <div id="import-validation-result" style="display: none;"></div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-outline" onclick="closeModal('bulk-import-modal')">取消</button>
