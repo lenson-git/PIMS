@@ -1116,6 +1116,45 @@
     </div>
 
 
+    <!-- 入库批量导入模态框 -->
+    <div id="inbound-bulk-import-modal" class="modal-overlay" style="z-index: 9999;">
+        <div class="modal-container" style="max-width: 1200px;">
+            <div class="modal-header">
+                <h3>批量入库</h3>
+                <button class="modal-close" onclick="closeModal('inbound-bulk-import-modal')">×</button>
+            </div>
+            <div class="modal-body">
+                <!-- 上部分：两列布局 -->
+                <div class="import-layout">
+                    <!-- 左侧：文件上传 -->
+                    <div class="import-upload-section">
+                        <div class="form-group">
+                            <label>选择 Excel 文件</label>
+                            <input type="file" id="inbound-import-file" accept=".xlsx,.xls" onchange="handleInboundImportFile(event)">
+                            <p class="form-hint">Excel 需包含：SKU ID、入库数量</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 右侧：验证结果 -->
+                    <div class="import-validation-section">
+                        <div id="inbound-validation-result" style="display: none;"></div>
+                    </div>
+                </div>
+                
+                <!-- 下部分：产品预览 -->
+                <div id="inbound-preview-container" style="display: none;">
+                    <h4>入库预览</h4>
+                    <div id="inbound-preview-table" class="table-container"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('inbound-bulk-import-modal')">取消</button>
+                <button id="confirm-inbound-import-btn" class="btn btn-black" onclick="confirmInboundImport()" disabled>确认入库</button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- 验证错误详情模态框 -->
     <div id="validation-error-modal" class="modal-overlay" style="z-index: 10000;">
         <div class="modal-container">
@@ -1172,6 +1211,7 @@
 
     <script src="js/barcode-scanner.js"></script>
     <script src="js/sku-bulk-import.js" charset="utf-8"></script>
+    <script type="module" src="js/inbound-bulk-import.js"></script>
     <script type="module" src="js/app.js?v=20251124-expose-supabase-v10"></script>
 
 </body>
