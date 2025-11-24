@@ -2212,20 +2212,82 @@ async function preloadOutbound() {
 // Stock Logic
 // ==========================================
 
-window.loadStockList = async function (query = '', warehouse = '') {
+window.currentStockPage = 1;
+window.totalStockCount = 0;
+window.isLoadingStock = false;
+window.stockObserver = null;
+
+// 初始化库存无限滚动观察器
+function initStockObserver() {
+    if (window.stockObserver) {
+        window.stockObserver.disconnect();
+    }
+
+    const options = {
+        root: null,
+        rootMargin: '100px',
+        threshold: 0.1
+    };
+
+    window.stockObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !window.isLoadingStock) {
+                const maxPage = Math.ceil(window.totalStockCount / 20);
+                if (window.currentStockPage < maxPage) {
+                    const query = document.getElementById('stock-search-input').value;
+                    const warehouse = document.getElementById('stock-warehouse').value;
+                    window.loadStockList(query, warehouse, window.currentStockPage + 1, false);
+                }
+            }
+        });
+    }, options);
+
+    const sentinel = document.getElementById('stock-loading-sentinel');
+    if (sentinel) {
+        window.stockObserver.observe(sentinel);
+    }
+}
+
+window.loadStockList = async function (query = '', warehouse = '', page = 1, reset = true) {
     const tbody = document.getElementById('stock-list-body');
     const totalEl = document.getElementById('stock-total-count');
+    const sentinel = document.getElementById('stock-loading-sentinel');
+    const loadingText = sentinel ? sentinel.querySelector('.loading-text') : null;
+    const noMoreData = sentinel ? sentinel.querySelector('.no-more-data') : null;
+
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center">加载中...</td></tr>';
+    if (window.isLoadingStock) return;
+
+    window.isLoadingStock = true;
+    if (loadingText) loadingText.style.display = 'inline-block';
+    if (noMoreData) noMoreData.style.display = 'none';
+
+    if (reset) {
+        window.currentStockPage = 1;
+        tbody.innerHTML = ''; // 清空现有数据
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center">加载中...</td></tr>';
+    }
+
     try {
-        const { data: products } = await fetchSKUs(1, 50, query);
+        const { data: products, count } = await fetchSKUs(page, 20, query);
+        window.totalStockCount = count || 0;
+        window.currentStockPage = page;
+        if (totalEl) totalEl.textContent = window.totalStockCount;
+
+        if (reset) {
+            tbody.innerHTML = ''; // 清除初始 loading
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">暂无数据</td></tr>';
+            }
+        }
+
         const rows = [];
         let warehouseStockMap = null;
         if (warehouse) {
             try { warehouseStockMap = await fetchWarehouseStockMap(warehouse); } catch (_) { warehouseStockMap = null; }
         }
         for (const p of products) {
-            const original = p.pic || 'https://via.placeholder.com/300';
+            const original = p.pic || null;
             let thumb = null;
             if (p.pic) {
                 thumb = await createTransformedUrlFromPublicUrl(p.pic, 300, 300);
@@ -2263,7 +2325,8 @@ window.loadStockList = async function (query = '', warehouse = '') {
                 continue;
             }
 
-            const idx = rows.length + 1;
+            // 计算序号: (当前页 - 1) * 每页数量 + 当前索引 + 1
+            const idx = (page - 1) * 20 + rows.length + 1;
             let warehouseName = '';
             if (warehouse) {
                 // 选择了特定仓库,显示仓库名称
@@ -2277,10 +2340,14 @@ window.loadStockList = async function (query = '', warehouse = '') {
     <tr>
                     <td>${idx}</td>
                     <td>
-                        <div class="img-thumbnail-small" onclick="event.stopPropagation(); showLightbox('${original}')">
+                        <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
                             <div class="image-container">
-                                <div class="skeleton-image"></div>
-                                <img src="${thumb || 'https://via.placeholder.com/100'}" alt="Product" loading="lazy">
+                                ${thumb ? `
+                                    <div class="skeleton-image"></div>
+                                    <img src="${thumb}" alt="Product" loading="lazy" onerror="window.handleImgError && window.handleImgError(this)">
+                                ` : `
+                                    <div class="image-placeholder">📦</div>
+                                `}
                             </div>
                         </div>
                     </td>
@@ -2303,11 +2370,35 @@ window.loadStockList = async function (query = '', warehouse = '') {
                 </tr >
     `);
         }
-        tbody.innerHTML = rows.join('') || '<tr><td colspan="8" class="text-center">暂无数据</td></tr>';
-        if (totalEl) totalEl.textContent = String(rows.length || 0);
+        const html = rows.join('');
+        if (reset) {
+            tbody.innerHTML = html || '<tr><td colspan="8" class="text-center">暂无数据</td></tr>';
+        } else {
+            tbody.insertAdjacentHTML('beforeend', html);
+        }
+
+        // 检查是否还有更多数据
+        const maxPage = Math.ceil(window.totalStockCount / 20);
+        if (page >= maxPage && window.totalStockCount > 0) {
+            if (noMoreData) noMoreData.style.display = 'block';
+            if (window.stockObserver) window.stockObserver.disconnect();
+        }
+
         setupImageLoading(); // 激活骨架屏加载
     } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-error">加载失败</td></tr>';
+        console.error('loadStockList error:', error);
+        if (reset) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-error">加载失败: ' + error.message + '</td></tr>';
+        }
+    } finally {
+        window.isLoadingStock = false;
+        if (loadingText) loadingText.style.display = 'none';
+
+        // 在状态重置后重新初始化观察器
+        const maxPage = Math.ceil(window.totalStockCount / 20);
+        if (page < maxPage) {
+            initStockObserver();
+        }
     }
 }
 /**
@@ -2318,7 +2409,7 @@ window.searchStock = function (queryOverride) {
     try {
         const query = queryOverride !== undefined ? queryOverride : document.getElementById('stock-search-input').value;
         const warehouse = document.getElementById('stock-warehouse').value;
-        loadStockList(query, warehouse);
+        loadStockList(query, warehouse, 1, true);
     } catch (error) {
         console.error('搜索失败:', error);
         showError('搜索失败,请重试');
