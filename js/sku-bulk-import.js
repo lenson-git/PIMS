@@ -78,9 +78,15 @@ window.importSKU = function () {
         fileInput.value = '';
     }
 
-    // 清空预览
-    document.getElementById('import-preview-container').style.display = 'none';
-    document.getElementById('import-validation-result').style.display = 'none';
+    // 清空预览和验证结果
+    const previewContainer = document.getElementById('import-preview-container');
+    const validationResult = document.getElementById('import-validation-result');
+    const previewTable = document.getElementById('import-preview-table');
+
+    previewContainer.style.display = 'none';
+    validationResult.style.display = 'none';
+    previewTable.innerHTML = '';
+    validationResult.innerHTML = '';
 
     // 禁用确认按钮
     document.getElementById('confirm-bulk-import-btn').disabled = true;
