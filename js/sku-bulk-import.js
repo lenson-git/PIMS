@@ -156,30 +156,44 @@ async function parseExcelFile(file) {
                 let targetSheet = null;
                 let targetSheetName = null;
 
-                for (const sheetName of workbook.SheetNames) {
-                    const worksheet = workbook.Sheets[sheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                // 优先查找名为 "sheet1" 的工作表（不区分大小写）
+                const sheet1Name = workbook.SheetNames.find(name =>
+                    name.toLowerCase() === 'sheet1'
+                );
 
-                    if (jsonData.length < 2) continue;
+                if (sheet1Name) {
+                    targetSheet = workbook.Sheets[sheet1Name];
+                    targetSheetName = sheet1Name;
+                    const jsonData = XLSX.utils.sheet_to_json(targetSheet, { header: 1 });
+                    if (jsonData.length > 0) {
+                        console.log(`[DEBUG] 使用工作表 "${sheet1Name}" 的列名:`, jsonData[0]);
+                    }
+                } else {
+                    // 如果没有 sheet1，则查找包含必需列名的工作表
+                    for (const sheetName of workbook.SheetNames) {
+                        const worksheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-                    const headers = jsonData[0];
-                    console.log(`[DEBUG] 工作表 "${sheetName}" 的列名:`, headers);
+                        if (jsonData.length < 2) continue;
 
-                    // 检查是否包含必需的列名
-                    const hasRequiredColumns = headers.includes('SKU ID') &&
-                        headers.includes('货品标题') &&
-                        headers.includes('单价(元)');
+                        const headers = jsonData[0];
+                        console.log(`[DEBUG] 工作表 "${sheetName}" 的列名:`, headers);
 
-                    if (hasRequiredColumns) {
-                        targetSheet = worksheet;
-                        targetSheetName = sheetName;
-                        console.log(`[DEBUG] 找到目标工作表: "${sheetName}"`);
-                        break;
+                        // 检查是否包含必需的列名
+                        const hasRequiredColumns = headers.includes('SKU ID') &&
+                            headers.includes('货品标题');
+
+                        if (hasRequiredColumns) {
+                            targetSheet = worksheet;
+                            targetSheetName = sheetName;
+                            console.log(`[DEBUG] 找到目标工作表: "${sheetName}"`);
+                            break;
+                        }
                     }
                 }
 
                 if (!targetSheet) {
-                    reject(new Error('未找到包含必需列名（SKU ID、货品标题、单价(元)）的工作表'));
+                    reject(new Error('未找到名为 "sheet1" 的工作表，也未找到包含必需列名（SKU ID、货品标题）的工作表'));
                     return;
                 }
 
