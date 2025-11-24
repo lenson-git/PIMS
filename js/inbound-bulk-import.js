@@ -1,11 +1,8 @@
-/* global XLSX */
+/* global XLSX, supabase, showSuccess, showError, openModal, closeModal */
 /**
  * 入库批量导入模块
- * 复用 SKU 批量导入的核心逻辑，针对入库场景定制
+ * 复用 SKU 批量导入的核心逻辑,针对入库场景定制
  */
-
-import { supabase } from './supabase-client.js';
-import { showSuccess, showError } from './utils.js';
 
 // 全局状态
 let currentInboundData = null;
