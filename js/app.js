@@ -106,11 +106,8 @@ function initializeMetrics(shops, salesChannels, warehouses) {
     // 初始化仓库指标
     if (warehouses.length > 0) {
         warehouses.forEach(wh => {
-            let whName = wh.name;
-            if (wh.code === 'MAIN' || wh.code === 'Main') whName = '主仓库';
-            else if (wh.code === 'AFTERSALES' || wh.code === 'AfterSales') whName = '售后仓库';
-
-            warehouseMetrics[wh.code] = { name: whName, valueRMB: 0, qty: 0 };
+            // 直接使用数据库中的名称，不再强制覆盖
+            warehouseMetrics[wh.code] = { name: wh.name, valueRMB: 0, qty: 0 };
         });
     } else {
         // 如果配置未加载，使用默认仓库
@@ -210,9 +207,11 @@ function calculateInventoryMetrics(allStock, warehouseMetrics, rateThbToCny) {
         // 分仓库统计
         const whCode = stock.warehouse_code;
         if (!warehouseMetrics[whCode]) {
+            // 尝试从全局缓存获取名称，否则使用代码
             let whName = whCode;
-            if (whCode === 'MAIN' || whCode === 'Main') whName = '主仓库';
-            else if (whCode === 'AFTERSALES' || whCode === 'AfterSales') whName = '售后仓库';
+            if (window._settingsCache && window._settingsCache.warehouse && window._settingsCache.warehouse[whCode]) {
+                whName = window._settingsCache.warehouse[whCode];
+            }
 
             warehouseMetrics[whCode] = { name: whName, valueRMB: 0, qty: 0 };
         }
