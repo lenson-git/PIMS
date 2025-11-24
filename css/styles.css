@@ -2229,12 +2229,12 @@ button:active svg {
 }
 
 
-/* 导入布局 - 两列设计 */
+/* 导入布局 - 上部分两列 */
 .import-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
-    min-height: 400px;
+    margin-bottom: 24px;
 }
 
 .import-upload-section {
@@ -2248,10 +2248,24 @@ button:active svg {
     border-radius: 12px;
     padding: 20px;
     border: 1px solid #e5e7eb;
+    min-height: 120px;
 }
 
 .import-validation-section #import-validation-result {
     display: block !important;
+}
+
+/* 下部分：预览表格 */
+#import-preview-container {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+}
+
+#import-preview-container h4 {
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 /* 验证结果 */
