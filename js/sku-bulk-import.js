@@ -339,6 +339,8 @@ async function validateAndShowResult(data) {
 
         // 重复 SKU 统计
         const duplicateCount = result.duplicates.length;
+        const newCount = data.length - duplicateCount;  // 新增数量 = 总数 - 重复数
+
         if (duplicateCount > 0) {
             const identicalCount = result.duplicates.filter(d => d.isIdentical).length;
             const differentCount = duplicateCount - identicalCount;
@@ -346,6 +348,11 @@ async function validateAndShowResult(data) {
             html += `<p class="validation-item warning">⚠ 发现 ${duplicateCount} 个重复 SKU `;
             html += `(${identicalCount} 个一致将跳过, ${differentCount} 个不同将自动更新) `;
             html += `<button class="btn-link" onclick="showDuplicateList()">查看详情</button></p>`;
+        }
+
+        // 新增 SKU 统计
+        if (newCount > 0) {
+            html += `<p class="validation-item success">✓ ${newCount} 个新增 SKU 将被添加</p>`;
         }
 
         html += '</div>';
