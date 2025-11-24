@@ -1091,7 +1091,14 @@ window.clearImageSelection = function () {
     currentImageUrl = null;
     const area = document.getElementById('sku-upload-area');
     if (area) {
-        area.innerHTML = ``;
+        area.innerHTML = `
+            <input type="file" id="sku-img-input" accept="image/*" hidden>
+            <label for="sku-img-input" class="upload-label">
+                <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span>点击选择图片</span>
+                <span class="text-sm text-secondary">选择后将自动上传并重命名</span>
+            </label>
+        `;
         const input = document.getElementById('sku-img-input');
         if (input) input.addEventListener('change', handleImageSelect);
     }
