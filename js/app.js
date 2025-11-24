@@ -8,6 +8,8 @@ import { getSettingName, showError, showInfo, showSuccess, formatCurrency, forma
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
+window.createTransformedUrlFromPublicUrl = createTransformedUrlFromPublicUrl;
+window.createSignedUrlFromPublicUrl = createSignedUrlFromPublicUrl;
 
 // ==========================================
 // Core Logic
