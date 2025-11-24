@@ -467,8 +467,8 @@ async function validateImportData(data) {
 
                         const existingInfo = normalizeStr(existing.product_info);
                         const importingInfo = normalizeStr(importing.product_info);
-                        const existingShop = normalizeStr(existing.shop_code);
-                        const importingShop = normalizeStr(importing.shop_code);
+                        const existingShop = normalizeStr(existing.shop_code).toUpperCase();
+                        const importingShop = normalizeStr(importing.shop_code).toUpperCase();
 
                         // 调试日志
                         console.log('[DEBUG] 比较 SKU:', existing.external_barcode);
