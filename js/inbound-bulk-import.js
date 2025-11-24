@@ -192,7 +192,9 @@ function renderPendingInboundList() {
 
     let html = '';
     pendingInboundList.forEach((item, index) => {
-        const imgSrc = item.pic || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Ctext y="50%25" font-size="30" text-anchor="middle" x="50%25"%3E📦%3C/text%3E%3C/svg%3E';
+        // 使用盒子图标作为默认图片
+        const imgSrc = item.pic || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="40"%3E📦%3C/text%3E%3C/svg%3E';
+
         html += `
             <tr>
                 <td>${index + 1}</td>
@@ -204,12 +206,19 @@ function renderPendingInboundList() {
                 <td>${item.quantity}</td>
                 <td>
                     <input type="number" class="quantity-input" 
-                           value="${item.quantity}" min="1" 
+                           value="0" min="0" 
                            onchange="updatePendingQuantity(${index}, this.value)"
                            style="width: 80px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px;">
                 </td>
                 <td class="text-center">
-                    <button class="btn btn-sm btn-outline" onclick="removePendingInboundItem(${index})" style="padding: 4px 12px;">删除</button>
+                    <button class="btn-icon-only" onclick="removePendingInboundItem(${index})" title="删除">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                    </button>
                 </td>
             </tr>
         `;
@@ -265,13 +274,27 @@ window.submitInbound = async function () {
     try {
         console.log('[DEBUG] 开始批量入库...');
 
-        const records = pendingInboundList.map(item => ({
-            sku_id: item.sku_id,
-            warehouse_code: '主仓库',
-            movement_type_code: '采购入库',
-            quantity: item.quantity,
-            movement_date: new Date().toISOString().split('T')[0]
-        }));
+        // 从输入框读取实际入库数量
+        const inputs = document.querySelectorAll('.quantity-input');
+        const records = [];
+
+        pendingInboundList.forEach((item, index) => {
+            const quantity = parseInt(inputs[index]?.value || 0);
+            if (quantity > 0) {
+                records.push({
+                    sku_id: item.sku_id,
+                    warehouse_code: '主仓库',
+                    movement_type_code: '采购入库',
+                    quantity: quantity,
+                    movement_date: new Date().toISOString().split('T')[0]
+                });
+            }
+        });
+
+        if (records.length === 0) {
+            showError('请至少输入一个商品的入库数量');
+            return;
+        }
 
         console.log('[DEBUG] 准备入库', records.length, '条记录');
 

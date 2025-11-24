@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <!-- Version: 20251124-2147-refactor-inbound -->
+    <!-- Version: 20251124-2154-optimize-list -->
     <meta charset="UTF-8">
     <title>PIMS 库存管理系统</title>
     <link rel="stylesheet" href="css/styles.css?v=20251121-dashboard-fix-v2">
@@ -299,6 +299,7 @@
                         <div class="panel-header">
                             <div class="panel-title">待入库清单</div>
                             <div class="panel-actions">
+                                <button class="btn btn-outline" onclick="clearPendingInbound()">清除列表</button>
                                 <button class="btn btn-black" onclick="submitInbound()">确认入库</button>
                             </div>
                         </div>
@@ -1212,7 +1213,7 @@
 
     <script src="js/barcode-scanner.js"></script>
     <script src="js/sku-bulk-import.js" charset="utf-8"></script>
-    <script src="js/inbound-bulk-import.js?v=20251124-refactor-flow"></script>
+    <script src="js/inbound-bulk-import.js?v=20251124-2154-optimize"></script>
     <script type="module" src="js/app.js?v=20251124-expose-supabase-v10"></script>
 
 </body>
