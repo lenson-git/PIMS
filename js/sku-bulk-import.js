@@ -93,11 +93,13 @@ window.importSKU = function () {
  * 处理文件选择
  */
 window.handleBulkImportFile = async function (event) {
+    console.log('[DEBUG] handleBulkImportFile 开始');
     const file = event.target.files[0];
     if (!file) return;
 
     // 检查文件类型
     const fileName = file.name.toLowerCase();
+    console.log('[DEBUG] 文件名:', fileName);
     if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
         showError('请选择 Excel 文件 (.xlsx 或 .xls)');
         return;
@@ -106,9 +108,11 @@ window.handleBulkImportFile = async function (event) {
     try {
         // 显示加载状态
         showSuccess('正在解析文件...');
+        console.log('[DEBUG] 开始解析 Excel...');
 
         // 解析 Excel
         const data = await parseExcelFile(file);
+        console.log('[DEBUG] Excel 解析完成，数据行数:', data ? data.length : 0);
 
         if (!data || data.length === 0) {
             showError('Excel 文件为空或格式不正确');
@@ -117,12 +121,17 @@ window.handleBulkImportFile = async function (event) {
 
         // 保存数据
         currentImportData = data;
+        console.log('[DEBUG] 数据已保存');
 
         // 显示预览
+        console.log('[DEBUG] 开始渲染预览...');
         renderImportPreview(data);
+        console.log('[DEBUG] 预览渲染完成');
 
         // 验证数据
+        console.log('[DEBUG] 开始验证数据...');
         await validateAndShowResult(data);
+        console.log('[DEBUG] 验证完成');
 
     } catch (error) {
         console.error('解析文件失败:', error);
@@ -307,11 +316,13 @@ async function validateAndShowResult(data) {
  * 验证导入数据
  */
 async function validateImportData(data) {
+    console.log('[DEBUG] validateImportData 开始，数据行数:', data.length);
     const errors = [];
     const duplicates = [];
     let totalShipping = 0;
 
     // 1. 必填字段验证
+    console.log('[DEBUG] 步骤 1: 必填字段验证...');
     data.forEach((row, index) => {
         if (!row.external_barcode) {
             errors.push({
