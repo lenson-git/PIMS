@@ -1,3 +1,4 @@
+/* global supabase, XLSX */
 /**
  * SKU 批量导入功能模块
  * 功能：从 Excel 批量导入 SKU，支持数据验证、重复检测和智能对比

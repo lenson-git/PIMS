@@ -1,3 +1,4 @@
+/* global XLSX */
 /**
  * 入库批量导入模块
  * 复用 SKU 批量导入的核心逻辑，针对入库场景定制
@@ -10,11 +11,18 @@ import { showSuccess, showError } from './utils.js';
 let currentInboundData = null;
 let currentValidationResult = null;
 
+console.log('Inbound Bulk Import Script Loaded');
+
 /**
  * 打开入库批量导入模态框
  */
 window.openInboundBulkImportModal = function () {
     console.log('[DEBUG] 打开入库批量导入模态框');
+    if (typeof XLSX === 'undefined') {
+        console.error('XLSX library not loaded!');
+        showError('系统错误：Excel 解析库未加载');
+        return;
+    }
 
     // 重置状态
     currentInboundData = null;
