@@ -87,11 +87,23 @@ export function formatDate(dateString) {
 
 // 格式化货币
 export function formatCurrency(amount, currency = 'CNY') {
-  if (!amount) return '0'
-  return new Intl.NumberFormat('zh-CN', {
-    style: 'currency',
-    currency: currency
-  }).format(amount)
+  if (!amount && amount !== 0) return '0';
+
+  // 格式化数字，添加千位分隔符
+  const formattedNumber = new Intl.NumberFormat('zh-CN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(amount);
+
+  // 根据货币类型返回对应符号
+  const currencyUpper = (currency || 'THB').toUpperCase();
+  if (currencyUpper === 'RMB' || currencyUpper === 'CNY') {
+    return `¥ ${formattedNumber}`;
+  } else if (currencyUpper === 'THB') {
+    return `฿ ${formattedNumber}`;
+  } else {
+    return `${currencyUpper} ${formattedNumber}`;
+  }
 }
 
 // 全局设置缓存
