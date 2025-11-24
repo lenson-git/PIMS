@@ -245,29 +245,45 @@ export async function fetchWarehouseStockMap(warehouseCode) {
 }
 
 export async function fetchAllStock() {
-  // Join with skus table to get price information
-  const { data, error } = await supabase
+  // 1. Fetch stock data
+  const { data: stockData, error: stockError } = await supabase
     .from('v_current_stock')
-    .select(`
-      sku_id,
-      warehouse_code,
-      current_quantity,
-      skus:sku_id (
-        purchase_price_rmb,
-        selling_price_thb
-      )
-    `);
+    .select('sku_id, warehouse_code, current_quantity');
 
-  if (error) throw error;
+  if (stockError) throw stockError;
 
-  // Flatten the structure for easier access
-  const flattenedData = (data || []).map(item => ({
-    sku_id: item.sku_id,
-    warehouse_code: item.warehouse_code,
-    quantity: item.current_quantity,
-    purchase_price_rmb: item.skus?.purchase_price_rmb || null,
-    selling_price_thb: item.skus?.selling_price_thb || null
-  }));
+  // 2. Fetch SKU price info
+  // Optimization: only fetch SKUs that are in stock if needed, but fetching all is safer/easier for now
+  // or we can extract IDs from stockData
+  const skuIds = (stockData || []).map(s => s.sku_id).filter(Boolean);
+
+  let priceMap = {};
+  if (skuIds.length > 0) {
+    const { data: skuData, error: skuError } = await supabase
+      .from('skus')
+      .select('id, purchase_price_rmb, selling_price_thb')
+      .in('id', skuIds);
+
+    if (skuError) console.error('Error fetching SKU prices:', skuError);
+
+    if (skuData) {
+      skuData.forEach(sku => {
+        priceMap[sku.id] = sku;
+      });
+    }
+  }
+
+  // 3. Merge data
+  const flattenedData = (stockData || []).map(item => {
+    const sku = priceMap[item.sku_id] || {};
+    return {
+      sku_id: item.sku_id,
+      warehouse_code: item.warehouse_code,
+      quantity: item.current_quantity,
+      purchase_price_rmb: sku.purchase_price_rmb || null,
+      selling_price_thb: sku.selling_price_thb || null
+    };
+  });
 
   return flattenedData;
 }

@@ -1,7 +1,7 @@
 import {
     fetchSKUs, createSKU, uploadImage, fetchSettings, createSignedUrlFromPublicUrl, fetchSKUByBarcode, createStockMovement, fetchStockMovements, fetchSKUById, fetchStockTotalBySKU, fetchSales30dBySKU, updateSKU, createTransformedUrlFromPublicUrl, deleteSKU, fetchWarehouseStockMap, fetchStockBySKUWarehouse, createSetting, fetchAllStock, fetchSafetyStock,
     fetchExpenses, createExpense, updateExpense, deleteExpense, supabase
-} from './supabase-client.js';
+} from './supabase-client.js?v=20251125-0125-fix-stock';
 import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
 import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
 import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
