@@ -453,12 +453,27 @@ async function validateImportData(data) {
                 existingSKUs.forEach(existing => {
                     const importing = data.find(d => d.external_barcode === existing.external_barcode);
                     if (importing) {
+                        // 标准化数据进行比较
+                        const existingPrice = parseFloat(existing.purchase_price_rmb || 0);
+                        const importingPrice = parseFloat(importing.purchase_price_rmb || 0);
+                        const existingSelling = parseFloat(existing.selling_price_thb || 0);
+                        const importingSelling = parseFloat(importing.selling_price_thb || 0);
+
+                        // 调试日志
+                        console.log('[DEBUG] 比较 SKU:', existing.external_barcode);
+                        console.log('  product_info:', existing.product_info, '===', importing.product_info, '?', existing.product_info === importing.product_info);
+                        console.log('  purchase_price:', existingPrice, '===', importingPrice, '?', existingPrice === importingPrice);
+                        console.log('  selling_price:', existingSelling, '===', importingSelling, '?', existingSelling === importingSelling);
+                        console.log('  shop_code:', existing.shop_code, '===', importing.shop_code, '?', existing.shop_code === importing.shop_code);
+
                         const isIdentical = (
                             existing.product_info === importing.product_info &&
-                            parseFloat(existing.purchase_price_rmb || 0) === parseFloat(importing.purchase_price_rmb || 0) &&
-                            parseFloat(existing.selling_price_thb || 0) === parseFloat(importing.selling_price_thb || 0) &&
+                            existingPrice === importingPrice &&
+                            existingSelling === importingSelling &&
                             existing.shop_code === importing.shop_code
                         );
+
+                        console.log('  => isIdentical:', isIdentical);
 
                         duplicates.push({
                             sku: existing.external_barcode,
