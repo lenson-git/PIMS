@@ -174,30 +174,56 @@ function addToPendingInbound(data, skuDetails) {
 // 盒子图标 SVG 常量
 const BOX_ICON_SVG = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="40"%3E📦%3C/text%3E%3C/svg%3E';
 
-// 初始化默认值
+// 初始化默认值 - 使用轮询确保在选项加载后设置
 document.addEventListener('DOMContentLoaded', function () {
-    setTimeout(() => {
+    const maxAttempts = 20; // 最多尝试20次 (20 * 500ms = 10秒)
+    let attempts = 0;
+
+    const intervalId = setInterval(() => {
+        attempts++;
         const warehouseSelect = document.getElementById('inbound-warehouse');
         const typeSelect = document.getElementById('inbound-type');
+        let warehouseSet = false;
+        let typeSet = false;
 
-        if (warehouseSelect) {
-            // 尝试选中"主仓库"，如果不存在则选中第一个非空选项
+        // 尝试设置仓库
+        if (warehouseSelect && warehouseSelect.options.length > 1) { // >1 意味着除了空选项还有其他选项
             const options = Array.from(warehouseSelect.options);
-            const mainWarehouse = options.find(opt => opt.text.includes('主仓库') || opt.value === '主仓库');
+            // 查找包含"主"字的仓库，或者 value 为 "主仓库"
+            const mainWarehouse = options.find(opt => opt.text.includes('主') || opt.value === '主仓库' || opt.value === 'MAIN');
+
             if (mainWarehouse) {
                 warehouseSelect.value = mainWarehouse.value;
+                // 触发 change 事件以更新 UI (浮动标签)
+                warehouseSelect.dispatchEvent(new Event('change'));
+                warehouseSet = true;
             }
         }
 
-        if (typeSelect) {
-            // 尝试选中"采购入库"
+        // 尝试设置入库类型
+        if (typeSelect && typeSelect.options.length > 1) {
             const options = Array.from(typeSelect.options);
-            const purchaseType = options.find(opt => opt.text.includes('采购入库') || opt.value === '采购入库');
+            const purchaseType = options.find(opt => opt.text.includes('采购') || opt.value === '采购入库');
+
             if (purchaseType) {
                 typeSelect.value = purchaseType.value;
+                typeSelect.dispatchEvent(new Event('change'));
+                typeSet = true;
             }
         }
-    }, 1000); // 延迟执行以确保选项已加载
+
+        // 如果都设置成功，或者超时，清除定时器
+        // 注意：只要找到一个就可以停止尝试那个，但为了简单，我们等待两个都找到或超时
+        // 实际上，只要尝试次数够多，最终会停止。为了避免一直重置用户的选择，一旦设置成功就不再设置
+        if ((warehouseSet && typeSet) || attempts >= maxAttempts) {
+            clearInterval(intervalId);
+            if (attempts >= maxAttempts) {
+                console.log('[DEBUG] 设置默认值超时或部分未找到');
+            } else {
+                console.log('[DEBUG] 默认值设置成功');
+            }
+        }
+    }, 500);
 });
 
 /**
@@ -224,8 +250,12 @@ function renderPendingInboundList() {
     pendingInboundList.forEach((item, index) => {
         // 检查图片 URL 是否有效
         let imgSrc = BOX_ICON_SVG;
-        if (item.pic && typeof item.pic === 'string' && item.pic.trim() !== '' && item.pic !== 'null' && item.pic !== 'undefined') {
-            imgSrc = item.pic;
+        // 严格检查: 必须是字符串, 非空, 非 'null', 非 'undefined'
+        if (item.pic && typeof item.pic === 'string') {
+            const cleanPic = item.pic.trim().toLowerCase();
+            if (cleanPic !== '' && cleanPic !== 'null' && cleanPic !== 'undefined') {
+                imgSrc = item.pic;
+            }
         }
 
         html += `
