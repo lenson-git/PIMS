@@ -734,7 +734,7 @@ window.confirmBulkImport = async function () {
                                 purchase_price_rmb: parseFloat(row.purchase_price_rmb || 0),
                                 selling_price_thb: parseFloat(row.selling_price_thb || 0),
                                 shop_code: row.shop_code,
-                                status_code: row.status_code || '上架'
+                                status_code: row.status_code || 'ACTIVE'
                             })
                             .eq('id', duplicate.existing.id);
 
@@ -758,7 +758,7 @@ window.confirmBulkImport = async function () {
                         purchase_price_rmb: parseFloat(row.purchase_price_rmb || 0),
                         selling_price_thb: parseFloat(row.selling_price_thb || 0),
                         shop_code: row.shop_code,
-                        status_code: row.status_code || '上架'
+                        status_code: row.status_code || 'ACTIVE'
                     });
 
                 if (error) throw error;
