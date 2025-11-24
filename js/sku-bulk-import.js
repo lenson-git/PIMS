@@ -344,7 +344,7 @@ async function validateAndShowResult(data) {
             const differentCount = duplicateCount - identicalCount;
 
             html += `<p class="validation-item warning">⚠ 发现 ${duplicateCount} 个重复 SKU `;
-            html += `(${identicalCount} 个一致, ${differentCount} 个不一致) `;
+            html += `(${identicalCount} 个一致将跳过, ${differentCount} 个不同将自动更新) `;
             html += `<button class="btn-link" onclick="showDuplicateList()">查看详情</button></p>`;
         }
 
@@ -480,7 +480,7 @@ async function validateImportData(data) {
                             existing: existing,
                             importing: importing,
                             isIdentical: isIdentical,
-                            action: isIdentical ? 'skip' : 'pending'
+                            action: isIdentical ? 'skip' : 'overwrite'  // 相同则跳过，不同则自动覆盖
                         });
                     }
                 });
