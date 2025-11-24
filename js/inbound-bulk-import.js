@@ -49,6 +49,21 @@ window.openInboundBulkImportModal = function () {
 
     // 打开模态框
     window.openModal('inbound-bulk-import-modal');
+
+    // 重新绑定事件监听器（防止多次绑定）
+    // 复用已定义的 fileInput 变量 (如果它在作用域内) 或者重新获取
+    // 注意：上面的 fileInput 是 const，所以这里我们使用不同的变量名以防万一，或者直接使用它如果它在作用域内。
+    // 为了安全起见，我们使用一个新的变量名。
+    if (fileInput) {
+        // 方案：移除 onchange 属性（如果存在），并使用 addEventListener
+        fileInput.removeAttribute('onchange');
+
+        // 移除之前的监听器引用
+        fileInput.removeEventListener('change', window.handleInboundImportFile);
+
+        // 添加新的监听器
+        fileInput.addEventListener('change', window.handleInboundImportFile);
+    }
 };
 
 /**
