@@ -143,7 +143,6 @@ body {
    全局 SKU 行样式
    ============================================ */
 .sku-row {
-    cursor: pointer;
     transition: background-color 0.15s;
 }
 
@@ -1293,7 +1292,7 @@ textarea.form-control {
 }
 
 .sku-name {
-    font-size: 12px;
+    font-size: 14px;
     margin-top: 2px;
 }
 

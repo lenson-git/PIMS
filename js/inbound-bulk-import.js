@@ -248,40 +248,48 @@ async function renderPendingInboundList() {
 
     // 并行处理所有图片 URL
     const rows = await Promise.all(pendingInboundList.map(async (item, index) => {
-        let imgSrc = BOX_ICON_SVG;
-        let original = null;
+        let imgHtml = '';
 
         try {
             if (item.pic && typeof item.pic === 'string') {
                 const cleanPic = item.pic.trim();
                 if (cleanPic !== '' && cleanPic.toLowerCase() !== 'null' && cleanPic.toLowerCase() !== 'undefined') {
-                    original = cleanPic;
-
-                    // 尝试转换 URL
+                    // 尝试转换为缩略图
+                    let thumb = null;
                     if (typeof window.createTransformedUrlFromPublicUrl === 'function') {
                         try {
-                            const thumb = await window.createTransformedUrlFromPublicUrl(original, 100, 100);
-                            if (thumb) {
-                                imgSrc = thumb;
-                            } else if (typeof window.createSignedUrlFromPublicUrl === 'function') {
-                                const signed = await window.createSignedUrlFromPublicUrl(original);
-                                if (signed) imgSrc = signed;
-                                else imgSrc = original;
-                            } else {
-                                imgSrc = original;
+                            thumb = await window.createTransformedUrlFromPublicUrl(cleanPic, 100, 100);
+                            if (!thumb && typeof window.createSignedUrlFromPublicUrl === 'function') {
+                                thumb = await window.createSignedUrlFromPublicUrl(cleanPic);
                             }
                         } catch (e) {
-                            console.warn('Image transform failed for:', original, e);
-                            imgSrc = original;
+                            console.warn('Image transform failed for:', cleanPic, e);
                         }
-                    } else {
-                        console.warn('Image helper functions not available');
-                        imgSrc = original;
                     }
+
+                    // 有图片：显示骨架屏 + 图片（渐变加载）
+                    if (thumb) {
+                        imgHtml = `
+                            <div class="skeleton-image"></div>
+                            <img src="${thumb}" alt="产品图片" loading="lazy" 
+                                 onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>📦</div>'"
+                                 style="width: 100%; height: 100%; object-fit: cover;">
+                        `;
+                    } else {
+                        // 转换失败：显示盒子
+                        imgHtml = '<div class="image-placeholder">📦</div>';
+                    }
+                } else {
+                    // 无效图片：显示盒子
+                    imgHtml = '<div class="image-placeholder">📦</div>';
                 }
+            } else {
+                // 没有图片：显示盒子
+                imgHtml = '<div class="image-placeholder">📦</div>';
             }
         } catch (err) {
             console.error('Error processing image for item:', index, err);
+            imgHtml = '<div class="image-placeholder">📦</div>';
         }
 
         return `
@@ -289,8 +297,8 @@ async function renderPendingInboundList() {
                 <td>${index + 1}</td>
                 <td>
                     <div class="img-thumbnail-small">
-                        <div class="image-container">
-                            <img src="${imgSrc}" alt="产品图片" onerror="this.onerror=null;this.src='${BOX_ICON_SVG}'" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
+                        <div class="image-container" data-img-id="bulk-${index}">
+                            ${imgHtml}
                         </div>
                     </div>
                 </td>
@@ -320,6 +328,11 @@ async function renderPendingInboundList() {
     }));
 
     tbody.innerHTML = rows.join('');
+
+    // 激活图片渐变加载效果
+    if (typeof window.setupImageLoading === 'function') {
+        window.setupImageLoading();
+    }
 }
 
 /**
