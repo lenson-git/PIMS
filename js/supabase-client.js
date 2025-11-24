@@ -79,41 +79,100 @@ export async function fetchStockBySKUWarehouse(id, warehouseCode) {
       const q = data[0].current_quantity
       return (typeof q === 'number') ? q : (q == null ? null : Number(q))
     }
-  } catch (_) { }
-
-  try {
-    const { data: inboundTypes } = await supabase
-      .from('settings')
-      .select('code')
-      .eq('type', 'InboundType')
-    const { data: outboundTypes } = await supabase
-      .from('settings')
-      .select('code')
-      .eq('type', 'OutboundType')
-    const inboundSet = new Set((inboundTypes || []).map(x => x.code))
-    const outboundSet = new Set((outboundTypes || []).map(x => x.code))
-
-    const { data, error } = await supabase
-      .from('stock_movements')
-      .select('quantity, movement_type_code')
-      .eq('sku_id', id)
-      .eq('warehouse_code', warehouseCode)
-    if (error) throw error
-    const list = Array.isArray(data) ? data : []
-    let total = 0
-    if (inboundSet.size === 0 && outboundSet.size === 0) {
-      total = list.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0)
-    } else {
-      for (const r of list) {
-        const qty = Number(r.quantity) || 0
-        if (inboundSet.has(r.movement_type_code)) total += qty
-        else if (outboundSet.has(r.movement_type_code)) total -= qty
-      }
-    }
-    return total
+    return null
   } catch (_) {
     return null
   }
+}
+
+// 批量获取 SKU 库存总量
+export async function fetchStockTotalBySKUs(ids) {
+  if (!ids || ids.length === 0) return {}
+  try {
+    const { data, error } = await supabase
+      .from('v_current_stock')
+      .select('sku_id, current_quantity')
+      .in('sku_id', ids)
+
+    if (error) throw error
+
+    const result = {}
+    // 初始化所有 ID 为 0
+    ids.forEach(id => result[id] = 0)
+
+    if (data) {
+      data.forEach(row => {
+        if (result[row.sku_id] !== undefined) {
+          result[row.sku_id] += (row.current_quantity || 0)
+        }
+      })
+    }
+    return result
+  } catch (error) {
+    console.error('fetchStockTotalBySKUs error:', error)
+    return {}
+  }
+}
+
+// 批量获取指定仓库的 SKU 库存
+export async function fetchStockBySKUsWarehouse(ids, warehouseCode) {
+  if (!ids || ids.length === 0 || !warehouseCode) return {}
+  try {
+    const { data, error } = await supabase
+      .from('v_current_stock')
+      .select('sku_id, current_quantity')
+      .in('sku_id', ids)
+      .eq('warehouse_code', warehouseCode)
+
+    if (error) throw error
+
+    const result = {}
+    // 初始化所有 ID 为 0
+    ids.forEach(id => result[id] = 0)
+
+    if (data) {
+      data.forEach(row => {
+        result[row.sku_id] = row.current_quantity || 0
+      })
+    }
+    return result
+  } catch (error) {
+    console.error('fetchStockBySKUsWarehouse error:', error)
+    return {}
+  }
+}
+const { data: inboundTypes } = await supabase
+  .from('settings')
+  .select('code')
+  .eq('type', 'InboundType')
+const { data: outboundTypes } = await supabase
+  .from('settings')
+  .select('code')
+  .eq('type', 'OutboundType')
+const inboundSet = new Set((inboundTypes || []).map(x => x.code))
+const outboundSet = new Set((outboundTypes || []).map(x => x.code))
+
+const { data, error } = await supabase
+  .from('stock_movements')
+  .select('quantity, movement_type_code')
+  .eq('sku_id', id)
+  .eq('warehouse_code', warehouseCode)
+if (error) throw error
+const list = Array.isArray(data) ? data : []
+let total = 0
+if (inboundSet.size === 0 && outboundSet.size === 0) {
+  total = list.reduce((sum, r) => sum + (Number(r.quantity) || 0), 0)
+} else {
+  for (const r of list) {
+    const qty = Number(r.quantity) || 0
+    if (inboundSet.has(r.movement_type_code)) total += qty
+    else if (outboundSet.has(r.movement_type_code)) total -= qty
+  }
+}
+return total
+} catch (_) {
+  return null
+}
 }
 
 export async function fetchWarehousesForSKU(id) {

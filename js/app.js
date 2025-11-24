@@ -2286,6 +2286,28 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
         if (warehouse) {
             try { warehouseStockMap = await fetchWarehouseStockMap(warehouse); } catch (_) { warehouseStockMap = null; }
         }
+
+        // 批量获取库存数据
+        const skuIds = products.map(p => p.id);
+        let stockTotals = {};
+        let warehouseStocks = {};
+
+        try {
+            // 并行请求库存数据
+            const promises = [fetchStockTotalBySKUs(skuIds)];
+            if (warehouse) {
+                promises.push(fetchStockBySKUsWarehouse(skuIds, warehouse));
+            }
+
+            const results = await Promise.all(promises);
+            stockTotals = results[0] || {};
+            if (warehouse) {
+                warehouseStocks = results[1] || {};
+            }
+        } catch (e) {
+            console.error('Bulk fetch stock error:', e);
+        }
+
         for (const p of products) {
             const original = p.pic || null;
             let thumb = null;
@@ -2293,21 +2315,13 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
                 thumb = await createTransformedUrlFromPublicUrl(p.pic, 300, 300);
             }
             let stockWarehouse = '-';
-            let stockTotal = '-';
-            try {
-                const total = await fetchStockTotalBySKU(p.id);
-                stockTotal = total == null ? '-' : total;
-            } catch (_) { }
+            let stockTotal = stockTotals[p.id] !== undefined ? stockTotals[p.id] : '-';
+
             if (warehouse) {
                 if (warehouseStockMap && Object.prototype.hasOwnProperty.call(warehouseStockMap, p.id)) {
                     stockWarehouse = warehouseStockMap[p.id];
                 } else {
-                    try {
-                        const sw = await fetchStockBySKUWarehouse(p.id, warehouse);
-                        stockWarehouse = (sw == null ? 0 : sw);
-                    } catch (e) {
-                        stockWarehouse = 0;
-                    }
+                    stockWarehouse = warehouseStocks[p.id] !== undefined ? warehouseStocks[p.id] : 0;
                 }
             }
             // 过滤下架状态的SKU - 不在库存管理中显示
