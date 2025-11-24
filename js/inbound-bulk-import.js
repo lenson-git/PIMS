@@ -29,6 +29,8 @@ let currentValidationResult = null;
 
 console.log('Inbound Bulk Import Script Loaded');
 
+console.log('[DEBUG] 准备定义 openInboundBulkImportModal 函数...');
+
 /**
  * 打开入库批量导入模态框
  */
@@ -68,6 +70,8 @@ window.openInboundBulkImportModal = function () {
 
     // 事件监听器已在 HTML 的 onchange 属性中定义，无需手动绑定
 };
+
+console.log('[DEBUG] openInboundBulkImportModal 函数已定义:', typeof window.openInboundBulkImportModal);
 
 /**
  * 处理文件选择
