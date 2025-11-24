@@ -481,14 +481,24 @@ async function validateImportData(data) {
         const validShops = Object.keys(window._settingsCache.shop);
         console.log('[DEBUG] 有效店铺列表:', validShops);
         console.log('[DEBUG] 待验证店铺:', shopCodes);
+        // 创建大小写不敏感的映射
+        const validShopsMap = new Map(validShops.map(s => [s.toLowerCase(), s]));
+
         shopCodes.forEach(code => {
-            if (!validShops.includes(code)) {
+            const normalizedCode = code.toLowerCase();
+            if (!validShopsMap.has(normalizedCode)) {
                 const rows = data.filter(d => d.shop_code === code).map(d => d._rowNumber);
                 errors.push({
                     row: rows.join(', '),
                     field: '店铺',
                     message: `无效的店铺代码: ${code}`
                 });
+            } else {
+                // 自动修正大小写
+                const correctCase = validShopsMap.get(normalizedCode);
+                if (code !== correctCase) {
+                    data.filter(d => d.shop_code === code).forEach(d => d.shop_code = correctCase);
+                }
             }
         });
     }
