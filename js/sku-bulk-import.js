@@ -459,18 +459,29 @@ async function validateImportData(data) {
                         const existingSelling = parseFloat(existing.selling_price_thb || 0);
                         const importingSelling = parseFloat(importing.selling_price_thb || 0);
 
+                        // 标准化字符串（去除首尾空白，统一换行符）
+                        const normalizeStr = (str) => {
+                            if (!str) return '';
+                            return String(str).trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                        };
+
+                        const existingInfo = normalizeStr(existing.product_info);
+                        const importingInfo = normalizeStr(importing.product_info);
+                        const existingShop = normalizeStr(existing.shop_code);
+                        const importingShop = normalizeStr(importing.shop_code);
+
                         // 调试日志
                         console.log('[DEBUG] 比较 SKU:', existing.external_barcode);
-                        console.log('  product_info:', existing.product_info, '===', importing.product_info, '?', existing.product_info === importing.product_info);
+                        console.log('  product_info:', `"${existingInfo}"`, '===', `"${importingInfo}"`, '?', existingInfo === importingInfo);
                         console.log('  purchase_price:', existingPrice, '===', importingPrice, '?', existingPrice === importingPrice);
                         console.log('  selling_price:', existingSelling, '===', importingSelling, '?', existingSelling === importingSelling);
-                        console.log('  shop_code:', existing.shop_code, '===', importing.shop_code, '?', existing.shop_code === importing.shop_code);
+                        console.log('  shop_code:', `"${existingShop}"`, '===', `"${importingShop}"`, '?', existingShop === importingShop);
 
                         const isIdentical = (
-                            existing.product_info === importing.product_info &&
+                            existingInfo === importingInfo &&
                             existingPrice === importingPrice &&
                             existingSelling === importingSelling &&
-                            existing.shop_code === importing.shop_code
+                            existingShop === importingShop
                         );
 
                         console.log('  => isIdentical:', isIdentical);
