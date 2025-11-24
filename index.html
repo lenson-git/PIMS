@@ -284,11 +284,11 @@
 
                             <!-- 4. 采购单导入 -->
                             <div class="control-group flex-fixed">
-                                <button class="btn btn-outline btn-lg-height" onclick="openInboundBulkImportModal()">
+                                <button class="btn btn-outline btn-lg-height" onclick="document.getElementById('inbound-import-file').click()">
                                     <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                                     导入采购单
                                 </button>
-                                <input type="file" id="sheet-upload-input" accept=".xlsx,.xls,.csv" hidden>
+                                <input type="file" id="inbound-import-file" accept=".xlsx,.xls" onchange="handleInboundImportFile(event)" hidden>
                             </div>
                         </div>
                     </div>
@@ -1211,7 +1211,7 @@
 
     <script src="js/barcode-scanner.js"></script>
     <script src="js/sku-bulk-import.js" charset="utf-8"></script>
-    <script src="js/inbound-bulk-import.js?v=20251124-fix-variables"></script>
+    <script src="js/inbound-bulk-import.js?v=20251124-refactor-flow"></script>
     <script type="module" src="js/app.js?v=20251124-expose-supabase-v10"></script>
 
 </body>

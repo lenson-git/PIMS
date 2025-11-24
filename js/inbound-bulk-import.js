@@ -1,7 +1,7 @@
 /* global XLSX, supabase, showSuccess, showError, openModal, closeModal */
 /**
  * 入库批量导入模块
- * 复用 SKU 批量导入的核心逻辑,针对入库场景定制
+ * 直接选择文件后验证并显示在待入库清单中
  */
 
 // 备用函数：如果全局没有定义，则使用本地实现
@@ -23,55 +23,10 @@ if (typeof window.closeModal === 'undefined') {
     };
 }
 
-// 全局状态
-let inboundImportData = null;
-let inboundValidationResult = null;
+// 全局状态：待入库商品列表
+let pendingInboundList = [];
 
 console.log('Inbound Bulk Import Script Loaded');
-
-console.log('[DEBUG] 准备定义 openInboundBulkImportModal 函数...');
-
-/**
- * 打开入库批量导入模态框
- */
-window.openInboundBulkImportModal = function () {
-    console.log('[DEBUG] 打开入库批量导入模态框');
-    if (typeof XLSX === 'undefined') {
-        console.error('XLSX library not loaded!');
-        showError('系统错误：Excel 解析库未加载');
-        return;
-    }
-
-    // 重置状态
-    inboundImportData = null;
-    inboundValidationResult = null;
-
-    // 清空文件输入
-    const fileInput = document.getElementById('inbound-import-file');
-    if (fileInput) {
-        fileInput.value = '';
-    }
-
-    // 清空预览和验证结果
-    const previewContainer = document.getElementById('inbound-preview-container');
-    const validationResult = document.getElementById('inbound-validation-result');
-    const previewTable = document.getElementById('inbound-preview-table');
-
-    previewContainer.style.display = 'none';
-    validationResult.style.display = 'none';
-    previewTable.innerHTML = '';
-    validationResult.innerHTML = '';
-
-    // 禁用确认按钮
-    document.getElementById('confirm-inbound-import-btn').disabled = true;
-
-    // 打开模态框
-    window.openModal('inbound-bulk-import-modal');
-
-    // 事件监听器已在 HTML 的 onchange 属性中定义，无需手动绑定
-};
-
-console.log('[DEBUG] openInboundBulkImportModal 函数已定义:', typeof window.openInboundBulkImportModal);
 
 /**
  * 处理文件选择
@@ -90,19 +45,27 @@ window.handleInboundImportFile = async function (event) {
         const data = await parseInboundExcel(file);
         console.log('[DEBUG] Excel 解析完成，数据行数:', data.length);
 
-        // 保存数据
-        inboundImportData = data;
-        console.log('[DEBUG] 数据已保存');
-
-        // 验证数据
-        console.log('[DEBUG] 开始验证数据...');
-        await validateInboundData(data);
+        // 验证 SKU
+        console.log('[DEBUG] 开始验证 SKU...');
+        const validation = await validateInboundSKUs(data);
         console.log('[DEBUG] 验证完成');
+
+        if (validation.missingSkus.length > 0) {
+            // 显示错误提示
+            showMissingSKUsError(validation.missingSkus);
+        } else {
+            // 添加到待入库清单
+            addToPendingInbound(data, validation.skuDetails);
+            showSuccess(`成功添加 ${data.length} 个商品到待入库清单`);
+        }
 
     } catch (error) {
         console.error('文件处理失败:', error);
         showError('文件处理失败: ' + error.message);
     }
+
+    // 清空文件输入
+    event.target.value = '';
 };
 
 /**
@@ -142,186 +105,173 @@ async function parseInboundExcel(file) {
 }
 
 /**
- * 验证入库数据
+ * 验证 SKU 是否存在
  */
-async function validateInboundData(data) {
-    console.log('[DEBUG] validateInboundData 开始，数据行数:', data.length);
+async function validateInboundSKUs(data) {
+    const skuIds = data.map(row => row.sku_id).filter(Boolean);
+    console.log('[DEBUG] 查询 SKU:', skuIds);
 
-    const errors = [];
-    const validationResult = document.getElementById('inbound-validation-result');
-    const confirmBtn = document.getElementById('confirm-inbound-import-btn');
+    const { data: existingSKUs, error } = await supabase
+        .from('v_skus')
+        .select('id, external_barcode, product_info, pic, purchase_price_rmb')
+        .in('external_barcode', skuIds);
 
-    try {
-        // 1. 基础验证
-        data.forEach((row, index) => {
-            if (!row.sku_id) {
-                errors.push({ row: index + 1, message: 'SKU ID 不能为空' });
-            }
-            if (!row.quantity || row.quantity <= 0) {
-                errors.push({ row: index + 1, sku: row.sku_id, message: '入库数量必须大于 0' });
-            }
-        });
+    if (error) throw error;
 
-        // 2. 查询 SKU 是否存在
-        const skuIds = data.map(row => row.sku_id).filter(Boolean);
-        console.log('[DEBUG] 查询 SKU:', skuIds);
+    console.log('[DEBUG] 查询到', existingSKUs.length, '个 SKU');
 
-        const { data: existingSKUs, error: queryError } = await supabase
-            .from('v_skus')
-            .select('id, external_barcode, product_info, pic, purchase_price_rmb')
-            .in('external_barcode', skuIds);
+    const existingIds = new Set(existingSKUs.map(s => s.external_barcode));
+    const missingSkus = skuIds.filter(id => !existingIds.has(id));
 
-        if (queryError) throw queryError;
-
-        console.log('[DEBUG] 查询到', existingSKUs.length, '个 SKU');
-
-        // 3. 检查缺失的 SKU
-        const existingIds = new Set(existingSKUs.map(s => s.external_barcode));
-        const missingSkus = skuIds.filter(id => !existingIds.has(id));
-
-        if (missingSkus.length > 0) {
-            missingSkus.forEach(sku => {
-                errors.push({ sku, message: 'SKU 不存在于数据库中，请先录入' });
-            });
-        }
-
-        // 4. 显示验证结果
-        validationResult.style.display = 'block';
-        let html = '<div class="validation-summary">';
-        html += `<p class="validation-item success">✓ 共 ${data.length} 条数据</p>`;
-
-        if (errors.length > 0) {
-            html += `<p class="validation-item error">✗ 发现 ${errors.length} 个问题</p>`;
-            errors.forEach(err => {
-                html += `<p class="validation-item error">• 第 ${err.row || ''} 行 ${err.sku || ''}: ${err.message}</p>`;
-            });
-            confirmBtn.disabled = true;
-        } else {
-            html += `<p class="validation-item success">✓ 所有 SKU 验证通过</p>`;
-            confirmBtn.disabled = false;
-
-            // 渲染预览
-            renderInboundPreview(data, existingSKUs);
-        }
-
-        html += '</div>';
-        validationResult.innerHTML = html;
-
-        // 保存验证结果
-        inboundValidationResult = {
-            valid: errors.length === 0,
-            errors,
-            skuDetails: existingSKUs
-        };
-
-    } catch (error) {
-        console.error('验证失败:', error);
-        showError('验证失败: ' + error.message);
-    }
+    return {
+        skuDetails: existingSKUs,
+        missingSkus: missingSkus
+    };
 }
 
 /**
- * 渲染入库预览
+ * 显示缺失 SKU 错误
  */
-function renderInboundPreview(data, skuDetails) {
-    console.log('[DEBUG] 渲染入库预览');
+function showMissingSKUsError(missingSkus) {
+    const message = `以下 SKU 不存在，请先在 SKU 管理中添加:\n\n${missingSkus.join('\n')}`;
+    showError(message);
+}
 
-    const previewContainer = document.getElementById('inbound-preview-container');
-    const previewTable = document.getElementById('inbound-preview-table');
-
+/**
+ * 添加到待入库清单
+ */
+function addToPendingInbound(data, skuDetails) {
     const skuMap = new Map(skuDetails.map(s => [s.external_barcode, s]));
 
-    let html = '<table class="data-table">';
-    html += '<thead><tr>';
-    html += '<th>序号</th>';
-    html += '<th>产品图片</th>';
-    html += '<th>SKU ID</th>';
-    html += '<th>产品信息</th>';
-    html += '<th>采购价格(¥)</th>';
-    html += '<th>入库数量</th>';
-    html += '<th>入库仓库</th>';
-    html += '<th>入库类型</th>';
-    html += '</tr></thead><tbody>';
-
-    data.forEach((row, index) => {
+    // 合并到现有清单
+    data.forEach(row => {
         const sku = skuMap.get(row.sku_id);
-        if (!sku) return; // 跳过不存在的 SKU
-
-        const imgSrc = sku.pic || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><text y="50%" font-size="30" text-anchor="middle" x="50%">📦</text></svg>';
-
-        html += '<tr>';
-        html += `<td>${index + 1}</td>`;
-        html += `<td><img src="${imgSrc}" alt="产品图片" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;"></td>`;
-        html += `<td>${row.sku_id}</td>`;
-        html += `<td>${sku.product_info || '-'}</td>`;
-        html += `<td>¥${(sku.purchase_price_rmb || 0).toFixed(2)}</td>`;
-        html += `<td><input type="number" class="inbound-quantity-input" data-index="${index}" value="${row.quantity}" min="1" style="width: 80px;" ${index === 0 ? 'autofocus' : ''}></td>`;
-        html += `<td>主仓库</td>`;
-        html += `<td>采购入库</td>`;
-        html += '</tr>';
+        if (sku) {
+            // 检查是否已存在
+            const existingIndex = pendingInboundList.findIndex(item => item.sku_id === sku.id);
+            if (existingIndex >= 0) {
+                // 累加数量
+                pendingInboundList[existingIndex].quantity += row.quantity;
+            } else {
+                // 添加新商品
+                pendingInboundList.push({
+                    sku_id: sku.id,
+                    external_barcode: row.sku_id,
+                    product_info: sku.product_info,
+                    pic: sku.pic,
+                    purchase_price_rmb: sku.purchase_price_rmb,
+                    quantity: row.quantity
+                });
+            }
+        }
     });
 
-    html += '</tbody></table>';
-
-    previewTable.innerHTML = html;
-    previewContainer.style.display = 'block';
-
-    // 绑定数量输入事件
-    const inputs = document.querySelectorAll('.inbound-quantity-input');
-    inputs.forEach((input, i) => {
-        // 更新数据
-        input.addEventListener('change', function () {
-            const index = parseInt(this.dataset.index);
-            const newQuantity = parseInt(this.value);
-            if (inboundImportData[index]) {
-                inboundImportData[index].quantity = newQuantity;
-            }
-        });
-
-        // 回车跳转到下一行
-        input.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const nextInput = inputs[i + 1];
-                if (nextInput) {
-                    nextInput.focus();
-                    nextInput.select();
-                } else {
-                    // 如果是最后一行，可以考虑聚焦到确认按钮
-                    document.getElementById('confirm-inbound-import-btn').focus();
-                }
-            }
-        });
-    });
+    // 渲染清单
+    renderPendingInboundList();
 }
 
 /**
- * 确认入库
+ * 渲染待入库清单
  */
-window.confirmInboundImport = async function () {
-    if (!inboundImportData || !inboundValidationResult || !inboundValidationResult.valid) {
-        showError('请先上传并验证文件');
+function renderPendingInboundList() {
+    const tbody = document.getElementById('inbound-list-body');
+    const emptyState = document.getElementById('inbound-empty-state');
+
+    if (!tbody || !emptyState) {
+        console.error('找不到待入库清单元素');
+        return;
+    }
+
+    if (pendingInboundList.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'flex';
+        return;
+    }
+
+    emptyState.style.display = 'none';
+
+    let html = '';
+    pendingInboundList.forEach((item, index) => {
+        const imgSrc = item.pic || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40"%3E%3Ctext y="50%25" font-size="30" text-anchor="middle" x="50%25"%3E📦%3C/text%3E%3C/svg%3E';
+        html += `
+            <tr>
+                <td>${index + 1}</td>
+                <td><img src="${imgSrc}" alt="产品图片" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;"></td>
+                <td>
+                    <div style="font-weight: 500;">${item.external_barcode}</div>
+                    <div style="color: #6b7280; font-size: 14px; margin-top: 4px;">${item.product_info || '-'}</div>
+                </td>
+                <td>${item.quantity}</td>
+                <td>
+                    <input type="number" class="quantity-input" 
+                           value="${item.quantity}" min="1" 
+                           onchange="updatePendingQuantity(${index}, this.value)"
+                           style="width: 80px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline" onclick="removePendingInboundItem(${index})" style="padding: 4px 12px;">删除</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+}
+
+/**
+ * 更新待入库数量
+ */
+window.updatePendingQuantity = function (index, value) {
+    const quantity = parseInt(value);
+    if (quantity > 0 && pendingInboundList[index]) {
+        pendingInboundList[index].quantity = quantity;
+    }
+};
+
+/**
+ * 删除待入库商品
+ */
+window.removePendingInboundItem = function (index) {
+    pendingInboundList.splice(index, 1);
+    renderPendingInboundList();
+    showSuccess('已删除商品');
+};
+
+/**
+ * 清空待入库清单
+ */
+window.clearPendingInbound = function () {
+    if (pendingInboundList.length === 0) {
+        showError('待入库清单为空');
+        return;
+    }
+
+    if (confirm('确定要清空待入库清单吗?')) {
+        pendingInboundList = [];
+        renderPendingInboundList();
+        showSuccess('已清空待入库清单');
+    }
+};
+
+/**
+ * 确认入库（统一入库）
+ */
+window.submitInbound = async function () {
+    if (pendingInboundList.length === 0) {
+        showError('待入库清单为空');
         return;
     }
 
     try {
         console.log('[DEBUG] 开始批量入库...');
 
-        const confirmBtn = document.getElementById('confirm-inbound-import-btn');
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = '入库中...';
-
-        // 准备入库记录
-        const skuMap = new Map(inboundValidationResult.skuDetails.map(s => [s.external_barcode, s]));
-        const records = inboundImportData
-            .filter(row => skuMap.has(row.sku_id))
-            .map(row => ({
-                sku_id: skuMap.get(row.sku_id).id,
-                warehouse_code: '主仓库',
-                movement_type_code: '采购入库',
-                quantity: row.quantity,
-                movement_date: new Date().toISOString().split('T')[0]
-            }));
+        const records = pendingInboundList.map(item => ({
+            sku_id: item.sku_id,
+            warehouse_code: '主仓库',
+            movement_type_code: '采购入库',
+            quantity: item.quantity,
+            movement_date: new Date().toISOString().split('T')[0]
+        }));
 
         console.log('[DEBUG] 准备入库', records.length, '条记录');
 
@@ -333,7 +283,10 @@ window.confirmInboundImport = async function () {
         if (error) throw error;
 
         showSuccess(`成功入库 ${records.length} 条记录`);
-        window.closeModal('inbound-bulk-import-modal');
+
+        // 清空清单
+        pendingInboundList = [];
+        renderPendingInboundList();
 
         // 刷新库存列表（如果在库存页面）
         if (typeof window.loadStockList === 'function') {
@@ -343,9 +296,5 @@ window.confirmInboundImport = async function () {
     } catch (error) {
         console.error('入库失败:', error);
         showError('入库失败: ' + error.message);
-    } finally {
-        const confirmBtn = document.getElementById('confirm-inbound-import-btn');
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = '确认入库';
     }
 };
