@@ -1,6 +1,7 @@
 /* global XLSX, supabase, showSuccess, showError, openModal, closeModal */
 /**
  * 入库批量导入模块
+ * Version: 20251124-2225-fix-syntax
  * 直接选择文件后验证并显示在待入库清单中
  */
 
