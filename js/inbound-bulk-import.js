@@ -251,30 +251,37 @@ async function renderPendingInboundList() {
         let imgSrc = BOX_ICON_SVG;
         let original = null;
 
-        if (item.pic && typeof item.pic === 'string') {
-            const cleanPic = item.pic.trim().toLowerCase();
-            if (cleanPic !== '' && cleanPic !== 'null' && cleanPic !== 'undefined') {
-                original = item.pic;
-                // 尝试转换 URL
-                if (window.createTransformedUrlFromPublicUrl) {
-                    try {
-                        const thumb = await window.createTransformedUrlFromPublicUrl(item.pic, 100, 100);
-                        if (thumb) imgSrc = thumb;
-                        else if (window.createSignedUrlFromPublicUrl) {
-                            const signed = await window.createSignedUrlFromPublicUrl(item.pic);
-                            if (signed) imgSrc = signed;
-                            else imgSrc = item.pic;
-                        } else {
-                            imgSrc = item.pic;
+        try {
+            if (item.pic && typeof item.pic === 'string') {
+                const cleanPic = item.pic.trim();
+                if (cleanPic !== '' && cleanPic.toLowerCase() !== 'null' && cleanPic.toLowerCase() !== 'undefined') {
+                    original = cleanPic;
+
+                    // 尝试转换 URL
+                    if (typeof window.createTransformedUrlFromPublicUrl === 'function') {
+                        try {
+                            const thumb = await window.createTransformedUrlFromPublicUrl(original, 100, 100);
+                            if (thumb) {
+                                imgSrc = thumb;
+                            } else if (typeof window.createSignedUrlFromPublicUrl === 'function') {
+                                const signed = await window.createSignedUrlFromPublicUrl(original);
+                                if (signed) imgSrc = signed;
+                                else imgSrc = original;
+                            } else {
+                                imgSrc = original;
+                            }
+                        } catch (e) {
+                            console.warn('Image transform failed for:', original, e);
+                            imgSrc = original;
                         }
-                    } catch (e) {
-                        console.warn('Image transform failed:', e);
-                        imgSrc = item.pic;
+                    } else {
+                        console.warn('Image helper functions not available');
+                        imgSrc = original;
                     }
-                } else {
-                    imgSrc = item.pic;
                 }
             }
+        } catch (err) {
+            console.error('Error processing image for item:', index, err);
         }
 
         return `
