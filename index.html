@@ -503,16 +503,20 @@
                                     </select>
                                     <label>费用类型</label>
                                 </div>
-                                <div class="floating-label-group">
-                                    <input type="number" id="new-expense-amount" min="0" step="0.01" placeholder=" " autocomplete="off">
-                                    <label>金额</label>
+                                <div class="control-group">
+                                    <div class="floating-label-group">
+                                        <input type="number" id="new-expense-amount" placeholder=" " step="0.01">
+                                        <label>金额</label>
+                                    </div>
                                 </div>
-                                <div class="floating-label-group" style="flex: 0 0 100px;">
-                                    <select id="new-expense-currency" autocomplete="off">
-                                        <option value="THB">THB</option>
-                                        <option value="RMB">RMB</option>
-                                    </select>
-                                    <label>货币</label>
+                                <div class="control-group">
+                                    <div class="floating-label-group">
+                                        <select id="new-expense-currency" placeholder=" ">
+                                            <option value="THB">THB (฿)</option>
+                                            <option value="RMB">RMB (¥)</option>
+                                        </select>
+                                        <label>币种</label>
+                                    </div>
                                 </div>
                                 <div class="floating-label-group flex-2">
                                     <input type="text" id="new-expense-note" placeholder=" " autocomplete="off">

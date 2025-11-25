@@ -3052,9 +3052,17 @@ window.initExpensesView = function () {
 
     // 3. 初始化浮动标签
     initFloatingLabels();
+
+    // 初始化费用金额标签
+    if (typeof updateExpenseAmountLabel === 'function') {
+        updateExpenseAmountLabel('new');
+    }
+
+    // 加载价格规则和仓库约束
+    // await loadPriceRules(); // This line was likely intended to be outside initExpensesView or handled differently.
+    // await loadWarehouseConstraints(); // This line was likely intended to be outside initExpensesView or handled differently.
 }
 
-// 加载费用列表
 // 加载费用列表
 window.loadExpenses = async function () {
     const tbody = document.getElementById('expenses-list-body');
@@ -3260,7 +3268,7 @@ window.openEditExpenseModal = async function (id) {
 
         // 填充类型下拉框
         const typeSelect = document.getElementById('edit-expense-type');
-        await loadSelectOptions('expense_type_code', 'expense_type', typeSelect);
+        await loadSelectOptions('expense_type_code', 'expense_type', expense.expense_type_code);
         typeSelect.value = expense.expense_type_code;
 
         // 显示当前图片
