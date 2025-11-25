@@ -3095,6 +3095,7 @@ window.loadExpenses = async function () {
             type: document.getElementById('expense-type-filter').value
         };
 
+        await fetchExchangeRate();
         const [expenses, expenseTypes] = await Promise.all([
             fetchExpenses(filters),
             fetchSettings('ExpenseType')
@@ -3126,10 +3127,15 @@ function renderExpenses(expenses) {
         return;
     }
 
-    let totalAmount = 0;
+    let totalAmountTHB = 0;
 
     expenses.forEach((expense, index) => {
-        totalAmount += parseFloat(expense.amount || 0);
+        const amt = parseFloat(expense.amount || 0);
+        const cur = (expense.currency || 'THB').toUpperCase();
+        const rateCnyToThb = currentExchangeRate || 4.8;
+        if (cur === 'THB') totalAmountTHB += amt;
+        else if (cur === 'RMB' || cur === 'CNY') totalAmountTHB += amt * rateCnyToThb;
+        else totalAmountTHB += amt;
 
         const tr = document.createElement('tr');
 
@@ -3165,8 +3171,10 @@ function renderExpenses(expenses) {
     });
 
     // 更新统计信息
+    const rateCnyToThb = currentExchangeRate || 4.8;
     document.querySelector('.expenses-list-panel .panel-info').innerHTML =
-        `共 <strong>${expenses.length}</strong> 条记录 | 总计: <strong class="text-error">${formatCurrency(totalAmount, 'THB')}</strong>`;
+        `共 <strong>${expenses.length}</strong> 条记录 | 总计: <strong class="text-error">${formatCurrency(totalAmountTHB, 'THB')}</strong>` +
+        ` <span class="text-secondary">(汇率: 1 CNY ≈ ${rateCnyToThb.toFixed(2)} THB)</span>`;
 }
 
 window.selectQuickDate = function (period) {
