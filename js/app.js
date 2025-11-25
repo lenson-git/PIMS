@@ -1380,11 +1380,10 @@ function renderSKUTable(products, append = false) {
     }
 
     // 重新绑定图片加载事件
-    setupImageLoading();
+    if (typeof window.setupImageLoading === 'function') {
+        window.setupImageLoading();
+    }
 }
-
-// 为所有图片添加加载事件监听
-setupImageLoading();
 
 // 设置图片加载监听
 window.setupImageLoading = function setupImageLoading() {
@@ -1416,6 +1415,9 @@ function handleImageError(container, img) {
     container.classList.add('loaded');
     container.innerHTML = '<div class="image-placeholder">📦</div>';
 }
+
+// 为所有图片添加加载事件监听
+window.setupImageLoading();
 
 
 window.showSKUDetails = async function (skuId) {
