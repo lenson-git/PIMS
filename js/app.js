@@ -3080,7 +3080,9 @@ window.loadExpenses = async function () {
 
 // 渲染费用列表
 function renderExpenses(expenses) {
+    // 缓存费用数据供编辑功能使用
     window._expensesCache = expenses;
+
     const tbody = document.getElementById('expenses-list-body');
     tbody.innerHTML = '';
 
@@ -3229,14 +3231,21 @@ window.addExpense = async function () {
 // 打开编辑模态框
 window.openEditExpenseModal = async function (id) {
     try {
+        console.log('[费用编辑] 尝试编辑费用 ID:', id);
+        console.log('[费用编辑] 缓存状态:', window._expensesCache);
+
         if (!window._expensesCache) {
             showError('数据未加载,请刷新重试');
             return;
         }
 
-        const expense = window._expensesCache.find(e => e.id === id);
+        const expense = window._expensesCache.find(e => e.id == id); // 使用 == 而不是 === 以支持类型转换
+        console.log('[费用编辑] 找到的费用:', expense);
+
         if (!expense) {
             showError('未找到该费用记录');
+            console.error('[费用编辑] 在缓存中未找到 ID:', id);
+            console.error('[费用编辑] 缓存中的所有ID:', window._expensesCache.map(e => e.id));
             return;
         }
 
