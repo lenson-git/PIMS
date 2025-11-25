@@ -729,6 +729,7 @@ window.openAddSettingModal = function (type, targetSelectId) {
         inbound_type: '入库类型',
         outbound_type: '出库类型',
         expense_type: '费用类型',
+        ExpenseType: '费用类型',
         status: '状态',
         sales_channel: '销售渠道'
     };
@@ -847,6 +848,7 @@ window.saveNewSetting = async function () {
                 'inbound_type': 'inbound_type_code',
                 'outbound_type': 'outbound_type_code',
                 'expense_type': 'expense_type',
+                'ExpenseType': 'ExpenseType',
                 'status': 'status_code',
                 'sales_channel': 'sales_channel_code'
             };
@@ -902,6 +904,7 @@ window.saveNewSetting = async function () {
                 'inbound_type': 'inbound_type_code',
                 'outbound_type': 'outbound_type_code',
                 'expense_type': 'expense_type',
+                'ExpenseType': 'ExpenseType',
                 'status': 'status_code',
                 'sales_channel': 'sales_channel_code'
             };
@@ -2706,7 +2709,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             loadWarehouseConstraints();
             loadPriceRules();
             loadSelectOptions('outbound_type_code', 'outbound_type');
-            loadSelectOptions('expense_type', 'expense_type');
+            loadSelectOptions('ExpenseType', 'ExpenseType');
             loadSelectOptions('status_code', 'status');
             loadSelectOptions('sales_channel', 'sales_channel');
 
@@ -3268,7 +3271,7 @@ window.openEditExpenseModal = async function (id) {
 
         // 填充类型下拉框
         const typeSelect = document.getElementById('edit-expense-type');
-        await loadSelectOptions('expense_type_code', 'expense_type', expense.expense_type_code);
+        await loadSelectOptions('ExpenseType', 'ExpenseType', expense.expense_type_code);
         typeSelect.value = expense.expense_type_code;
 
         // 显示当前图片
