@@ -583,6 +583,21 @@ function navigate(viewName) {
         if (dateToInput && !dateToInput.value) dateToInput.value = today;
 
         loadExpenses();
+
+        // 重置快速录入下拉为未选择
+        setTimeout(() => {
+            const typeSelect = document.getElementById('new-expense-type');
+            const currencySelect = document.getElementById('new-expense-currency');
+            if (typeSelect) {
+                typeSelect.value = '';
+                typeSelect.dispatchEvent(new Event('change'));
+            }
+            if (currencySelect) {
+                currencySelect.value = '';
+                currencySelect.dispatchEvent(new Event('change'));
+            }
+            try { initFloatingLabels(); } catch (_) {}
+        }, 200);
     }
 
     // 重新绑定扫描按钮（因为视图已更新）
