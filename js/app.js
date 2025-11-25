@@ -1,7 +1,7 @@
 import {
-    fetchSKUs, createSKU, uploadImage, fetchSettings, createSignedUrlFromPublicUrl, fetchSKUByBarcode, createStockMovement, fetchStockMovements, fetchSKUById, fetchStockTotalBySKU, fetchSales30dBySKU, updateSKU, createTransformedUrlFromPublicUrl, deleteSKU, fetchWarehouseStockMap, fetchStockBySKUWarehouse, createSetting, fetchAllStock, fetchSafetyStock,
+    fetchSKUs, createSKU, uploadImage, fetchSettings, createSignedUrlFromPublicUrl, fetchSKUByBarcode, createStockMovement, fetchStockMovements, fetchSKUById, fetchStockTotalBySKU, fetchStockTotalBySKUs, fetchStockBySKUsWarehouse, fetchSales30dBySKU, updateSKU, createTransformedUrlFromPublicUrl, deleteSKU, fetchWarehouseStockMap, fetchStockBySKUWarehouse, createSetting, fetchAllStock, fetchSafetyStock,
     fetchExpenses, createExpense, updateExpense, deleteExpense, fetchWarehouseConstraints, fetchPriceRules, supabase
-} from './supabase-client.js?v=20251125-1715-complete-dynamic-config';
+} from './supabase-client.js?v=20251125-1734';
 import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
 import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
 import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
