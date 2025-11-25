@@ -1,7 +1,7 @@
 /* global XLSX, supabase, showSuccess, showError, openModal, closeModal */
 /**
  * 入库批量导入模块
- * Version: 20251125-1130-fix-image-loading
+ * Version: 20251125-1145-fix-image-event-binding
  * 直接选择文件后验证并显示在待入库清单中
  */
 
@@ -339,12 +339,16 @@ async function renderPendingInboundList() {
 
     tbody.innerHTML = rows.join('');
 
-    // 激活图片渐变加载效果（延迟调用确保 DOM 已渲染）
-    setTimeout(() => {
+    // 激活图片渐变加载效果
+    // 使用 requestAnimationFrame 确保 DOM 已渲染
+    requestAnimationFrame(() => {
         if (typeof window.setupImageLoading === 'function') {
+            console.log('[批量入库] 调用 setupImageLoading');
             window.setupImageLoading();
+        } else {
+            console.warn('[批量入库] setupImageLoading 函数未找到');
         }
-    }, 100);
+    });
 }
 
 /**

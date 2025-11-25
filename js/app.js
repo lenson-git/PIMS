@@ -1387,13 +1387,13 @@ function renderSKUTable(products, append = false) {
 setupImageLoading();
 
 // 设置图片加载监听
-function setupImageLoading() {
+window.setupImageLoading = function setupImageLoading() {
     const containers = document.querySelectorAll('.image-container');
     containers.forEach(container => {
         const img = container.querySelector('img');
         if (!img) return;
 
-        // 如果图片已经加载完成（来自缓存）
+        // 如果图片已经加载完成(来自缓存)
         if (img.complete) {
             handleImageLoad(container, img);
         } else {
