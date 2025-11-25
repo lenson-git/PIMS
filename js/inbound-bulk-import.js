@@ -1,7 +1,7 @@
 /* global XLSX, supabase, showSuccess, showError, openModal, closeModal */
 /**
  * 入库批量导入模块
- * Version: 20251125-1153-set-default-values
+ * Version: 20251125-1201-fix-default-values
  * 直接选择文件后验证并显示在待入库清单中
  */
 
@@ -174,74 +174,59 @@ function addToPendingInbound(data, skuDetails) {
 // 盒子图标 SVG 常量
 const BOX_ICON_SVG = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="40"%3E📦%3C/text%3E%3C/svg%3E';
 
-// 初始化默认值 - 使用轮询确保在选项加载后设置
-document.addEventListener('DOMContentLoaded', function () {
-    const maxAttempts = 20; // 最多尝试20次 (20 * 500ms = 10秒)
-    let attempts = 0;
-    let warehouseSet = false;
-    let typeSet = false;
+/**
+ * 设置入库页面的默认值
+ * 在 preloadInbound() 完成后调用
+ */
+window.setInboundDefaults = function () {
+    const warehouseSelect = document.getElementById('inbound-warehouse');
+    const typeSelect = document.getElementById('inbound-type');
 
-    const intervalId = setInterval(() => {
-        attempts++;
-        const warehouseSelect = document.getElementById('inbound-warehouse');
-        const typeSelect = document.getElementById('inbound-type');
+    // 设置默认仓库
+    if (warehouseSelect && warehouseSelect.options.length > 1) {
+        const options = Array.from(warehouseSelect.options);
+        // 查找包含"主"字的仓库,或者 value/text 包含 "main"(不区分大小写)
+        const mainWarehouse = options.find(opt => {
+            const text = (opt.text || '').toLowerCase();
+            const value = (opt.value || '').toLowerCase();
+            return text.includes('主') ||
+                value.includes('主') ||
+                text.includes('main') ||
+                value.includes('main');
+        });
 
-        // 尝试设置仓库(只设置一次)
-        if (!warehouseSet && warehouseSelect && warehouseSelect.options.length > 1) {
-            const options = Array.from(warehouseSelect.options);
-            // 查找包含"主"字的仓库,或者 value/text 包含 "main"(不区分大小写)
-            const mainWarehouse = options.find(opt => {
-                const text = (opt.text || '').toLowerCase();
-                const value = (opt.value || '').toLowerCase();
-                return text.includes('主') ||
-                    value.includes('主') ||
-                    text.includes('main') ||
-                    value.includes('main');
-            });
-
-            if (mainWarehouse) {
-                warehouseSelect.value = mainWarehouse.value;
-                // 触发 change 事件以更新 UI (浮动标签)
-                warehouseSelect.dispatchEvent(new Event('change'));
-                warehouseSet = true;
-                console.log('[批量入库] 默认仓库已设置:', mainWarehouse.text);
-            }
+        if (mainWarehouse) {
+            warehouseSelect.value = mainWarehouse.value;
+            // 触发 change 事件以更新 UI (浮动标签)
+            warehouseSelect.dispatchEvent(new Event('change'));
+            console.log('[批量入库] 默认仓库已设置:', mainWarehouse.text);
+        } else {
+            console.warn('[批量入库] 未找到"主仓"');
         }
+    }
 
-        // 尝试设置入库类型(只设置一次)
-        if (!typeSet && typeSelect && typeSelect.options.length > 1) {
-            const options = Array.from(typeSelect.options);
-            // 查找包含"采购"字的类型,或者 value/text 包含 "purchase"(不区分大小写)
-            const purchaseType = options.find(opt => {
-                const text = (opt.text || '').toLowerCase();
-                const value = (opt.value || '').toLowerCase();
-                return text.includes('采购') ||
-                    value.includes('采购') ||
-                    text.includes('purchase') ||
-                    value.includes('purchase');
-            });
+    // 设置默认入库类型
+    if (typeSelect && typeSelect.options.length > 1) {
+        const options = Array.from(typeSelect.options);
+        // 查找包含"采购"字的类型,或者 value/text 包含 "purchase"(不区分大小写)
+        const purchaseType = options.find(opt => {
+            const text = (opt.text || '').toLowerCase();
+            const value = (opt.value || '').toLowerCase();
+            return text.includes('采购') ||
+                value.includes('采购') ||
+                text.includes('purchase') ||
+                value.includes('purchase');
+        });
 
-            if (purchaseType) {
-                typeSelect.value = purchaseType.value;
-                typeSelect.dispatchEvent(new Event('change'));
-                typeSet = true;
-                console.log('[批量入库] 默认入库类型已设置:', purchaseType.text);
-            }
+        if (purchaseType) {
+            typeSelect.value = purchaseType.value;
+            typeSelect.dispatchEvent(new Event('change'));
+            console.log('[批量入库] 默认入库类型已设置:', purchaseType.text);
+        } else {
+            console.warn('[批量入库] 未找到"采购入库"类型');
         }
-
-        // 如果都设置成功,或者超时,清除定时器
-        if ((warehouseSet && typeSet) || attempts >= maxAttempts) {
-            clearInterval(intervalId);
-            if (attempts >= maxAttempts) {
-                console.warn('[批量入库] 设置默认值超时或部分未找到');
-                if (!warehouseSet) console.warn('[批量入库] 未找到"主仓"');
-                if (!typeSet) console.warn('[批量入库] 未找到"采购入库"类型');
-            } else {
-                console.log('[批量入库] 默认值设置成功');
-            }
-        }
-    }, 500);
-});
+    }
+};
 
 /**
  * 渲染待入库清单

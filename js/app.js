@@ -1899,6 +1899,12 @@ async function preloadInbound() {
     if (inboundWarehouse && inboundType) {
         filterTypes(inboundWarehouse.value, inboundType, 'inbound');
     }
+
+    // 设置默认值
+    if (typeof window.setInboundDefaults === 'function') {
+        window.setInboundDefaults();
+    }
+
     window._viewReady.inbound = true;
     setInboundDisabled(false);
     const inboundInputEl = document.getElementById('inbound-sku-input');
