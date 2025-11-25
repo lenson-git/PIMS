@@ -1,7 +1,7 @@
 import {
     fetchSKUs, createSKU, uploadImage, fetchSettings, createSignedUrlFromPublicUrl, fetchSKUByBarcode, createStockMovement, fetchStockMovements, fetchSKUById, fetchStockTotalBySKU, fetchSales30dBySKU, updateSKU, createTransformedUrlFromPublicUrl, deleteSKU, fetchWarehouseStockMap, fetchStockBySKUWarehouse, createSetting, fetchAllStock, fetchSafetyStock,
-    fetchExpenses, createExpense, updateExpense, deleteExpense, supabase
-} from './supabase-client.js?v=20251125-0125-fix-stock';
+    fetchExpenses, createExpense, updateExpense, deleteExpense, fetchWarehouseConstraints, fetchPriceRules, supabase
+} from './supabase-client.js?v=20251125-1715-complete-dynamic-config';
 import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
 import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
 import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
@@ -22,6 +22,11 @@ window._settingsCache = {
     inbound_type: {},
     outbound_type: {}
 };
+
+// 仓库约束关系缓存 (动态加载)
+window._warehouseConstraints = null;
+// 价格规则缓存 (动态加载)
+window._priceRules = null;
 
 // ==========================================
 // Dashboard Logic
@@ -928,26 +933,32 @@ window.saveNewSetting = async function () {
 // 根据选中的仓库过滤入/出库类型选项，仅显示允许的集合（选项值为代码）
 /**
  * 根据仓库类型过滤移库类型
- * @param {string} warehouseCode - 仓库代码 (CN/TH)
+ * @param {string} warehouseCode - 仓库代码 (MAIN/AFTERSALE)
  * @param {HTMLSelectElement} selectEl - 移库类型选择框的DOM元素
  * @param {string} direction - 方向 (inbound/outbound)
  */
 function filterTypes(warehouseCode, selectEl, direction) {
-    const warehouseName = window._settingsCache.warehouse[warehouseCode] || warehouseCode;
-    const rules = WAREHOUSE_RULES[warehouseName] || WAREHOUSE_RULES[warehouseCode];
+    // 优先使用动态加载的配置,否则回退到静态配置
+    const rules = (window._warehouseConstraints || WAREHOUSE_RULES)[warehouseCode];
     if (!rules) return;
+
     const allow = direction === 'inbound' ? rules.inbound : rules.outbound;
     const typeMap = window._settingsCache[direction === 'inbound' ? 'inbound_type' : 'outbound_type'] || {};
+
+    // 保留空选项和"新建"选项
     const preserved = [];
     Array.from(selectEl.options).forEach(opt => {
         if (opt.value === '' || opt.value === '__new__') preserved.push(opt);
     });
+
     const current = selectEl.value;
     selectEl.innerHTML = '';
     preserved.forEach(o => selectEl.appendChild(o));
+
+    // 根据允许的 code 列表添加选项
     const allowedOptions = [];
     Object.entries(typeMap).forEach(([code, name]) => {
-        if (Array.isArray(allow) && allow.includes(name)) {
+        if (Array.isArray(allow) && allow.includes(code)) {  // allow 包含的是 code
             const opt = document.createElement('option');
             opt.value = code;
             opt.textContent = name;
@@ -955,12 +966,15 @@ function filterTypes(warehouseCode, selectEl, direction) {
             allowedOptions.push({ code, name });
         }
     });
-    const currentName = typeMap[current] || current;
-    if (Array.isArray(allow) && allow.includes(currentName)) {
+
+    // 如果当前选中的值在允许列表中,保持选中
+    if (Array.isArray(allow) && allow.includes(current)) {
         selectEl.value = current;
     } else {
         selectEl.value = '';
     }
+
+    // 如果只有一个选项,自动选中
     if (allowedOptions.length === 1) {
         selectEl.value = allowedOptions[0].code;
         if (selectEl.parentElement) selectEl.parentElement.classList.add('active');
@@ -976,18 +990,18 @@ function filterTypes(warehouseCode, selectEl, direction) {
  * @returns {boolean} 验证是否通过
  */
 function validateMovement(warehouseCode, typeCode, direction) {
-    const warehouseName = window._settingsCache.warehouse[warehouseCode] || warehouseCode;
-    const rules = WAREHOUSE_RULES[warehouseName];
+    // 优先使用动态加载的配置,否则回退到静态配置
+    const rules = (window._warehouseConstraints || WAREHOUSE_RULES)[warehouseCode];
     if (!rules) return false;
     const allow = direction === 'inbound' ? rules.inbound : rules.outbound;
-    const typeMap = window._settingsCache[direction === 'inbound' ? 'inbound_type' : 'outbound_type'] || {};
-    const typeName = typeMap[typeCode] || typeCode;
-    return Array.isArray(allow) && allow.includes(typeName);
+    // 直接检查 typeCode 是否在允许列表中(allow 现在包含 code)
+    return Array.isArray(allow) && allow.includes(typeCode);
 }
 
 // 按类型返回对应币种的单价（不做汇率换算）
 function getUnitPriceForMovement(sku, movementType) {
-    const rule = PRICE_RULES[movementType];
+    // 优先使用动态加载的配置,否则回退到静态配置
+    const rule = (window._priceRules || PRICE_RULES)[movementType];
     if (!rule) return { unit_price_rmb: null, unit_price_thb: null };
     const value = Number(sku[rule.source]) || 0;
     if (rule.currency === 'RMB') return { unit_price_rmb: value, unit_price_thb: null };
@@ -2615,6 +2629,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             loadSelectOptions('shop_code', 'shop');
             loadSelectOptions('warehouse_code', 'warehouse');
             loadSelectOptions('inbound_type_code', 'inbound_type');
+
+            // 加载动态配置
+            loadWarehouseConstraints();
+            loadPriceRules();
             loadSelectOptions('outbound_type_code', 'outbound_type');
             loadSelectOptions('expense_type', 'expense_type');
             loadSelectOptions('status_code', 'status');
@@ -3263,6 +3281,55 @@ window.loadSettings = async function () {
         console.error('Failed to load settings cache:', err);
     }
 }
+
+// 加载仓库约束关系
+window.loadWarehouseConstraints = async function () {
+    try {
+        const data = await fetchWarehouseConstraints();
+
+        // 构建 WAREHOUSE_RULES 格式
+        const rules = {};
+        data.forEach(constraint => {
+            if (!rules[constraint.warehouse_code]) {
+                rules[constraint.warehouse_code] = { inbound: [], outbound: [] };
+            }
+            rules[constraint.warehouse_code][constraint.direction].push(
+                constraint.movement_type_code
+            );
+        });
+
+        window._warehouseConstraints = rules;
+        console.log('仓库约束关系已加载:', rules);
+    } catch (error) {
+        console.error('加载仓库约束关系失败:', error);
+        // 使用默认配置作为后备
+        window._warehouseConstraints = WAREHOUSE_RULES;
+    }
+}
+
+// 加载价格规则
+window.loadPriceRules = async function () {
+    try {
+        const data = await fetchPriceRules();
+
+        // 构建 PRICE_RULES 格式
+        const rules = {};
+        data.forEach(rule => {
+            rules[rule.code] = {
+                source: rule.price_source,
+                currency: rule.currency
+            };
+        });
+
+        window._priceRules = rules;
+        console.log('价格规则已加载:', rules);
+    } catch (error) {
+        console.error('加载价格规则失败:', error);
+        // 使用默认配置作为后备
+        window._priceRules = PRICE_RULES;
+    }
+}
+
 
 window.loadSystemSettings = async function () {
     try {

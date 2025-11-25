@@ -1,3 +1,4 @@
+// Version: 20251125-1715-complete-dynamic-config
 import { supabase } from './config.js'
 export { supabase }
 
@@ -591,3 +592,33 @@ export async function deleteExpense(id) {
   if (error) throw error;
   return true;
 }
+
+// ==========================================
+// Warehouse Constraints API
+// ==========================================
+
+// 获取仓库约束关系
+export async function fetchWarehouseConstraints() {
+  const { data, error } = await supabase
+    .from('warehouse_type_constraints')
+    .select('*')
+    .order('warehouse_code')
+    .order('direction')
+    .order('movement_type_code');
+
+  if (error) throw error;
+  return data || [];
+}
+
+// 获取价格规则(从 settings 表)
+export async function fetchPriceRules() {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('code, price_source, currency')
+    .in('type', ['InboundType', 'OutboundType', 'AdjustmentType'])
+    .not('price_source', 'is', null);
+
+  if (error) throw error;
+  return data || [];
+}
+

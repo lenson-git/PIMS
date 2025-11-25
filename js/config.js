@@ -76,22 +76,34 @@ export const FIELD_LABELS = {
 }
 
 // 仓库与出入库类型约束（前端校验与选项过滤使用）
+// 注意：使用 code 而非 name，这样用户可以在系统设置中随意修改中文名称
 export const WAREHOUSE_RULES = {
-  '主仓库': {
-    inbound: ['采购入库', '售后入库'],
-    outbound: ['销售出库', '换货出库']
+  'MAIN': {              // 主仓
+    inbound: [
+      'PURCHASE_IN',     // 采购入库
+      'AFTERSALE_IN'     // 售后入库
+    ],
+    outbound: [
+      'SALES_OUT',       // 销售出库
+      'EXCHANGE_OUT'     // 换货出库
+    ]
   },
-  '售后仓库': {
-    inbound: ['售后入库'],
-    outbound: ['退给供应商']
+  'AFTERSALE': {         // 售后仓
+    inbound: [
+      'AFTERSALE_IN'     // 售后入库
+    ],
+    outbound: [
+      'RETURN_SUPPLIER'  // 退给供应商
+    ]
   }
 }
 
 // 出入库类型对应的价格来源与币种（不做汇率换算）
+// 注意：使用 code 而非 name
 export const PRICE_RULES = {
-  '采购入库': { source: 'purchase_price_rmb', currency: 'RMB' },
-  '销售出库': { source: 'selling_price_thb', currency: 'THB' },
-  '换货出库': { source: 'selling_price_thb', currency: 'THB' },
-  '售后入库': { source: 'selling_price_thb', currency: 'THB' },
-  '退给供应商': { source: 'purchase_price_rmb', currency: 'RMB' }
+  'PURCHASE_IN': { source: 'purchase_price_rmb', currency: 'RMB' },    // 采购入库
+  'SALES_OUT': { source: 'selling_price_thb', currency: 'THB' },       // 销售出库
+  'EXCHANGE_OUT': { source: 'selling_price_thb', currency: 'THB' },    // 换货出库
+  'AFTERSALE_IN': { source: 'selling_price_thb', currency: 'THB' },    // 售后入库
+  'RETURN_SUPPLIER': { source: 'purchase_price_rmb', currency: 'RMB' } // 退给供应商
 }
