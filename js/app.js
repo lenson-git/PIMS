@@ -564,7 +564,7 @@ function navigate(viewName) {
         preloadInbound();
         setTimeout(() => document.getElementById('inbound-sku-input')?.focus(), 100);
     } else if (viewName === 'outbound') {
-        renderOutboundList();
+        preloadOutbound();
         setTimeout(() => document.getElementById('outbound-sku-input')?.focus(), 100);
     } else if (viewName === 'settings') {
         loadSystemSettings();
