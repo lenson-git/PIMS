@@ -78,7 +78,7 @@ export const FIELD_LABELS = {
 // 仓库与出入库类型约束（前端校验与选项过滤使用）
 export const WAREHOUSE_RULES = {
   '主仓库': {
-    inbound: ['采购入库'],
+    inbound: ['采购入库', '售后入库'],
     outbound: ['销售出库', '换货出库']
   },
   '售后仓库': {
