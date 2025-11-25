@@ -111,7 +111,8 @@ window._settingsCache = {
   shop: {},
   warehouse: {},
   inbound_type: {},
-  outbound_type: {}
+  outbound_type: {},
+  ExpenseType: {}
 }
 
 // 获取配置项显示名称

@@ -3080,7 +3080,16 @@ window.loadExpenses = async function () {
             type: document.getElementById('expense-type-filter').value
         };
 
-        const expenses = await fetchExpenses(filters);
+        const [expenses, expenseTypes] = await Promise.all([
+            fetchExpenses(filters),
+            fetchSettings('ExpenseType')
+        ]);
+
+        if (!window._settingsCache['ExpenseType']) window._settingsCache['ExpenseType'] = {};
+        expenseTypes.forEach(item => {
+            window._settingsCache['ExpenseType'][item.code || item.name] = item.name;
+        });
+
         renderExpenses(expenses);
     } catch (err) {
         console.error('加载费用失败:', err);
