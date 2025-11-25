@@ -1,7 +1,7 @@
 /* global XLSX, supabase, showSuccess, showError, openModal, closeModal */
 /**
  * 入库批量导入模块
- * Version: 20251124-2225-fix-syntax
+ * Version: 20251125-1130-fix-image-loading
  * 直接选择文件后验证并显示在待入库清单中
  */
 
@@ -275,13 +275,13 @@ async function renderPendingInboundList() {
                     }
 
                     if (thumb) {
-                        // 转换成功：显示骨架屏 + 缩略图
+                        // 转换成功:显示骨架屏 + 缩略图
                         imgHtml = `
-            < div class="skeleton-image" ></div >
-                <img src="${thumb}" alt="产品图片" loading="lazy"
-                    onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>📦</div>'"
-                    style="width: 100%; height: 100%; object-fit: cover;">
-                    `;
+                            <div class="skeleton-image"></div>
+                            <img src="${thumb}" alt="产品图片" loading="lazy"
+                                onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>📦</div>'"
+                                style="width: 100%; height: 100%; object-fit: cover;">
+                        `;
                     } else {
                         // 转换失败：显示盒子
                         console.warn(`[批量入库] 显示盒子图标 ${index + 1}`);
