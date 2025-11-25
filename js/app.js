@@ -2234,6 +2234,12 @@ async function preloadOutbound() {
     if (outboundWarehouse && outboundType) {
         filterTypes(outboundWarehouse.value, outboundType, 'outbound');
     }
+
+    // 设置默认值
+    if (typeof window.setOutboundDefaults === 'function') {
+        window.setOutboundDefaults();
+    }
+
     window._viewReady.outbound = true;
     setOutboundDisabled(false);
     const outboundInputEl = document.getElementById('outbound-sku-input');
