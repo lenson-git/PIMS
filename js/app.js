@@ -3117,7 +3117,7 @@ function renderExpenses(expenses) {
             : `<span class="text-secondary" > -</span > `;
 
         // 类型名称
-        const typeName = getSettingName('expense_type', expense.expense_type_code) || expense.expense_type_code;
+        const typeName = getSettingName('ExpenseType', expense.expense_type_code) || expense.expense_type_code;
 
         tr.innerHTML = `
     <td> ${index + 1}</td >
