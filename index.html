@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <!-- Version: 20251125-1734-outbound-defaults -->
+    <!-- Version: 20251125-1802-three-enhancements -->
     <meta charset="UTF-8">
     <title>PIMS 库存管理系统</title>
     <link rel="stylesheet" href="css/styles.css?v=20251125-1715">
@@ -448,7 +448,12 @@
                     <div class="card stock-list-panel">
                         <div class="panel-header">
                             <div class="panel-title">库存列表</div>
-                            <div class="panel-info text-secondary">共 <strong id="stock-total-count">0</strong> 个 SKU</div>
+                            <div class="panel-info text-secondary">
+                                SKU: <strong id="stock-sku-count">0</strong>个 / 
+                                库存: <strong id="stock-quantity-total">0</strong>个 / 
+                                主仓: <strong id="stock-main-warehouse">0</strong>个 / 
+                                售后仓: <strong id="stock-aftersale-warehouse">0</strong>个
+                            </div>
                         </div>
                         <div class="table-container">
                             <table class="data-table stock-table">
@@ -514,12 +519,17 @@
                                     <label>备注</label>
                                 </div>
                                 <div class="control-group" style="flex: 0 0 auto;">
-                                    <div class="image-upload-wrapper">
+                                    <div class="image-upload-wrapper" style="position: relative;">
                                         <input type="file" id="expense-image-input" accept="image/*" hidden>
                                         <button class="btn btn-outline btn-block btn-lg-height" onclick="document.getElementById('expense-image-input').click()">
                                             <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                                             选择图片
                                         </button>
+                                        <div id="expense-image-success" class="upload-success-badge" style="display: none;">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="control-group" style="flex: 0 0 auto;">
@@ -1203,6 +1213,73 @@
                 <button class="btn btn-outline" onclick="handleCurrentDuplicate('overwrite')">覆盖更新</button>
                 <button class="btn btn-outline" onclick="handleRemainingDuplicates('skip')">全部跳过</button>
                 <button class="btn btn-black" onclick="handleRemainingDuplicates('overwrite')">全部覆盖</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 费用编辑模态框 -->
+    <div id="edit-expense-modal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>编辑费用</h3>
+                <button class="modal-close" onclick="closeEditExpenseModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="floating-label-group">
+                        <input type="date" id="edit-expense-date" placeholder=" ">
+                        <label>日期</label>
+                    </div>
+                    <div class="floating-label-group">
+                        <select id="edit-expense-type" placeholder=" ">
+                            <option value="">请选择</option>
+                        </select>
+                        <label>费用类型</label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="floating-label-group">
+                        <input type="number" id="edit-expense-amount" placeholder=" " step="0.01">
+                        <label>金额</label>
+                    </div>
+                    <div class="floating-label-group">
+                        <select id="edit-expense-currency" placeholder=" ">
+                            <option value="THB">THB (฿)</option>
+                            <option value="RMB">RMB (¥)</option>
+                        </select>
+                        <label>币种</label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="floating-label-group full-width">
+                        <input type="text" id="edit-expense-note" placeholder=" ">
+                        <label>备注</label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div style="flex: 1;">
+                        <div class="image-upload-wrapper" style="position: relative;">
+                            <input type="file" id="edit-expense-image-input" accept="image/*" hidden>
+                            <button class="btn btn-outline btn-block btn-lg-height" onclick="document.getElementById('edit-expense-image-input').click()">
+                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                重新上传图片
+                            </button>
+                            <div id="edit-expense-image-success" class="upload-success-badge" style="display: none;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                        <div id="edit-expense-current-image" style="margin-top: 12px; display: none;">
+                            <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">当前图片:</div>
+                            <img id="edit-expense-image-preview" style="max-width: 200px; max-height: 150px; border-radius: 4px; border: 1px solid #e5e7eb; cursor: pointer;" onclick="if(this.src) showLightbox(this.src)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEditExpenseModal()">取消</button>
+                <button class="btn btn-black" onclick="saveExpenseEdit()">保存</button>
             </div>
         </div>
     </div>

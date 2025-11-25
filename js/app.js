@@ -2235,16 +2235,18 @@ async function preloadOutbound() {
         filterTypes(outboundWarehouse.value, outboundType, 'outbound');
     }
 
-    // 设置默认值
-    if (typeof window.setOutboundDefaults === 'function') {
-        window.setOutboundDefaults();
-    }
-
     window._viewReady.outbound = true;
     setOutboundDisabled(false);
     const outboundInputEl = document.getElementById('outbound-sku-input');
     if (outboundInputEl) outboundInputEl.focus();
     renderOutboundList(); // Ensure list is rendered after preload
+
+    // 设置默认值 - 延迟执行确保所有选项已加载
+    setTimeout(() => {
+        if (typeof window.setOutboundDefaults === 'function') {
+            window.setOutboundDefaults();
+        }
+    }, 200);
 }
 
 // ==========================================
@@ -2255,6 +2257,59 @@ window.currentStockPage = 1;
 window.totalStockCount = 0;
 window.isLoadingStock = false;
 window.stockObserver = null;
+
+// 更新库存统计信息显示
+function updateStockStatistics(skuCount, totalQuantity, mainWarehouse, aftersaleWarehouse) {
+    const skuCountEl = document.getElementById('stock-sku-count');
+    const totalQuantityEl = document.getElementById('stock-quantity-total');
+    const mainWarehouseEl = document.getElementById('stock-main-warehouse');
+    const aftersaleWarehouseEl = document.getElementById('stock-aftersale-warehouse');
+
+    if (skuCountEl) skuCountEl.textContent = skuCount;
+    if (totalQuantityEl) totalQuantityEl.textContent = totalQuantity;
+    if (mainWarehouseEl) mainWarehouseEl.textContent = mainWarehouse;
+    if (aftersaleWarehouseEl) aftersaleWarehouseEl.textContent = aftersaleWarehouse;
+}
+
+// 计算库存统计信息
+async function calculateStockStatistics() {
+    try {
+        // 获取所有库存数据
+        const allStock = await fetchAllStock();
+
+        // 计算总库存数量
+        const totalQuantity = allStock.reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+        // 计算主仓库存
+        const mainStock = allStock
+            .filter(item => item.warehouse_code === 'MAIN')
+            .reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+        // 计算售后仓库存
+        const aftersaleStock = allStock
+            .filter(item => item.warehouse_code === 'AFTERSALE')
+            .reduce((sum, item) => sum + (item.quantity || 0), 0);
+
+        // 更新显示
+        updateStockStatistics(
+            window.totalStockCount,
+            totalQuantity,
+            mainStock,
+            aftersaleStock
+        );
+
+        console.log('[库存统计]', {
+            SKU: window.totalStockCount,
+            总库存: totalQuantity,
+            主仓: mainStock,
+            售后仓: aftersaleStock
+        });
+    } catch (error) {
+        console.error('[库存统计] 计算失败:', error);
+        // 失败时显示 0
+        updateStockStatistics(window.totalStockCount, 0, 0, 0);
+    }
+}
 
 // 初始化库存无限滚动观察器
 function initStockObserver() {
@@ -2311,12 +2366,18 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
         const { data: products, count } = await fetchSKUs(page, 20, query);
         window.totalStockCount = count || 0;
         window.currentStockPage = page;
-        if (totalEl) totalEl.textContent = window.totalStockCount;
+
+        // 更新 SKU 数量
+        const skuCountEl = document.getElementById('stock-sku-count');
+        if (skuCountEl) skuCountEl.textContent = window.totalStockCount;
 
         if (reset) {
             tbody.innerHTML = ''; // 清除初始 loading
             if (products.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" class="text-center">暂无数据</td></tr>';
+                // 清空统计信息
+                updateStockStatistics(0, 0, 0, 0);
+                return;
             }
         }
 
@@ -2435,6 +2496,11 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
         if (page >= maxPage && window.totalStockCount > 0) {
             if (noMoreData) noMoreData.style.display = 'block';
             if (window.stockObserver) window.stockObserver.disconnect();
+        }
+
+        // 计算库存统计信息 (仅在第一页时计算)
+        if (reset && page === 1) {
+            calculateStockStatistics();
         }
 
         setupImageLoading(); // 激活骨架屏加载
@@ -3117,6 +3183,7 @@ window.addExpense = async function () {
     const currency = document.getElementById('new-expense-currency').value;
     const note = document.getElementById('new-expense-note').value;
     const imageInput = document.getElementById('expense-image-input');
+    const successBadge = document.getElementById('expense-image-success');
 
     if (!date || !type || !amount) {
         showError('请填写必填项：日期、类型、金额');
@@ -3125,8 +3192,11 @@ window.addExpense = async function () {
 
     try {
         let imageUrl = null;
+
         if (imageInput.files.length > 0) {
             imageUrl = await uploadImage(imageInput.files[0], 'expenses');
+            // 显示上传成功标识
+            if (successBadge) successBadge.style.display = 'flex';
         }
 
         await createExpense({
@@ -3145,6 +3215,9 @@ window.addExpense = async function () {
         document.getElementById('new-expense-note').value = '';
         imageInput.value = '';
 
+        // 隐藏上传成功标识
+        if (successBadge) successBadge.style.display = 'none';
+
         // 刷新列表
         loadExpenses();
     } catch (err) {
@@ -3156,21 +3229,8 @@ window.addExpense = async function () {
 // 打开编辑模态框
 window.openEditExpenseModal = async function (id) {
     try {
-        // 获取最新数据 (或者从当前列表中查找, 这里简单起见重新获取或从DOM获取? 最好是从缓存或重新获取)
-        // 为了简单, 我们假设 fetchExpenses 返回了所有字段.
-        // 实际项目中可能需要 fetchExpenseById, 但这里我们先遍历当前列表缓存?
-        // 暂时没有全局缓存 expenses, 所以重新 fetch 或者从行数据取不太方便.
-        // 让我们添加 fetchExpenseById 或者直接在 render 时把数据绑定到 button?
-        // 最稳妥是 fetchExpenseById, 但 supabase-client 没加.
-        // 等等, 我不能改 supabase-client 了 (tool limit).
-        // 那就用 fetchExpenses 过滤 id? 不, fetchExpenses 是列表查询.
-        // 既然我刚刚加了 fetchExpenses, 我可以在 render 时把数据存到 window._expensesCache.
-
-        // 重新实现 renderExpenses 来缓存数据
-        // (在 renderExpenses 中添加 window._expensesCache = expenses;)
-
         if (!window._expensesCache) {
-            showError('数据未加载, 请刷新重试');
+            showError('数据未加载,请刷新重试');
             return;
         }
 
@@ -3180,66 +3240,97 @@ window.openEditExpenseModal = async function (id) {
             return;
         }
 
-        document.getElementById('edit-expense-id').value = expense.id;
-        document.getElementById('edit-expense-date').value = expense.date;
+        // 保存当前编辑的ID
+        window._editingExpenseId = id;
+
+        // 填充表单
+        document.getElementById('edit-expense-date').value = expense.timestamp.split('T')[0];
         document.getElementById('edit-expense-amount').value = expense.amount;
-        document.getElementById('edit-expense-note').value = expense.note || '';
+        document.getElementById('edit-expense-currency').value = expense.currency || 'THB';
+        document.getElementById('edit-expense-note').value = expense.description || '';
 
-        // 填充类型下拉框 (确保选项已加载)
+        // 填充类型下拉框
         const typeSelect = document.getElementById('edit-expense-type');
-        // 复制 new-expense-type 的选项
-        typeSelect.innerHTML = document.getElementById('new-expense-type').innerHTML;
-        typeSelect.value = expense.type;
+        await loadSelectOptions('expense_type_code', 'expense_type', typeSelect);
+        typeSelect.value = expense.expense_type_code;
 
-        // 图片预览
-        const previewArea = document.getElementById('edit-expense-image-preview');
-        if (expense.image_url) {
-            previewArea.innerHTML = `<img src="${expense.image_url}" style="max-height: 100px; border-radius: 4px;" > `;
+        // 显示当前图片
+        const currentImageDiv = document.getElementById('edit-expense-current-image');
+        const imagePreview = document.getElementById('edit-expense-image-preview');
+        if (expense.picture_id) {
+            const imageUrl = await createSignedUrlFromPublicUrl(expense.picture_id);
+            imagePreview.src = imageUrl;
+            currentImageDiv.style.display = 'block';
         } else {
-            previewArea.innerHTML = '<span class="text-secondary">无图片</span>';
+            currentImageDiv.style.display = 'none';
         }
 
-        window.openModal('edit-expense-modal');
+        // 隐藏上传成功标识
+        const successBadge = document.getElementById('edit-expense-image-success');
+        if (successBadge) successBadge.style.display = 'none';
+
+        // 清空文件输入
+        document.getElementById('edit-expense-image-input').value = '';
+
+        // 打开模态框
+        document.getElementById('edit-expense-modal').classList.add('active');
         initFloatingLabels();
 
     } catch (err) {
-        console.error(err);
-        showError('打开编辑框失败');
+        console.error('打开编辑框失败:', err);
+        showError('打开编辑框失败: ' + err.message);
     }
 }
 
+// 关闭编辑模态框
+window.closeEditExpenseModal = function () {
+    document.getElementById('edit-expense-modal').classList.remove('active');
+    window._editingExpenseId = null;
+}
+
 // 保存编辑
-window.updateExpenseAction = async function () {
-    const id = document.getElementById('edit-expense-id').value;
+window.saveExpenseEdit = async function () {
+    const id = window._editingExpenseId;
+    if (!id) {
+        showError('无效的编辑操作');
+        return;
+    }
+
     const date = document.getElementById('edit-expense-date').value;
     const type = document.getElementById('edit-expense-type').value;
     const amount = document.getElementById('edit-expense-amount').value;
+    const currency = document.getElementById('edit-expense-currency').value;
     const note = document.getElementById('edit-expense-note').value;
     const imageInput = document.getElementById('edit-expense-image-input');
+    const successBadge = document.getElementById('edit-expense-image-success');
 
     if (!date || !type || !amount) {
-        showError('请填写必填项');
+        showError('请填写必填项:日期、类型、金额');
         return;
     }
 
     try {
         const updates = {
-            date,
-            type,
+            timestamp: date,
+            expense_type_code: type,
             amount: parseFloat(amount),
-            note
+            currency,
+            description: note
         };
 
+        // 如果选择了新图片,上传并更新
         if (imageInput.files.length > 0) {
-            updates.image_url = await uploadImage(imageInput.files[0], 'expenses');
+            updates.picture_id = await uploadImage(imageInput.files[0], 'expenses');
+            // 显示上传成功标识
+            if (successBadge) successBadge.style.display = 'flex';
         }
 
         await updateExpense(id, updates);
         showSuccess('更新成功');
-        closeModal('edit-expense-modal');
+        closeEditExpenseModal();
         loadExpenses();
     } catch (err) {
-        console.error(err);
+        console.error('更新失败:', err);
         showError('更新失败: ' + err.message);
     }
 }

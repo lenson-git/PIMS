@@ -58,5 +58,5 @@ window.setOutboundDefaults = function () {
                 console.warn('[出库默认值] 未找到"销售出库"类型');
             }
         }
-    }, 100); // 延迟 100ms 确保仓库过滤完成
+    }, 300); // 延迟 300ms 确保仓库过滤完成
 };
