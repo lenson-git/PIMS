@@ -5,6 +5,7 @@ import {
 import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
 import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
 import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
+import { logger } from './logger.js'
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
@@ -59,7 +60,7 @@ async function fetchExchangeRate() {
             if (rateEl) rateEl.textContent = `汇率: 1 CNY ≈ ${currentExchangeRate.toFixed(2)} THB`;
         }
     } catch (error) {
-        console.error('获取汇率失败:', error);
+        logger.error('获取汇率失败:', error);
         // 保持默认值或上次的值
     }
 }
@@ -405,7 +406,7 @@ async function loadDashboard() {
         }
 
     } catch (error) {
-        console.error('加载仪表盘数据失败:', error);
+        logger.error('加载仪表盘数据失败:', error);
         const rateEl = document.getElementById('dashboard-rate');
         if (rateEl) rateEl.textContent = 'Error: ' + error.message;
     }
@@ -548,7 +549,7 @@ function navigate(viewName) {
     if (view) {
         view.classList.add('active');
     } else {
-        console.error('View not found:', viewName + '-view');
+        logger.error('View not found:', viewName + '-view');
     }
 
     // 更新标题
@@ -631,10 +632,10 @@ window.openModal = function (modalId) {
         try {
             setTimeout(initFloatingLabels, 50);
         } catch (e) {
-            console.error('Error initializing floating labels:', e);
+            logger.error('Error initializing floating labels:', e);
         }
     } else {
-        console.error('Modal not found:', modalId);
+        logger.error('Modal not found:', modalId);
     }
 }
 
@@ -737,7 +738,7 @@ async function loadSelectOptions(selectName, type, selectedValue) {
 
         });
     } catch (err) {
-        console.error('加载下拉选项失败:', selectName, err);
+        logger.error('加载下拉选项失败:', selectName, err);
     }
 }
 
@@ -808,7 +809,7 @@ async function reloadSettingsByType(type) {
         });
 
     } catch (err) {
-        console.error(`Failed to reload settings for ${type}: `, err);
+        logger.error(`Failed to reload settings for ${type}: `, err);
         showError('刷新列表失败');
     }
 }
@@ -1235,7 +1236,7 @@ window.saveSKU = async function () {
         } catch (_) { }
 
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         showError('保存失败: ' + (error && error.message ? error.message : error));
     } finally {
         btn.textContent = originalText;
@@ -1279,7 +1280,7 @@ function initSKUObserver() {
         console.log('[DEBUG] Sentinel found, observing');
         window.skuObserver.observe(sentinel);
     } else {
-        console.error('[DEBUG] Sentinel NOT found');
+        logger.error('[DEBUG] Sentinel NOT found');
     }
 }
 
@@ -1339,7 +1340,7 @@ window.loadSKUs = async function (page = 1, search = '', reset = true) {
         }
 
     } catch (error) {
-        console.error('loadSKUs error:', error);
+        logger.error('loadSKUs error:', error);
         if (reset) {
             tbody.innerHTML = '<tr><td colspan="9" class="text-center text-error">加载失败: ' + error.message + '</td></tr>';
         }
@@ -1503,8 +1504,8 @@ window.showSKUDetails = async function (skuId) {
         // 追加统计信息
         const stockTotal = await fetchStockTotalBySKU(sku.id);
         const sales30d = await fetchSales30dBySKU(sku.id);
-        pushRow('库存数量', stockTotal == null ? '-' : stockTotal);
-        pushRow('最近30天销售量', sales30d == null ? '-' : sales30d);
+        pushRow('库存数量', stockTotal === null ? '-' : stockTotal);
+        pushRow('最近30天销售量', sales30d === null ? '-' : sales30d);
         const right = `<div class="sku-detail-fields"> ${rows.join('')}</div> `;
         const body = document.getElementById('sku-detail-body');
         if (body) body.innerHTML = `<div class="sku-detail-grid"> ${left}${right}</div> `;
@@ -1733,8 +1734,8 @@ window.decreaseInboundQty = (code) => updateQuantity('inbound', code, -1);
 
 
 window.removeInboundItem = function (code) {
-    if (pendingInbound[code] != null) delete pendingInbound[code];
-    if (inboundPurchaseQty[code] != null) delete inboundPurchaseQty[code];
+    if (pendingInbound[code] !== null) delete pendingInbound[code];
+    if (inboundPurchaseQty[code] !== null) delete inboundPurchaseQty[code];
     const row = document.querySelector(`#inbound - list - body tr[data - code= "${code}"]`);
     if (row) row.remove();
     const empty = document.getElementById('inbound-empty-state');
@@ -1892,7 +1893,7 @@ window.submitInbound = async function () {
         showSuccess('入库成功');
         resetInboundView();
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         showError('入库失败: ' + error.message);
     }
 }
@@ -2051,7 +2052,7 @@ async function renderOutboundList() {
         try {
             const total = await fetchStockTotalBySKU(skuId);
             const cell = row.querySelector('[data-role="current-stock"]');
-            if (cell) cell.textContent = (total == null ? '-' : total);
+            if (cell) cell.textContent = (total === null ? '-' : total);
             if (typeof total === 'number') {
                 if (pendingOutbound[code] > total) {
                     pendingOutbound[code] = total;
@@ -2143,7 +2144,7 @@ async function appendOutboundRowIfNeeded(code) {
         try {
             const total = await fetchStockTotalBySKU(sku.id);
             const cell = tr.querySelector('[data-role="current-stock"]');
-            if (cell) cell.textContent = (total == null ? '-' : total);
+            if (cell) cell.textContent = (total === null ? '-' : total);
             if (typeof total === 'number') {
                 const input = tr.querySelector('input[data-role="outbound-qty"]');
                 if (pendingOutbound[code] > total) {
@@ -2169,7 +2170,7 @@ window.increaseOutboundQty = (code) => updateQuantity('outbound', code, 1);
 window.decreaseOutboundQty = (code) => updateQuantity('outbound', code, -1);
 
 window.removeOutboundItem = function (code) {
-    if (pendingOutbound[code] != null) delete pendingOutbound[code];
+    if (pendingOutbound[code] !== null) delete pendingOutbound[code];
     const row = document.querySelector(`#outbound - list - body tr[data - code= "${code}"]`);
     if (row) row.remove();
     const empty = document.getElementById('outbound-empty-state');
@@ -2234,7 +2235,7 @@ window.submitOutbound = async function () {
         showSuccess('出库成功');
         resetOutboundView();
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         showError('出库失败: ' + error.message);
     }
 }
@@ -2347,7 +2348,7 @@ async function calculateStockStatistics() {
             售后仓: aftersaleStock
         });
     } catch (error) {
-        console.error('[库存统计] 计算失败:', error);
+        logger.error('[库存统计] 计算失败:', error);
         // 失败时显示 0
         updateStockStatistics(window.totalStockCount, 0, 0, 0);
     }
@@ -2448,7 +2449,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
                 warehouseStocks = results[1] || {};
             }
         } catch (e) {
-            console.error('Bulk fetch stock error:', e);
+            logger.error('Bulk fetch stock error:', e);
         }
 
         // 🚀 性能优化: 并行获取所有图片URL
@@ -2523,7 +2524,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
                     </td>
                     <td class="no-wrap">${warehouseName}</td>
                     <td class="font-num">${stockShown}</td>
-                    <td class="font-num">${p.safety_stock_30d != null ? p.safety_stock_30d : '-'}</td>
+                    <td class="font-num">${p.safety_stock_30d !== null ? p.safety_stock_30d : '-'}</td>
                     <td class="text-center">${p.url ? `<a href="${p.url}" target="_blank" title="打开链接" class="btn-url-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 0 20"></path><path d="M12 2a15.3 15.3 0 0 0 0 20"></path></svg></a>` : ''}</td>
                     <td class="text-center">
                         <div class="action-icons">
@@ -2556,7 +2557,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
 
         setupImageLoading(); // 激活骨架屏加载
     } catch (error) {
-        console.error('loadStockList error:', error);
+        logger.error('loadStockList error:', error);
         if (reset) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center text-error">加载失败: ' + error.message + '</td></tr>';
         }
@@ -2581,7 +2582,7 @@ window.searchStock = function (queryOverride) {
         const warehouse = document.getElementById('stock-warehouse').value;
         loadStockList(query, warehouse, 1, true);
     } catch (error) {
-        console.error('搜索失败:', error);
+        logger.error('搜索失败:', error);
         showError('搜索失败,请重试');
     }
 }
@@ -2630,12 +2631,12 @@ window.openAdjustModal = function (sku) {
                         const selectedWarehouse = warehouseSelect.value;
                         if (selectedWarehouse) {
                             const cur = await fetchStockBySKUWarehouse(s.id, selectedWarehouse);
-                            if (currentStockEl) currentStockEl.textContent = (cur == null ? 0 : cur);
+                            if (currentStockEl) currentStockEl.textContent = (cur === null ? 0 : cur);
                             window._adjustSku = {
                                 id: s.id,
                                 barcode: s.external_barcode,
                                 warehouse: selectedWarehouse,
-                                current: (cur == null ? 0 : cur),
+                                current: (cur === null ? 0 : cur),
                                 price_rmb: Number(s.purchase_price_rmb) || 0
                             };
                         } else {
@@ -2661,7 +2662,7 @@ window.openAdjustModal = function (sku) {
                 if (skuNameEl) skuNameEl.textContent = '未找到';
             }
         } catch (err) {
-            console.error('加载SKU信息失败:', err);
+            logger.error('加载SKU信息失败:', err);
         }
     })();
 
@@ -2695,8 +2696,8 @@ window.openAdjustModal = function (sku) {
                 // 校验 settings 是否存在相应操作类型
                 // const inboundTypes = window._settingsCache['inbound_type'] || {};
                 // const outboundTypes = window._settingsCache['outbound_type'] || {};
-                // const hasAdd = inboundTypes['adjust_add'] != null;
-                // const hasReduce = outboundTypes['adjust_reduce'] != null;
+                // const hasAdd = inboundTypes['adjust_add'] !== null;
+                // const hasReduce = outboundTypes['adjust_reduce'] !== null;
                 // if ((movement === 'adjust_add' && !hasAdd) || (movement === 'adjust_reduce' && !hasReduce)) {
                 //     showError('缺少操作类型:请在 settings 中添加 adjust_add / adjust_reduce');
                 //     return;
@@ -2721,7 +2722,7 @@ window.openAdjustModal = function (sku) {
             }
         };
     } else {
-        console.error('[ERROR] 找不到确认调整按钮!');
+        logger.error('[ERROR] 找不到确认调整按钮!');
     }
 }
 
@@ -2780,7 +2781,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
         }
     } catch (error) {
-        console.error('enforceAuth failed:', error)
+        logger.error('enforceAuth failed:', error)
         // 出错时显示登录界面
         const authOverlay = document.getElementById('auth-overlay')
         if (authOverlay) authOverlay.style.display = 'flex'
@@ -3141,7 +3142,7 @@ window.loadExpenses = async function () {
 
         renderExpenses(expenses);
     } catch (err) {
-        console.error('加载费用失败:', err);
+        logger.error('加载费用失败:', err);
         tbody.innerHTML = '<tr><td colspan="7" class="text-center text-error">加载失败</td></tr>';
         showError('加载费用列表失败');
     }
@@ -3299,7 +3300,7 @@ window.addExpense = async function () {
         // 刷新列表
         loadExpenses();
     } catch (err) {
-        console.error('添加费用失败:', err);
+        logger.error('添加费用失败:', err);
         showError('添加费用失败: ' + err.message);
     }
 }
@@ -3320,8 +3321,8 @@ window.openEditExpenseModal = async function (id) {
 
         if (!expense) {
             showError('未找到该费用记录');
-            console.error('[费用编辑] 在缓存中未找到 ID:', id);
-            console.error('[费用编辑] 缓存中的所有ID:', window._expensesCache.map(e => e.id));
+            logger.error('[费用编辑] 在缓存中未找到 ID:', id);
+            logger.error('[费用编辑] 缓存中的所有ID:', window._expensesCache.map(e => e.id));
             return;
         }
 
@@ -3362,7 +3363,7 @@ window.openEditExpenseModal = async function (id) {
         initFloatingLabels();
 
     } catch (err) {
-        console.error('打开编辑框失败:', err);
+        logger.error('打开编辑框失败:', err);
         showError('打开编辑框失败: ' + err.message);
     }
 }
@@ -3415,7 +3416,7 @@ window.saveExpenseEdit = async function () {
         closeEditExpenseModal();
         loadExpenses();
     } catch (err) {
-        console.error('更新失败:', err);
+        logger.error('更新失败:', err);
         showError('更新失败: ' + err.message);
     }
 }
@@ -3460,7 +3461,7 @@ window.loadSettings = async function () {
         }));
         console.log('Settings cache updated');
     } catch (err) {
-        console.error('Failed to load settings cache:', err);
+        logger.error('Failed to load settings cache:', err);
     }
 }
 
@@ -3483,7 +3484,7 @@ window.loadWarehouseConstraints = async function () {
         window._warehouseConstraints = rules;
         console.log('仓库约束关系已加载:', rules);
     } catch (error) {
-        console.error('加载仓库约束关系失败:', error);
+        logger.error('加载仓库约束关系失败:', error);
         // 使用默认配置作为后备
         window._warehouseConstraints = WAREHOUSE_RULES;
     }
@@ -3506,7 +3507,7 @@ window.loadPriceRules = async function () {
         window._priceRules = rules;
         console.log('价格规则已加载:', rules);
     } catch (error) {
-        console.error('加载价格规则失败:', error);
+        logger.error('加载价格规则失败:', error);
         // 使用默认配置作为后备
         window._priceRules = PRICE_RULES;
     }
@@ -3524,7 +3525,7 @@ window.loadSystemSettings = async function () {
             .order('created_at', { ascending: true });
 
         if (error) {
-            console.error('Error fetching settings:', error);
+            logger.error('Error fetching settings:', error);
             throw error;
         }
 
@@ -3562,7 +3563,7 @@ window.loadSystemSettings = async function () {
         });
 
     } catch (err) {
-        console.error('加载系统设置失败:', err);
+        logger.error('加载系统设置失败:', err);
         showError('加载系统设置失败');
     }
 }
@@ -3627,7 +3628,7 @@ function initMobileMenu() {
 async function initApp() {
     // This function is intended to be called on page load to initialize various components.
     // For now, it's empty, but can be expanded later.
-    console.log('App initialized.');
+    logger.info('App initialized.');
     initMobileMenu(); // Initialize mobile menu functionality
 }
 
@@ -3711,7 +3712,7 @@ if (saveBtn) {
             loadSettings(); // Update global cache
 
         } catch (err) {
-            console.error('Update failed:', err);
+            logger.error('Update failed:', err);
             showError('更新失败: ' + err.message);
         }
     };

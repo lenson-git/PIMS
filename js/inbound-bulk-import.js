@@ -27,29 +27,29 @@ if (typeof window.closeModal === 'undefined') {
 // 全局状态：待入库商品列表
 let pendingInboundList = [];
 
-console.log('Inbound Bulk Import Script Loaded');
+if(window.logger)window.logger.info('Inbound Bulk Import Script Loaded');
 
 /**
  * 处理文件选择
  */
 window.handleInboundImportFile = async function (event) {
-    console.log('[DEBUG] handleInboundImportFile 开始');
+    if(window.logger)window.logger.debug( handleInboundImportFile 开始');
 
     const file = event.target.files[0];
     if (!file) return;
 
-    console.log('[DEBUG] 文件名:', file.name);
+    if(window.logger)window.logger.debug( 文件名:', file.name);
 
     try {
         // 解析 Excel
-        console.log('[DEBUG] 开始解析 Excel...');
+        if(window.logger)window.logger.debug( 开始解析 Excel...');
         const data = await parseInboundExcel(file);
-        console.log('[DEBUG] Excel 解析完成，数据行数:', data.length);
+        if(window.logger)window.logger.debug( Excel 解析完成，数据行数:', data.length);
 
         // 验证 SKU
-        console.log('[DEBUG] 开始验证 SKU...');
+        if(window.logger)window.logger.debug( 开始验证 SKU...');
         const validation = await validateInboundSKUs(data);
-        console.log('[DEBUG] 验证完成');
+        if(window.logger)window.logger.debug( 验证完成');
 
         if (validation.missingSkus.length > 0) {
             // 显示错误提示
@@ -81,12 +81,12 @@ async function parseInboundExcel(file) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
 
-                console.log('[DEBUG] 工作表列表:', workbook.SheetNames);
+                if(window.logger)window.logger.debug( 工作表列表:', workbook.SheetNames);
 
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const jsonData = XLSX.utils.sheet_to_json(firstSheet);
 
-                console.log('[DEBUG] 使用工作表 "' + workbook.SheetNames[0] + '" 的列名:', Object.keys(jsonData[0] || {}));
+                if(window.logger)window.logger.debug( 使用工作表 "' + workbook.SheetNames[0] + '" 的列名:', Object.keys(jsonData[0] || {}));
 
                 // 标准化数据
                 const normalized = jsonData.map(row => ({
@@ -110,7 +110,7 @@ async function parseInboundExcel(file) {
  */
 async function validateInboundSKUs(data) {
     const skuIds = data.map(row => row.sku_id).filter(Boolean);
-    console.log('[DEBUG] 查询 SKU:', skuIds);
+    if(window.logger)window.logger.debug( 查询 SKU:', skuIds);
 
     const { data: existingSKUs, error } = await supabase
         .from('v_skus')
@@ -119,7 +119,7 @@ async function validateInboundSKUs(data) {
 
     if (error) throw error;
 
-    console.log('[DEBUG] 查询到', existingSKUs.length, '个 SKU');
+    if(window.logger)window.logger.debug( 查询到', existingSKUs.length, '个 SKU');
 
     const existingIds = new Set(existingSKUs.map(s => s.external_barcode));
     const missingSkus = skuIds.filter(id => !existingIds.has(id));
@@ -199,7 +199,7 @@ window.setInboundDefaults = function () {
             warehouseSelect.value = mainWarehouse.value;
             // 触发 change 事件以更新 UI (浮动标签)
             warehouseSelect.dispatchEvent(new Event('change'));
-            console.log('[批量入库] 默认仓库已设置:', mainWarehouse.text);
+            if(window.logger)window.logger.info('[批量入库] 默认仓库已设置:', mainWarehouse.text);
         } else {
             console.warn('[批量入库] 未找到"主仓"');
         }
@@ -221,7 +221,7 @@ window.setInboundDefaults = function () {
         if (purchaseType) {
             typeSelect.value = purchaseType.value;
             typeSelect.dispatchEvent(new Event('change'));
-            console.log('[批量入库] 默认入库类型已设置:', purchaseType.text);
+            if(window.logger)window.logger.info('[批量入库] 默认入库类型已设置:', purchaseType.text);
         } else {
             console.warn('[批量入库] 未找到"采购入库"类型');
         }
@@ -255,7 +255,7 @@ async function renderPendingInboundList() {
         try {
             if (item.pic && typeof item.pic === 'string') {
                 const cleanPic = item.pic.trim();
-                console.log(`[批量入库] 处理图片 ${index + 1}: `, cleanPic);
+                if(window.logger)window.logger.info(`[批量入库] 处理图片 ${index + 1}: `, cleanPic);
 
                 if (cleanPic !== '' && cleanPic.toLowerCase() !== 'null' && cleanPic.toLowerCase() !== 'undefined') {
                     // 尝试转换为缩略图（无超时限制）
@@ -264,12 +264,12 @@ async function renderPendingInboundList() {
                     if (typeof window.createTransformedUrlFromPublicUrl === 'function') {
                         try {
                             thumb = await window.createTransformedUrlFromPublicUrl(cleanPic, 100, 100);
-                            console.log(`[批量入库] 缩略图转换结果 ${index + 1}: `, thumb ? '成功' : '失败');
+                            if(window.logger)window.logger.info(`[批量入库] 缩略图转换结果 ${index + 1}: `, thumb ? '成功' : '失败');
 
                             // 如果缩略图失败，尝试签名 URL
                             if (!thumb && typeof window.createSignedUrlFromPublicUrl === 'function') {
                                 thumb = await window.createSignedUrlFromPublicUrl(cleanPic);
-                                console.log(`[批量入库] 签名 URL 结果 ${index + 1}: `, thumb ? '成功' : '失败');
+                                if(window.logger)window.logger.info(`[批量入库] 签名 URL 结果 ${index + 1}: `, thumb ? '成功' : '失败');
                             }
                         } catch (e) {
                             console.error(`[批量入库] 图片转换失败 ${index + 1}: `, cleanPic, e);
@@ -345,7 +345,7 @@ async function renderPendingInboundList() {
     // 使用 requestAnimationFrame 确保 DOM 已渲染
     requestAnimationFrame(() => {
         if (typeof window.setupImageLoading === 'function') {
-            console.log('[批量入库] 调用 setupImageLoading');
+            if(window.logger)window.logger.info('[批量入库] 调用 setupImageLoading');
             window.setupImageLoading();
         } else {
             console.warn('[批量入库] setupImageLoading 函数未找到');
@@ -412,7 +412,7 @@ window.submitInbound = async function () {
     }
 
     try {
-        console.log('[DEBUG] 开始批量入库...');
+        if(window.logger)window.logger.debug( 开始批量入库...');
 
         // 从输入框读取实际入库数量
         const inputs = document.querySelectorAll('.quantity-input');
@@ -436,7 +436,7 @@ window.submitInbound = async function () {
             return;
         }
 
-        console.log('[DEBUG] 准备入库', records.length, '条记录');
+        if(window.logger)window.logger.debug( 准备入库', records.length, '条记录');
 
         // 批量插入
         const { error } = await supabase
