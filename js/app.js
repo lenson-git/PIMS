@@ -8,6 +8,15 @@ import { getSettingName, showError, showInfo, showSuccess, formatCurrency, forma
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
+
+// 将工具函数暴露到全局作用域
+window.showSuccess = showSuccess;
+window.showError = showError;
+window.showInfo = showInfo;
+window.getSettingName = getSettingName;
+window.formatCurrency = formatCurrency;
+window.formatDate = formatDate;
+window.escapeHtml = escapeHtml;
 window.createTransformedUrlFromPublicUrl = createTransformedUrlFromPublicUrl;
 window.createSignedUrlFromPublicUrl = createSignedUrlFromPublicUrl;
 
