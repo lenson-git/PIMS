@@ -5,7 +5,6 @@ import {
 import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
 import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
 import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
-import { showLoading, hideLoading } from './animations.js'
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
@@ -3261,25 +3260,9 @@ window.addExpense = async function () {
         let imageUrl = null;
 
         if (imageInput.files.length > 0) {
-            // 显示上传中状态
-            if (typeof window.showLoading === 'function') {
-                window.showLoading('正在上传图片...');
-            }
-
             imageUrl = await uploadImage(imageInput.files[0], 'expenses');
-
-            // 隐藏加载状态
-            if (typeof window.hideLoading === 'function') {
-                window.hideLoading();
-            }
-
             // 显示上传成功标识
             if (successBadge) successBadge.style.display = 'flex';
-
-            // 显示上传成功提示
-            if (typeof window.showInfo === 'function') {
-                window.showInfo('图片上传成功');
-            }
         }
 
         await createExpense({
@@ -3304,11 +3287,6 @@ window.addExpense = async function () {
         // 刷新列表
         loadExpenses();
     } catch (err) {
-        // 确保隐藏加载状态
-        if (typeof window.hideLoading === 'function') {
-            window.hideLoading();
-        }
-
         console.error('添加费用失败:', err);
         showError('添加费用失败: ' + err.message);
     }
