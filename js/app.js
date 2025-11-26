@@ -596,7 +596,7 @@ function navigate(viewName) {
                 currencySelect.value = '';
                 currencySelect.dispatchEvent(new Event('change'));
             }
-            try { initFloatingLabels(); } catch (_) {}
+            try { initFloatingLabels(); } catch (_) { }
         }, 200);
     }
 
@@ -2276,6 +2276,11 @@ window.totalStockCount = 0;
 window.isLoadingStock = false;
 window.stockObserver = null;
 
+// 🚀 性能优化: 库存统计缓存
+let stockStatsCache = null;
+let stockStatsCacheTime = 0;
+const STOCK_STATS_CACHE_DURATION = 30000; // 30秒缓存
+
 // 更新库存统计信息显示
 function updateStockStatistics(skuCount, totalQuantity, mainWarehouse, aftersaleWarehouse) {
     const skuCountEl = document.getElementById('stock-sku-count');
@@ -2289,9 +2294,17 @@ function updateStockStatistics(skuCount, totalQuantity, mainWarehouse, aftersale
     if (aftersaleWarehouseEl) aftersaleWarehouseEl.textContent = aftersaleWarehouse;
 }
 
-// 计算库存统计信息
+// 计算库存统计信息 (带缓存)
 async function calculateStockStatistics() {
     try {
+        // 检查缓存是否有效
+        const now = Date.now();
+        if (stockStatsCache && (now - stockStatsCacheTime) < STOCK_STATS_CACHE_DURATION) {
+            console.log('[库存统计] 使用缓存数据');
+            updateStockStatistics(...stockStatsCache);
+            return;
+        }
+
         // 获取所有库存数据
         const allStock = await fetchAllStock();
 
@@ -2308,13 +2321,12 @@ async function calculateStockStatistics() {
             .filter(item => item.warehouse_code === 'AFTERSALE')
             .reduce((sum, item) => sum + (item.quantity || 0), 0);
 
+        // 缓存结果
+        stockStatsCache = [window.totalStockCount, totalQuantity, mainStock, aftersaleStock];
+        stockStatsCacheTime = now;
+
         // 更新显示
-        updateStockStatistics(
-            window.totalStockCount,
-            totalQuantity,
-            mainStock,
-            aftersaleStock
-        );
+        updateStockStatistics(...stockStatsCache);
 
         console.log('[库存统计]', {
             SKU: window.totalStockCount,
@@ -2327,6 +2339,13 @@ async function calculateStockStatistics() {
         // 失败时显示 0
         updateStockStatistics(window.totalStockCount, 0, 0, 0);
     }
+}
+
+// 清除库存统计缓存 (在库存变动后调用)
+window.clearStockStatsCache = function () {
+    stockStatsCache = null;
+    stockStatsCacheTime = 0;
+    console.log('[库存统计] 缓存已清除');
 }
 
 // 初始化库存无限滚动观察器
@@ -2399,12 +2418,6 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
             }
         }
 
-        const rows = [];
-        let warehouseStockMap = null;
-        if (warehouse) {
-            try { warehouseStockMap = await fetchWarehouseStockMap(warehouse); } catch (_) { warehouseStockMap = null; }
-        }
-
         // 批量获取库存数据
         const skuIds = products.map(p => p.id);
         let stockTotals = {};
@@ -2426,22 +2439,30 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
             console.error('Bulk fetch stock error:', e);
         }
 
-        for (const p of products) {
-            const original = p.pic || null;
-            let thumb = null;
+        // 🚀 性能优化: 并行获取所有图片URL
+        const thumbPromises = products.map(p => {
             if (p.pic) {
-                thumb = await createTransformedUrlFromPublicUrl(p.pic, 300, 300);
+                return createTransformedUrlFromPublicUrl(p.pic, 300, 300);
             }
+            return Promise.resolve(null);
+        });
+
+        const thumbs = await Promise.all(thumbPromises);
+
+        // 构建HTML行
+        const rows = [];
+        for (let i = 0; i < products.length; i++) {
+            const p = products[i];
+            const original = p.pic || null;
+            const thumb = thumbs[i];
+
             let stockWarehouse = '-';
             let stockTotal = stockTotals[p.id] !== undefined ? stockTotals[p.id] : '-';
 
             if (warehouse) {
-                if (warehouseStockMap && Object.prototype.hasOwnProperty.call(warehouseStockMap, p.id)) {
-                    stockWarehouse = warehouseStockMap[p.id];
-                } else {
-                    stockWarehouse = warehouseStocks[p.id] !== undefined ? warehouseStocks[p.id] : 0;
-                }
+                stockWarehouse = warehouseStocks[p.id] !== undefined ? warehouseStocks[p.id] : 0;
             }
+
             // 过滤下架状态的SKU - 不在库存管理中显示
             const statusName = getSettingName('status', p.status_code) || '';
             const statusCode = (p.status_code || '').toLowerCase();
