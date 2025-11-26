@@ -574,6 +574,9 @@ function navigate(viewName) {
         // 异步加载数据
         loadStockList();
     } else if (viewName === 'expenses') {
+        // 刷新费用类型下拉列表，确保系统设置的修改能及时反映
+        loadSelectOptions('ExpenseType', 'ExpenseType');
+
         // 设置默认日期为今天
         const today = new Date().toISOString().split('T')[0];
         const dateInput = document.getElementById('new-expense-date');
