@@ -2525,7 +2525,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
                     </td>
                     <td class="no-wrap">${warehouseName}</td>
                     <td class="font-num">${stockShown}</td>
-                    <td class="font-num">${p.safety_stock_30d !== null ? p.safety_stock_30d : '-'}</td>
+                    <td class="font-num">${(p.safety_stock_30d !== null && p.safety_stock_30d !== undefined) ? p.safety_stock_30d : '-'}</td>
                     <td class="text-center">${p.url ? `<a href="${p.url}" target="_blank" title="打开链接" class="btn-url-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 0 20"></path><path d="M12 2a15.3 15.3 0 0 0 0 20"></path></svg></a>` : ''}</td>
                     <td class="text-center">
                         <div class="action-icons">
