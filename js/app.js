@@ -91,7 +91,7 @@ function initializeMetrics(shops, salesChannels, warehouses) {
     const warehouseMetrics = {};
 
     // 初始化店铺指标
-    if (shops.length> 0) {
+    if (shops.length > 0) {
         shops.forEach(shop => {
             shopMetrics[shop.code] = {
                 name: shop.name,
@@ -102,7 +102,7 @@ function initializeMetrics(shops, salesChannels, warehouses) {
                 channels: {}
             };
             // 初始化所有配置的渠道为 0
-            if (salesChannels.length> 0) {
+            if (salesChannels.length > 0) {
                 salesChannels.forEach(ch => {
                     shopMetrics[shop.code].channels[ch.name] = 0;
                 });
@@ -111,7 +111,7 @@ function initializeMetrics(shops, salesChannels, warehouses) {
     }
 
     // 初始化仓库指标
-    if (warehouses.length> 0) {
+    if (warehouses.length > 0) {
         warehouses.forEach(wh => {
             // 直接使用数据库中的名称，不再强制覆盖
             warehouseMetrics[wh.code] = { name: wh.name, valueRMB: 0, qty: 0 };
@@ -258,7 +258,7 @@ function calculateLowStockWarnings(allSkus, allStock, safetyStock, shopMetrics) 
         }
 
         // 只有当库存数量低于安全库存阈值时才计入低库存
-        if (threshold> 0 && totalQty <threshold) {
+        if (threshold > 0 && totalQty < threshold) {
             if (sku.shop_code && shopMetrics[sku.shop_code]) {
                 shopMetrics[sku.shop_code].lowStockCount += 1;
             }
@@ -411,7 +411,7 @@ function updateMetric(elementId, value, prefix = '', suffix = '', isInteger = fa
 
         // Color coding for profit/loss
         if (elementId === 'dashboard-profit') {
-            el.className = value>= 0 ? 'stat-total text-success' : 'stat-total text-error';
+            el.className = value >= 0 ? 'stat-total text-success' : 'stat-total text-error';
         }
     }
 }
@@ -423,7 +423,7 @@ function renderShopMetrics(containerId, shopMetrics, metricKey, prefix = '', suf
     body.innerHTML = '';
 
     const shops = Object.values(shopMetrics);
-    if (shops.length> 0) {
+    if (shops.length > 0) {
         shops.forEach(shop => {
             // 针对 stat-body (销售额) 的特殊布局 - 只在启用渠道显示时使用
             if (showChannels) {
@@ -432,7 +432,7 @@ function renderShopMetrics(containerId, shopMetrics, metricKey, prefix = '', suf
 
                 // 构建渠道细分 HTML
                 let channelsHtml = '';
-                if (shop.channels && Object.keys(shop.channels).length> 0) {
+                if (shop.channels && Object.keys(shop.channels).length > 0) {
                     Object.entries(shop.channels).forEach(([channel, amount]) => {
                         channelsHtml += `
     <div class="metric-row sub-row" style = "font-size: 0.9em; opacity: 0.8;">
@@ -1072,7 +1072,7 @@ window.resetForm = function () {
     const uploadArea = document.getElementById('sku-upload-area');
     if (uploadArea) {
         uploadArea.innerHTML = `
-    <input type = "file" id = "sku-img-input" accept = "image/*" hidden>
+    <input type="file" id="sku-img-input" accept="image/*" hidden>
         <label for="sku-img-input" class="upload-label">
             <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             <span>点击选择图片</span>
@@ -1169,7 +1169,7 @@ window.saveSKU = async function () {
         }
         let imageUrl = null;
         if (currentImageFile) {
-            const filename = `sku - ${Date.now()} -${currentImageFile.name} `;
+            const filename = `sku-${Date.now()}-${currentImageFile.name}`;
             imageUrl = await uploadImage(currentImageFile, filename);
         } else if (currentSKUId) {
             imageUrl = currentImageUrl;
@@ -1255,7 +1255,7 @@ function initSKUObserver() {
             if (entry.isIntersecting && !window.isLoadingSKUs) {
                 const maxPage = Math.ceil(window.totalSKUCount / 20);
                 console.log('[DEBUG] Loading next page:', window.currentSKUPage + 1, 'Max:', maxPage);
-                if (window.currentSKUPage <maxPage) {
+                if (window.currentSKUPage < maxPage) {
                     window.loadSKUs(window.currentSKUPage + 1, document.getElementById('sku-main-input').value, false);
                 }
             }
@@ -1321,7 +1321,7 @@ window.loadSKUs = async function (page = 1, search = '', reset = true) {
         const maxPage = Math.ceil(window.totalSKUCount / 20);
         console.log('[DEBUG] Page loaded:', page, 'Total:', window.totalSKUCount, 'MaxPage:', maxPage);
 
-        if (page>= maxPage && window.totalSKUCount> 0) {
+        if (page >= maxPage && window.totalSKUCount > 0) {
             if (noMoreData) noMoreData.style.display = 'block'; // Ensure block display
             if (window.skuObserver) window.skuObserver.disconnect();
         }
@@ -1337,7 +1337,7 @@ window.loadSKUs = async function (page = 1, search = '', reset = true) {
 
         // 在状态重置后重新初始化观察器，避免竞态条件
         const maxPage = Math.ceil(window.totalSKUCount / 20);
-        if (page <maxPage) {
+        if (page < maxPage) {
             initSKUObserver();
         }
     }
@@ -1691,12 +1691,12 @@ function updateQuantity(type, code, delta) {
     let next = cfg.data[code] + delta;
 
     // 出库需要检查库存上限
-    if (cfg.checkStock && delta> 0) {
+    if (cfg.checkStock && delta > 0) {
         const row = document.querySelector(`#${cfg.listBody} tr[data - code= "${code}"]`);
         if (row) {
             const cell = row.querySelector('[data-role="current-stock"]');
             const max = cell ? parseInt(cell.textContent, 10) : NaN;
-            if (!Number.isNaN(max) && next> max) {
+            if (!Number.isNaN(max) && next > max) {
                 next = max;
                 showError('超过当前库存，已回退到最大可用值');
             }
@@ -1840,7 +1840,7 @@ window.submitInbound = async function () {
 
     try {
         let count = 0;
-        if (Object.keys(pendingInbound).length> 0) {
+        if (Object.keys(pendingInbound).length > 0) {
             const ok = await confirmAction(`确认入库：共 ${Object.values(pendingInbound).reduce((a, b) => a + b, 0)} 件`)
             if (!ok) { showInfo('已取消'); return; }
             for (const code of Object.keys(pendingInbound)) {
@@ -2180,7 +2180,7 @@ window.submitOutbound = async function () {
 
     try {
         let count = 0;
-        if (Object.keys(pendingOutbound).length> 0) {
+        if (Object.keys(pendingOutbound).length > 0) {
             const ok = await confirmAction(`确认出库：共 ${Object.values(pendingOutbound).reduce((a, b) => a + b, 0)} 件`)
             if (!ok) { showInfo('已取消'); return; }
             for (const code of Object.keys(pendingOutbound)) {
@@ -2364,7 +2364,7 @@ function initStockObserver() {
         entries.forEach(entry => {
             if (entry.isIntersecting && !window.isLoadingStock) {
                 const maxPage = Math.ceil(window.totalStockCount / 20);
-                if (window.currentStockPage <maxPage) {
+                if (window.currentStockPage < maxPage) {
                     const query = document.getElementById('stock-search-input').value;
                     const warehouse = document.getElementById('stock-warehouse').value;
                     window.loadStockList(query, warehouse, window.currentStockPage + 1, false);
@@ -2451,7 +2451,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
 
         // 构建HTML行
         const rows = [];
-        for (let i = 0; i <products.length; i++) {
+        for (let i = 0; i < products.length; i++) {
             const p = products[i];
             const original = p.pic || null;
             const thumb = thumbs[i];
@@ -2532,7 +2532,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
 
         // 检查是否还有更多数据
         const maxPage = Math.ceil(window.totalStockCount / 20);
-        if (page>= maxPage && window.totalStockCount> 0) {
+        if (page >= maxPage && window.totalStockCount > 0) {
             if (noMoreData) noMoreData.style.display = 'block';
             if (window.stockObserver) window.stockObserver.disconnect();
         }
@@ -2554,7 +2554,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
 
         // 在状态重置后重新初始化观察器
         const maxPage = Math.ceil(window.totalStockCount / 20);
-        if (page <maxPage) {
+        if (page < maxPage) {
             initStockObserver();
         }
     }
@@ -2676,7 +2676,7 @@ window.openAdjustModal = function (sku) {
                 else if (type === 'set') {
                     const cur = info.current || 0;
                     const delta = qty - cur;
-                    if (delta> 0) { movement = 'adjust_add'; amount = delta; }
+                    if (delta > 0) { movement = 'adjust_add'; amount = delta; }
                     else if (delta < 0) { movement = 'adjust_reduce'; amount = -delta; }
                     else { showInfo('库存不变'); closeModal('adjust-stock-modal'); return; }
                 }
@@ -2992,7 +2992,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             val = Math.max(1, val);
             const cell = tr.querySelector('[data-role="current-stock"]');
             const max = cell ? parseInt(cell.textContent, 10) : NaN;
-            if (!Number.isNaN(max) && val> max) {
+            if (!Number.isNaN(max) && val > max) {
                 val = max;
                 showError('超过当前库存，已回退到最大可用值');
             }
@@ -3259,7 +3259,7 @@ window.addExpense = async function () {
     try {
         let imageUrl = null;
 
-        if (imageInput.files.length> 0) {
+        if (imageInput.files.length > 0) {
             imageUrl = await uploadImage(imageInput.files[0], 'expenses');
             // 显示上传成功标识
             if (successBadge) successBadge.style.display = 'flex';
@@ -3392,7 +3392,7 @@ window.saveExpenseEdit = async function () {
         };
 
         // 如果选择了新图片,上传并更新
-        if (imageInput.files.length> 0) {
+        if (imageInput.files.length > 0) {
             updates.picture_id = await uploadImage(imageInput.files[0], 'expenses');
             // 显示上传成功标识
             if (successBadge) successBadge.style.display = 'flex';
@@ -3556,7 +3556,7 @@ window.loadSystemSettings = async function () {
 }
 
 function renderSettingList(type, items) {
-    const container = document.getElementById(`${type} -list`);
+    const container = document.getElementById(`${type}-list`);
     if (!container) return;
 
     if (items.length === 0) {
