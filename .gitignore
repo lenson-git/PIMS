@@ -1,4 +1,38 @@
+# 系统文件
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 依赖
 node_modules/
+bower_components/
+
+# 构建产物
+dist/
+build/
 *.log
+
+# 环境变量
+.env
 .env.local
+.env.*.local
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 临时文件
+*.bak
+*.tmp
+.cache/
+
+# Gemini 工作目录（不上传）
+.gemini/
+.trae/
