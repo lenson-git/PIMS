@@ -255,7 +255,7 @@ async function renderPendingInboundList() {
         try {
             if (item.pic && typeof item.pic === 'string') {
                 const cleanPic = item.pic.trim();
-                if(window.logger)window.logger.info([批量入库] 处理图片 ${index + 1}: `, cleanPic);
+                if(window.logger)window.logger.info(`【批量入库】处理图片 ${index + 1}:`, cleanPic);
 
                 if (cleanPic !== '' && cleanPic.toLowerCase() !== 'null' && cleanPic.toLowerCase() !== 'undefined') {
                     // 尝试转换为缩略图（无超时限制）
@@ -264,12 +264,12 @@ async function renderPendingInboundList() {
                     if (typeof window.createTransformedUrlFromPublicUrl === 'function') {
                         try {
                             thumb = await window.createTransformedUrlFromPublicUrl(cleanPic, 100, 100);
-                            if(window.logger)window.logger.info([批量入库] 缩略图转换结果 ${index + 1}: `, thumb ? '成功' : '失败');
+                            if(window.logger)window.logger.info(`【批量入库】缩略图转换结果 ${index + 1}:`, thumb ? '成功' : '失败');
 
                             // 如果缩略图失败，尝试签名 URL
                             if (!thumb && typeof window.createSignedUrlFromPublicUrl === 'function') {
                                 thumb = await window.createSignedUrlFromPublicUrl(cleanPic);
-                                if(window.logger)window.logger.info([批量入库] 签名 URL 结果 ${index + 1}: `, thumb ? '成功' : '失败');
+                                if(window.logger)window.logger.info(`【批量入库】签名 URL 结果 ${index + 1}:`, thumb ? '成功' : '失败');
                             }
                         } catch (e) {
                             console.error(`[批量入库] 图片转换失败 ${index + 1}: `, cleanPic, e);
