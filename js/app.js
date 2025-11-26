@@ -1,10 +1,11 @@
 import {
-    fetchSKUs, createSKU, uploadImage, fetchSettings, createSignedUrlFromPublicUrl, fetchSKUByBarcode, createStockMovement, fetchStockMovements, fetchSKUById, fetchStockTotalBySKU, fetchStockTotalBySKUs, fetchStockBySKUsWarehouse, fetchSales30dBySKU, updateSKU, createTransformedUrlFromPublicUrl, deleteSKU, fetchWarehouseStockMap, fetchStockBySKUWarehouse, createSetting, fetchAllStock, fetchSafetyStock,
-    fetchExpenses, createExpense, updateExpense, deleteExpense, fetchWarehouseConstraints, fetchPriceRules, supabase
-} from './supabase-client.js?v=20251125-1734';
+    supabase, uploadImage, createTransformedUrlFromPublicUrl, createSignedUrlFromPublicUrl,
+    fetchSKUs, fetchAllStock, fetchStockTotalBySKUs, fetchStockBySKUsWarehouse, createSKU, updateSKU, deleteSKU, createStockMovement, fetchStockMovements, fetchExpenses, createExpense, updateExpense, deleteExpense, fetchSettings, createSetting, updateSetting, deleteSetting, fetchWarehouseTypeConstraints, fetchDynamicWarehouseRules, fetchDynamicPriceRules
+} from './supabase-client.js'
 import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
 import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
 import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
+import { showLoading, hideLoading, showWarning } from './animations.js'
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
@@ -391,7 +392,7 @@ async function loadDashboard() {
         const rateEl = document.getElementById('dashboard-rate');
         if (rateEl) {
             rateEl.innerHTML = `
-                汇率: 1 CNY ≈ ${metrics.rateCnyToThb.toFixed(2)} THB
+汇率: 1 CNY ≈ ${metrics.rateCnyToThb.toFixed(2)} THB
             `;
         }
 
@@ -435,22 +436,22 @@ function renderShopMetrics(containerId, shopMetrics, metricKey, prefix = '', suf
                 if (shop.channels && Object.keys(shop.channels).length > 0) {
                     Object.entries(shop.channels).forEach(([channel, amount]) => {
                         channelsHtml += `
-                            <div class="metric-row sub-row" style="font-size: 0.9em; opacity: 0.8;">
+    < div class="metric-row sub-row" style = "font-size: 0.9em; opacity: 0.8;" >
                                 <span class="label">${channel === 'Other' ? '未分类' : channel}</span>
                                 <span class="value">${prefix} ${formatNumber(amount)}${suffix}</span>
-                            </div>
-                        `;
+                            </div >
+    `;
                     });
                 }
 
                 col.innerHTML = `
-                    <div class="shop-header">${shop.name}</div>
-                    <div class="metric-row">
-                        <span class="label">Total</span>
-                        <span class="value">${prefix} ${formatNumber(shop[metricKey] || 0)}${suffix}</span>
-                    </div>
+    < div class="shop-header" > ${shop.name}</div >
+        <div class="metric-row">
+            <span class="label">Total</span>
+            <span class="value">${prefix} ${formatNumber(shop[metricKey] || 0)}${suffix}</span>
+        </div>
                     ${channelsHtml}
-                `;
+`;
                 body.appendChild(col);
 
                 // Add divider if not last
@@ -467,9 +468,9 @@ function renderShopMetrics(containerId, shopMetrics, metricKey, prefix = '', suf
                 const formatted = isInteger ? Math.round(val) : formatNumber(val);
 
                 row.innerHTML = `
-                    <span class="label">${shop.name}</span>
-                    <span class="value">${prefix} ${formatted}${suffix}</span>
-                `;
+    < span class="label" > ${shop.name}</span >
+        <span class="value">${prefix} ${formatted}${suffix}</span>
+`;
                 body.appendChild(row);
             }
         });
@@ -495,9 +496,9 @@ function renderWarehouseMetrics(containerId, warehouseMetrics, metricKey, prefix
         const formatted = isInteger ? Math.round(val) : formatNumber(val);
 
         row.innerHTML = `
-            <span class="label">${wh.name}</span>
-            <span class="value">${prefix} ${formatted}${suffix}</span>
-        `;
+    < span class="label" > ${wh.name}</span >
+        <span class="value">${prefix} ${formatted}${suffix}</span>
+`;
         group.appendChild(row);
     });
 
@@ -796,7 +797,7 @@ async function reloadSettingsByType(type) {
         });
 
     } catch (err) {
-        console.error(`Failed to reload settings for ${type}:`, err);
+        console.error(`Failed to reload settings for ${type}: `, err);
         showError('刷新列表失败');
     }
 }
@@ -927,8 +928,8 @@ window.saveNewSetting = async function () {
             const selectName = selectMap[type];
             if (selectName) {
                 // 查找所有 name 属性匹配的 select 元素并刷新
-                const selects = document.querySelectorAll(`select[name="${selectName}"]`);
-                console.log(`Found ${selects.length} select elements with name="${selectName}", refreshing...`);
+                const selects = document.querySelectorAll(`select[name = "${selectName}"]`);
+                console.log(`Found ${selects.length} select elements with name = "${selectName}", refreshing...`);
 
                 for (const select of selects) {
                     const currentValue = select.value;
@@ -1072,13 +1073,13 @@ window.resetForm = function () {
     const uploadArea = document.getElementById('sku-upload-area');
     if (uploadArea) {
         uploadArea.innerHTML = `
-            <input type="file" id="sku-img-input" accept="image/*" hidden>
-            <label for="sku-img-input" class="upload-label">
-                <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                <span>点击选择图片</span>
-                <span class="text-sm text-secondary">选择后将自动上传并重命名</span>
-            </label>
-        `;
+    < input type = "file" id = "sku-img-input" accept = "image/*" hidden >
+        <label for="sku-img-input" class="upload-label">
+            <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <span>点击选择图片</span>
+            <span class="text-sm text-secondary">选择后将自动上传并重命名</span>
+        </label>
+`;
         const input = document.getElementById('sku-img-input');
         if (input) input.addEventListener('change', handleImageSelect);
     }
@@ -1109,7 +1110,7 @@ function handleImageSelect(e) {
         currentImageBase64 = e.target.result;
         const area = document.getElementById('sku-upload-area');
         area.innerHTML = `
-    <div class="img-preview-wrapper" style="position: relative; width: 100%; height: 100%;" >
+    < div class="img-preview-wrapper" style = "position: relative; width: 100%; height: 100%;" >
                 <img src="${currentImageBase64}" style="width: 100%; height: 100%; object-fit: contain;" />
                 <button type="button" onclick="clearImageSelection()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">&times;</button>
             </div > `;
@@ -1124,13 +1125,13 @@ window.clearImageSelection = function () {
     const area = document.getElementById('sku-upload-area');
     if (area) {
         area.innerHTML = `
-            <input type="file" id="sku-img-input" accept="image/*" hidden>
-            <label for="sku-img-input" class="upload-label">
-                <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                <span>点击选择图片</span>
-                <span class="text-sm text-secondary">选择后将自动上传并重命名</span>
-            </label>
-        `;
+    < input type = "file" id = "sku-img-input" accept = "image/*" hidden >
+        <label for="sku-img-input" class="upload-label">
+            <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <span>点击选择图片</span>
+            <span class="text-sm text-secondary">选择后将自动上传并重命名</span>
+        </label>
+`;
         const input = document.getElementById('sku-img-input');
         if (input) input.addEventListener('change', handleImageSelect);
     }
@@ -1169,7 +1170,7 @@ window.saveSKU = async function () {
         }
         let imageUrl = null;
         if (currentImageFile) {
-            const filename = `sku-${Date.now()}-${currentImageFile.name} `;
+            const filename = `sku - ${Date.now()} -${currentImageFile.name} `;
             imageUrl = await uploadImage(currentImageFile, filename);
         } else if (currentSKUId) {
             imageUrl = currentImageUrl;
@@ -1206,7 +1207,7 @@ window.saveSKU = async function () {
                 const code = window._inboundCreateBarcode;
                 pendingInbound[code] = (pendingInbound[code] || 0) + 1;
                 await appendInboundRowIfNeeded(code);
-                const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
+                const row = document.querySelector(`#inbound - list - body tr[data - code= "${code}"]`);
                 if (row) {
                     const input = row.querySelector('input[data-role="inbound-qty"]');
                     if (input) input.value = pendingInbound[code];
@@ -1353,7 +1354,7 @@ function renderSKUTable(products, append = false) {
     }
 
     const html = products.map(p => `
-    <tr class="sku-row" >
+    < tr class="sku-row" >
             <td>${p.__seqId}</td>
             <td>
                 <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${p.__original ? `showLightbox('${p.__original}')` : ''}">
@@ -1460,7 +1461,7 @@ window.showSKUDetails = async function (skuId) {
         const mapName = (t, c) => (window._settingsCache[t] && window._settingsCache[t][c]) ? window._settingsCache[t][c] : c;
         const labels = FIELD_LABELS && FIELD_LABELS.skus ? FIELD_LABELS.skus : {};
         const img = sku.pic || 'https://via.placeholder.com/300';
-        const left = `<div class="sku-detail-image"> <img src="${img}" alt="商品图片" onerror="window.handleImgError && window.handleImgError(this)"></div>`;
+        const left = `< div class="sku-detail-image" > <img src="${img}" alt="商品图片" onerror="window.handleImgError && window.handleImgError(this)"></div>`;
         const rows = [];
 
         const fmtDate = (d) => {
@@ -1468,14 +1469,14 @@ window.showSKUDetails = async function (skuId) {
         };
 
         const pushRow = (label, value) => {
-            rows.push(`<div class="sku-detail-row"><div class="sku-detail-key">${label}</div><div class="sku-detail-val">${value ?? ''}</div></div > `);
+            rows.push(`< div class="sku-detail-row" ><div class="sku-detail-key">${label}</div><div class="sku-detail-val">${value ?? ''}</div></div > `);
         };
 
         // 展示字段（按顺序），隐藏 id、name、原始 code 字段
         if (sku.created_at) pushRow(labels.created_at || '创建时间', fmtDate(sku.created_at));
         if (sku.external_barcode) pushRow(labels.external_barcode || '产品条码', escapeHtml(sku.external_barcode));
-        if (sku.product_info) pushRow(labels.product_info || '产品信息', (sku.product_info || '').split('\n').map(l => `<div> ${escapeHtml(l)}</div > `).join(''));
-        pushRow('产品链接', sku.url ? `<a class="icon-link" href="${sku.url}" target="_blank" rel="noopener" title="${sku.url}" >
+        if (sku.product_info) pushRow(labels.product_info || '产品信息', (sku.product_info || '').split('\n').map(l => `< div > ${escapeHtml(l)}</div > `).join(''));
+        pushRow('产品链接', sku.url ? `< a class="icon-link" href = "${sku.url}" target = "_blank" rel = "noopener" title = "${sku.url}" >
             <svg class="icon-web-animated" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="2" y1="12" x2="22" y2="12"></line>
@@ -1493,9 +1494,9 @@ window.showSKUDetails = async function (skuId) {
         const sales30d = await fetchSales30dBySKU(sku.id);
         pushRow('库存数量', stockTotal == null ? '-' : stockTotal);
         pushRow('最近30天销售量', sales30d == null ? '-' : sales30d);
-        const right = `<div class="sku-detail-fields"> ${rows.join('')}</div > `;
+        const right = `< div class="sku-detail-fields" > ${rows.join('')}</div > `;
         const body = document.getElementById('sku-detail-body');
-        if (body) body.innerHTML = `<div class="sku-detail-grid"> ${left}${right}</div > `;
+        if (body) body.innerHTML = `< div class="sku-detail-grid" > ${left}${right}</div > `;
         window.openModal('sku-detail-modal');
     } catch (err) {
         showError('加载 SKU 详情失败: ' + err.message);
@@ -1579,13 +1580,13 @@ window.editSKU = async function (id) {
                 } catch (_) { }
 
                 area.innerHTML = `
-    <div class="img-preview-wrapper" style="position: relative; width: 100%; height: 100%;" >
+    < div class="img-preview-wrapper" style = "position: relative; width: 100%; height: 100%;" >
                 <img src="${displayUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                 <button type="button" onclick="clearImageSelection()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">&times;</button>
             </div > `;
             } else {
                 area.innerHTML = `
-    <input type="file" id="sku-img-input" accept="image/*" hidden >
+    < input type = "file" id = "sku-img-input" accept = "image/*" hidden >
         <label for="sku-img-input" class="upload-label">
             <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             <span>点击选择图片</span>
@@ -1629,7 +1630,7 @@ async function renderInboundList() {
         const qty = pendingInbound[code] || 0;
         const purchaseQty = inboundPurchaseQty[code] || 0;
         return `
-    <tr data-code="${code}">
+    < tr data - code="${code}" >
                 <td>${idx + 1}</td>
                 <td>
                     <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -1692,7 +1693,7 @@ function updateQuantity(type, code, delta) {
 
     // 出库需要检查库存上限
     if (cfg.checkStock && delta > 0) {
-        const row = document.querySelector(`#${cfg.listBody} tr[data-code="${code}"]`);
+        const row = document.querySelector(`#${cfg.listBody} tr[data - code= "${code}"]`);
         if (row) {
             const cell = row.querySelector('[data-role="current-stock"]');
             const max = cell ? parseInt(cell.textContent, 10) : NaN;
@@ -1708,9 +1709,9 @@ function updateQuantity(type, code, delta) {
     cfg.data[code] = next;
 
     // 更新 UI
-    const row = document.querySelector(`#${cfg.listBody} tr[data-code="${code}"]`);
+    const row = document.querySelector(`#${cfg.listBody} tr[data - code= "${code}"]`);
     if (row) {
-        const input = row.querySelector(`input[data-role="${cfg.inputRole}"]`);
+        const input = row.querySelector(`input[data - role= "${cfg.inputRole}"]`);
         if (input) input.value = next;
     }
 }
@@ -1723,7 +1724,7 @@ window.decreaseInboundQty = (code) => updateQuantity('inbound', code, -1);
 window.removeInboundItem = function (code) {
     if (pendingInbound[code] != null) delete pendingInbound[code];
     if (inboundPurchaseQty[code] != null) delete inboundPurchaseQty[code];
-    const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
+    const row = document.querySelector(`#inbound - list - body tr[data - code= "${code}"]`);
     if (row) row.remove();
     const empty = document.getElementById('inbound-empty-state');
     if (empty && Object.keys(pendingInbound).length === 0) empty.style.display = '';
@@ -1751,7 +1752,7 @@ function openQuickCreateForBarcode(code) {
                 const sku = await createSKU({ external_barcode: code, product_info: productName });
                 pendingInbound[code] = (pendingInbound[code] || 0) + 1;
                 await appendInboundRowIfNeeded(code);
-                const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
+                const row = document.querySelector(`#inbound - list - body tr[data - code= "${code}"]`);
                 if (row) {
                     const input = row.querySelector('input[data-role="inbound-qty"]');
                     if (input) input.value = pendingInbound[code];
@@ -1772,7 +1773,7 @@ async function appendInboundRowIfNeeded(code) {
     const tbody = document.getElementById('inbound-list-body');
     const empty = document.getElementById('inbound-empty-state');
     if (!tbody) return;
-    if (document.querySelector(`#inbound-list-body tr[data-code="${code}"]`)) return;
+    if (document.querySelector(`#inbound - list - body tr[data - code= "${code}"]`)) return;
     const sku = await getSKUByBarcodeCached(code);
     const original = (sku && sku.pic) ? sku.pic : 'https://via.placeholder.com/300';
     let thumb = null;
@@ -1785,7 +1786,7 @@ async function appendInboundRowIfNeeded(code) {
     const qty = pendingInbound[code] || 0;
     const purchaseQty = inboundPurchaseQty[code] || 0;
     const rowHtml = `
-    <tr data-code="${code}">
+    < tr data - code="${code}" >
             <td>${idx}</td>
             <td>
                 <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -1944,7 +1945,7 @@ async function preloadInbound() {
 }
 
 function flashRow(code) {
-    const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
+    const row = document.querySelector(`#inbound - list - body tr[data - code= "${code}"]`);
     if (!row) return;
     row.classList.remove('row-flash');
     void row.offsetWidth;
@@ -1996,7 +1997,7 @@ async function renderOutboundList() {
         const qty = pendingOutbound[code] || 0;
         const stockCell = '<td class="font-num" data-role="current-stock">-</td>';
         return `
-    <tr data-code="${code}" data-sku-id="${(sku && sku.id) || ''}" >
+    < tr data - code="${code}" data - sku - id="${(sku && sku.id) || ''}" >
                 <td>${idx + 1}</td>
                 <td>
                     <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -2033,7 +2034,7 @@ async function renderOutboundList() {
 
     // 异步更新每行的当前库存
     codes.forEach(async (code) => {
-        const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
+        const row = document.querySelector(`#outbound - list - body tr[data - code= "${code}"]`);
         const skuId = row && row.getAttribute('data-sku-id');
         if (!row || !skuId) return;
         try {
@@ -2075,7 +2076,7 @@ async function appendOutboundRowIfNeeded(code) {
     const tbody = document.getElementById('outbound-list-body');
     const empty = document.getElementById('outbound-empty-state');
     if (!tbody) return;
-    if (document.querySelector(`#outbound-list-body tr[data-code="${code}"]`)) return;
+    if (document.querySelector(`#outbound - list - body tr[data - code= "${code}"]`)) return;
     const sku = await getSKUByBarcodeCached(code);
     const original = (sku && sku.pic) ? sku.pic : 'https://via.placeholder.com/300';
     let thumb = null;
@@ -2087,7 +2088,7 @@ async function appendOutboundRowIfNeeded(code) {
     const idx = tbody.querySelectorAll('tr').length + 1;
     const qty = pendingOutbound[code] || 0;
     const rowHtml = `
-    <tr data-code="${code}" data-sku-id="${(sku && sku.id) || ''}" >
+    < tr data - code="${code}" data - sku - id="${(sku && sku.id) || ''}" >
             <td>${idx}</td>
             <td>
                 <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -2145,7 +2146,7 @@ async function appendOutboundRowIfNeeded(code) {
 }
 
 function flashOutboundRow(code) {
-    const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
+    const row = document.querySelector(`#outbound - list - body tr[data - code= "${code}"]`);
     if (!row) return;
     row.classList.remove('row-flash');
     void row.offsetWidth;
@@ -2158,7 +2159,7 @@ window.decreaseOutboundQty = (code) => updateQuantity('outbound', code, -1);
 
 window.removeOutboundItem = function (code) {
     if (pendingOutbound[code] != null) delete pendingOutbound[code];
-    const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
+    const row = document.querySelector(`#outbound - list - body tr[data - code= "${code}"]`);
     if (row) row.remove();
     const empty = document.getElementById('outbound-empty-state');
     if (empty && Object.keys(pendingOutbound).length === 0) empty.style.display = '';
@@ -2490,7 +2491,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
             }
             const stockShown = warehouse ? stockWarehouse : stockTotal;
             rows.push(`
-    <tr>
+    < tr >
                     <td>${idx}</td>
                     <td>
                         <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -2829,7 +2830,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     await appendInboundRowIfNeeded(code);
 
-                    const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
+                    const row = document.querySelector(`#inbound - list - body tr[data - code= "${code}"]`);
                     if (row) {
                         const input = row.querySelector('input[data-role="inbound-qty"]');
                         if (input) input.value = pendingInbound[code];
@@ -2887,7 +2888,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     await appendOutboundRowIfNeeded(code);
 
-                    const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
+                    const row = document.querySelector(`#outbound - list - body tr[data - code= "${code}"]`);
                     if (row) {
                         const cell = row.querySelector('[data-role="current-stock"]');
                         const max = cell ? parseInt(cell.textContent, 10) : NaN;
@@ -3162,16 +3163,16 @@ function renderExpenses(expenses) {
 
         // 凭证列: 有图片显示图标, 无图片显示 -
         const receiptCell = expense.picture_id
-            ? `<button class="btn-view-image" onclick="showLightbox('${expense.picture_id}')" title="查看凭证" >
+            ? `< button class="btn-view-image" onclick = "showLightbox('${expense.picture_id}')" title = "查看凭证" >
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                </button > `
-            : `<span class="text-secondary" > -</span > `;
+            : `< span class="text-secondary" > -</span > `;
 
         // 类型名称
         const typeName = getSettingName('ExpenseType', expense.expense_type_code) || expense.expense_type_code;
 
         tr.innerHTML = `
-    <td> ${index + 1}</td >
+    < td > ${index + 1}</td >
             <td>${formatDate(expense.timestamp)}</td>
             <td><span class="expense-type-badge">${typeName}</span></td>
             <td class="text-right font-num">${formatCurrency(expense.amount, expense.currency || 'THB')}</td>
@@ -3194,8 +3195,8 @@ function renderExpenses(expenses) {
     // 更新统计信息
     const rateCnyToThb = currentExchangeRate || 4.8;
     document.querySelector('.expenses-list-panel .panel-info').innerHTML =
-        `共 <strong>${expenses.length}</strong> 条记录 | 总计: <strong class="text-error">${formatCurrency(totalAmountTHB, 'THB')}</strong>` +
-        ` <span class="text-secondary">(汇率: 1 CNY ≈ ${rateCnyToThb.toFixed(2)} THB)</span>`;
+        `共 < strong > ${expenses.length}</strong > 条记录 | 总计: <strong class="text-error">${formatCurrency(totalAmountTHB, 'THB')}</strong>` +
+        ` < span class="text-secondary" > (汇率: 1 CNY ≈ ${rateCnyToThb.toFixed(2)} THB)</span > `;
 }
 
 window.selectQuickDate = function (period) {
@@ -3577,7 +3578,7 @@ window.loadSystemSettings = async function () {
 }
 
 function renderSettingList(type, items) {
-    const container = document.getElementById(`${type}-list`);
+    const container = document.getElementById(`${type} -list`);
     if (!container) return;
 
     if (items.length === 0) {
@@ -3588,7 +3589,7 @@ function renderSettingList(type, items) {
     container.innerHTML = items.map(item => {
         const isDisabled = item.status === 'disabled';
         return `
-            <div class="setting-item">
+    < div class="setting-item" >
                 <span class="setting-name ${isDisabled ? 'disabled' : ''}">${item.name}</span>
                 <div class="setting-actions">
                     <button class="btn-icon-only" title="编辑" onclick="editSetting('${item.id}', '${item.name}')">
@@ -3600,8 +3601,8 @@ function renderSettingList(type, items) {
                 : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>'}
                     </button>
                 </div>
-            </div>
-            `;
+            </div >
+    `;
     }).join('');
 }
 
