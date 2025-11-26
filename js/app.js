@@ -91,7 +91,7 @@ function initializeMetrics(shops, salesChannels, warehouses) {
     const warehouseMetrics = {};
 
     // 初始化店铺指标
-    if (shops.length > 0) {
+    if (shops.length> 0) {
         shops.forEach(shop => {
             shopMetrics[shop.code] = {
                 name: shop.name,
@@ -102,7 +102,7 @@ function initializeMetrics(shops, salesChannels, warehouses) {
                 channels: {}
             };
             // 初始化所有配置的渠道为 0
-            if (salesChannels.length > 0) {
+            if (salesChannels.length> 0) {
                 salesChannels.forEach(ch => {
                     shopMetrics[shop.code].channels[ch.name] = 0;
                 });
@@ -111,7 +111,7 @@ function initializeMetrics(shops, salesChannels, warehouses) {
     }
 
     // 初始化仓库指标
-    if (warehouses.length > 0) {
+    if (warehouses.length> 0) {
         warehouses.forEach(wh => {
             // 直接使用数据库中的名称，不再强制覆盖
             warehouseMetrics[wh.code] = { name: wh.name, valueRMB: 0, qty: 0 };
@@ -258,7 +258,7 @@ function calculateLowStockWarnings(allSkus, allStock, safetyStock, shopMetrics) 
         }
 
         // 只有当库存数量低于安全库存阈值时才计入低库存
-        if (threshold > 0 && totalQty < threshold) {
+        if (threshold> 0 && totalQty <threshold) {
             if (sku.shop_code && shopMetrics[sku.shop_code]) {
                 shopMetrics[sku.shop_code].lowStockCount += 1;
             }
@@ -411,7 +411,7 @@ function updateMetric(elementId, value, prefix = '', suffix = '', isInteger = fa
 
         // Color coding for profit/loss
         if (elementId === 'dashboard-profit') {
-            el.className = value >= 0 ? 'stat-total text-success' : 'stat-total text-error';
+            el.className = value>= 0 ? 'stat-total text-success' : 'stat-total text-error';
         }
     }
 }
@@ -423,7 +423,7 @@ function renderShopMetrics(containerId, shopMetrics, metricKey, prefix = '', suf
     body.innerHTML = '';
 
     const shops = Object.values(shopMetrics);
-    if (shops.length > 0) {
+    if (shops.length> 0) {
         shops.forEach(shop => {
             // 针对 stat-body (销售额) 的特殊布局 - 只在启用渠道显示时使用
             if (showChannels) {
@@ -432,19 +432,19 @@ function renderShopMetrics(containerId, shopMetrics, metricKey, prefix = '', suf
 
                 // 构建渠道细分 HTML
                 let channelsHtml = '';
-                if (shop.channels && Object.keys(shop.channels).length > 0) {
+                if (shop.channels && Object.keys(shop.channels).length> 0) {
                     Object.entries(shop.channels).forEach(([channel, amount]) => {
                         channelsHtml += `
-    < div class="metric-row sub-row" style = "font-size: 0.9em; opacity: 0.8;" >
+    <div class="metric-row sub-row" style = "font-size: 0.9em; opacity: 0.8;">
                                 <span class="label">${channel === 'Other' ? '未分类' : channel}</span>
                                 <span class="value">${prefix} ${formatNumber(amount)}${suffix}</span>
-                            </div >
+                            </div>
     `;
                     });
                 }
 
                 col.innerHTML = `
-    < div class="shop-header" > ${shop.name}</div >
+    <div class="shop-header"> ${shop.name}</div>
         <div class="metric-row">
             <span class="label">Total</span>
             <span class="value">${prefix} ${formatNumber(shop[metricKey] || 0)}${suffix}</span>
@@ -467,7 +467,7 @@ function renderShopMetrics(containerId, shopMetrics, metricKey, prefix = '', suf
                 const formatted = isInteger ? Math.round(val) : formatNumber(val);
 
                 row.innerHTML = `
-    < span class="label" > ${shop.name}</span >
+    <span class="label"> ${shop.name}</span>
         <span class="value">${prefix} ${formatted}${suffix}</span>
 `;
                 body.appendChild(row);
@@ -495,7 +495,7 @@ function renderWarehouseMetrics(containerId, warehouseMetrics, metricKey, prefix
         const formatted = isInteger ? Math.round(val) : formatNumber(val);
 
         row.innerHTML = `
-    < span class="label" > ${wh.name}</span >
+    <span class="label"> ${wh.name}</span>
         <span class="value">${prefix} ${formatted}${suffix}</span>
 `;
         group.appendChild(row);
@@ -1072,7 +1072,7 @@ window.resetForm = function () {
     const uploadArea = document.getElementById('sku-upload-area');
     if (uploadArea) {
         uploadArea.innerHTML = `
-    < input type = "file" id = "sku-img-input" accept = "image/*" hidden >
+    <input type = "file" id = "sku-img-input" accept = "image/*" hidden>
         <label for="sku-img-input" class="upload-label">
             <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             <span>点击选择图片</span>
@@ -1109,10 +1109,10 @@ function handleImageSelect(e) {
         currentImageBase64 = e.target.result;
         const area = document.getElementById('sku-upload-area');
         area.innerHTML = `
-    < div class="img-preview-wrapper" style = "position: relative; width: 100%; height: 100%;" >
+    <div class="img-preview-wrapper" style = "position: relative; width: 100%; height: 100%;">
                 <img src="${currentImageBase64}" style="width: 100%; height: 100%; object-fit: contain;" />
                 <button type="button" onclick="clearImageSelection()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">&times;</button>
-            </div > `;
+            </div> `;
     };
     reader.readAsDataURL(file);
 }
@@ -1124,7 +1124,7 @@ window.clearImageSelection = function () {
     const area = document.getElementById('sku-upload-area');
     if (area) {
         area.innerHTML = `
-    < input type = "file" id = "sku-img-input" accept = "image/*" hidden >
+    <input type = "file" id = "sku-img-input" accept = "image/*" hidden>
         <label for="sku-img-input" class="upload-label">
             <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             <span>点击选择图片</span>
@@ -1255,7 +1255,7 @@ function initSKUObserver() {
             if (entry.isIntersecting && !window.isLoadingSKUs) {
                 const maxPage = Math.ceil(window.totalSKUCount / 20);
                 console.log('[DEBUG] Loading next page:', window.currentSKUPage + 1, 'Max:', maxPage);
-                if (window.currentSKUPage < maxPage) {
+                if (window.currentSKUPage <maxPage) {
                     window.loadSKUs(window.currentSKUPage + 1, document.getElementById('sku-main-input').value, false);
                 }
             }
@@ -1321,7 +1321,7 @@ window.loadSKUs = async function (page = 1, search = '', reset = true) {
         const maxPage = Math.ceil(window.totalSKUCount / 20);
         console.log('[DEBUG] Page loaded:', page, 'Total:', window.totalSKUCount, 'MaxPage:', maxPage);
 
-        if (page >= maxPage && window.totalSKUCount > 0) {
+        if (page>= maxPage && window.totalSKUCount> 0) {
             if (noMoreData) noMoreData.style.display = 'block'; // Ensure block display
             if (window.skuObserver) window.skuObserver.disconnect();
         }
@@ -1337,7 +1337,7 @@ window.loadSKUs = async function (page = 1, search = '', reset = true) {
 
         // 在状态重置后重新初始化观察器，避免竞态条件
         const maxPage = Math.ceil(window.totalSKUCount / 20);
-        if (page < maxPage) {
+        if (page <maxPage) {
             initSKUObserver();
         }
     }
@@ -1353,7 +1353,7 @@ function renderSKUTable(products, append = false) {
     }
 
     const html = products.map(p => `
-    < tr class="sku-row" >
+    <tr class="sku-row">
             <td>${p.__seqId}</td>
             <td>
                 <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${p.__original ? `showLightbox('${p.__original}')` : ''}">
@@ -1402,7 +1402,7 @@ function renderSKUTable(products, append = false) {
                     </button>
                 </div>
             </td>
-        </tr >
+        </tr>
     `).join('');
 
     if (append) {
@@ -1460,7 +1460,7 @@ window.showSKUDetails = async function (skuId) {
         const mapName = (t, c) => (window._settingsCache[t] && window._settingsCache[t][c]) ? window._settingsCache[t][c] : c;
         const labels = FIELD_LABELS && FIELD_LABELS.skus ? FIELD_LABELS.skus : {};
         const img = sku.pic || 'https://via.placeholder.com/300';
-        const left = `< div class="sku-detail-image" > <img src="${img}" alt="商品图片" onerror="window.handleImgError && window.handleImgError(this)"></div>`;
+        const left = `<div class="sku-detail-image"> <img src="${img}" alt="商品图片" onerror="window.handleImgError && window.handleImgError(this)"></div>`;
         const rows = [];
 
         const fmtDate = (d) => {
@@ -1468,14 +1468,14 @@ window.showSKUDetails = async function (skuId) {
         };
 
         const pushRow = (label, value) => {
-            rows.push(`< div class="sku-detail-row" ><div class="sku-detail-key">${label}</div><div class="sku-detail-val">${value ?? ''}</div></div > `);
+            rows.push(`<div class="sku-detail-row"><div class="sku-detail-key">${label}</div><div class="sku-detail-val">${value ?? ''}</div></div> `);
         };
 
         // 展示字段（按顺序），隐藏 id、name、原始 code 字段
         if (sku.created_at) pushRow(labels.created_at || '创建时间', fmtDate(sku.created_at));
         if (sku.external_barcode) pushRow(labels.external_barcode || '产品条码', escapeHtml(sku.external_barcode));
-        if (sku.product_info) pushRow(labels.product_info || '产品信息', (sku.product_info || '').split('\n').map(l => `< div > ${escapeHtml(l)}</div > `).join(''));
-        pushRow('产品链接', sku.url ? `< a class="icon-link" href = "${sku.url}" target = "_blank" rel = "noopener" title = "${sku.url}" >
+        if (sku.product_info) pushRow(labels.product_info || '产品信息', (sku.product_info || '').split('\n').map(l => `<div> ${escapeHtml(l)}</div> `).join(''));
+        pushRow('产品链接', sku.url ? `<a class="icon-link" href = "${sku.url}" target = "_blank" rel = "noopener" title = "${sku.url}">
             <svg class="icon-web-animated" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="2" y1="12" x2="22" y2="12"></line>
@@ -1483,7 +1483,7 @@ window.showSKUDetails = async function (skuId) {
                 <path d="M12 2a15.3 15.3 0 0 0 0 20"></path>
             </svg>
             <span class="link-domain">${getDomain(sku.url)}</span>
-        </a > ` : '');
+        </a> ` : '');
         pushRow(labels.purchase_price_rmb || '采购价(RMB)', sku.purchase_price_rmb);
         pushRow(labels.selling_price_thb || '销售价(THB)', sku.selling_price_thb);
         if (sku.shop_code) pushRow('店铺', mapName('shop', sku.shop_code) || '');
@@ -1493,9 +1493,9 @@ window.showSKUDetails = async function (skuId) {
         const sales30d = await fetchSales30dBySKU(sku.id);
         pushRow('库存数量', stockTotal == null ? '-' : stockTotal);
         pushRow('最近30天销售量', sales30d == null ? '-' : sales30d);
-        const right = `< div class="sku-detail-fields" > ${rows.join('')}</div > `;
+        const right = `<div class="sku-detail-fields"> ${rows.join('')}</div> `;
         const body = document.getElementById('sku-detail-body');
-        if (body) body.innerHTML = `< div class="sku-detail-grid" > ${left}${right}</div > `;
+        if (body) body.innerHTML = `<div class="sku-detail-grid"> ${left}${right}</div> `;
         window.openModal('sku-detail-modal');
     } catch (err) {
         showError('加载 SKU 详情失败: ' + err.message);
@@ -1579,13 +1579,13 @@ window.editSKU = async function (id) {
                 } catch (_) { }
 
                 area.innerHTML = `
-    < div class="img-preview-wrapper" style = "position: relative; width: 100%; height: 100%;" >
+    <div class="img-preview-wrapper" style = "position: relative; width: 100%; height: 100%;">
                 <img src="${displayUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
                 <button type="button" onclick="clearImageSelection()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">&times;</button>
-            </div > `;
+            </div> `;
             } else {
                 area.innerHTML = `
-    < input type = "file" id = "sku-img-input" accept = "image/*" hidden >
+    <input type = "file" id = "sku-img-input" accept = "image/*" hidden>
         <label for="sku-img-input" class="upload-label">
             <svg viewBox="0 0 24 24" width="32" height="32"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             <span>点击选择图片</span>
@@ -1629,7 +1629,7 @@ async function renderInboundList() {
         const qty = pendingInbound[code] || 0;
         const purchaseQty = inboundPurchaseQty[code] || 0;
         return `
-    < tr data - code="${code}" >
+    <tr data - code="${code}">
                 <td>${idx + 1}</td>
                 <td>
                     <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -1657,7 +1657,7 @@ async function renderInboundList() {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                 </td>
-            </tr >
+            </tr>
     `;
     }));
 
@@ -1691,12 +1691,12 @@ function updateQuantity(type, code, delta) {
     let next = cfg.data[code] + delta;
 
     // 出库需要检查库存上限
-    if (cfg.checkStock && delta > 0) {
+    if (cfg.checkStock && delta> 0) {
         const row = document.querySelector(`#${cfg.listBody} tr[data - code= "${code}"]`);
         if (row) {
             const cell = row.querySelector('[data-role="current-stock"]');
             const max = cell ? parseInt(cell.textContent, 10) : NaN;
-            if (!Number.isNaN(max) && next > max) {
+            if (!Number.isNaN(max) && next> max) {
                 next = max;
                 showError('超过当前库存，已回退到最大可用值');
             }
@@ -1785,7 +1785,7 @@ async function appendInboundRowIfNeeded(code) {
     const qty = pendingInbound[code] || 0;
     const purchaseQty = inboundPurchaseQty[code] || 0;
     const rowHtml = `
-    < tr data - code="${code}" >
+    <tr data - code="${code}">
             <td>${idx}</td>
             <td>
                 <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -1813,7 +1813,7 @@ async function appendInboundRowIfNeeded(code) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
             </td>
-        </tr >
+        </tr>
     `;
     const temp = document.createElement('tbody');
     temp.innerHTML = rowHtml.trim();
@@ -1840,7 +1840,7 @@ window.submitInbound = async function () {
 
     try {
         let count = 0;
-        if (Object.keys(pendingInbound).length > 0) {
+        if (Object.keys(pendingInbound).length> 0) {
             const ok = await confirmAction(`确认入库：共 ${Object.values(pendingInbound).reduce((a, b) => a + b, 0)} 件`)
             if (!ok) { showInfo('已取消'); return; }
             for (const code of Object.keys(pendingInbound)) {
@@ -1996,7 +1996,7 @@ async function renderOutboundList() {
         const qty = pendingOutbound[code] || 0;
         const stockCell = '<td class="font-num" data-role="current-stock">-</td>';
         return `
-    < tr data - code="${code}" data - sku - id="${(sku && sku.id) || ''}" >
+    <tr data - code="${code}" data - sku - id="${(sku && sku.id) || ''}">
                 <td>${idx + 1}</td>
                 <td>
                     <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -2024,7 +2024,7 @@ async function renderOutboundList() {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                 </td>
-            </tr >
+            </tr>
     `;
     }));
     tbody.innerHTML = rows.join('');
@@ -2087,7 +2087,7 @@ async function appendOutboundRowIfNeeded(code) {
     const idx = tbody.querySelectorAll('tr').length + 1;
     const qty = pendingOutbound[code] || 0;
     const rowHtml = `
-    < tr data - code="${code}" data - sku - id="${(sku && sku.id) || ''}" >
+    <tr data - code="${code}" data - sku - id="${(sku && sku.id) || ''}">
             <td>${idx}</td>
             <td>
                 <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -2115,7 +2115,7 @@ async function appendOutboundRowIfNeeded(code) {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 </button>
             </td>
-        </tr >
+        </tr>
     `;
     const temp = document.createElement('tbody');
     temp.innerHTML = rowHtml.trim();
@@ -2180,7 +2180,7 @@ window.submitOutbound = async function () {
 
     try {
         let count = 0;
-        if (Object.keys(pendingOutbound).length > 0) {
+        if (Object.keys(pendingOutbound).length> 0) {
             const ok = await confirmAction(`确认出库：共 ${Object.values(pendingOutbound).reduce((a, b) => a + b, 0)} 件`)
             if (!ok) { showInfo('已取消'); return; }
             for (const code of Object.keys(pendingOutbound)) {
@@ -2364,7 +2364,7 @@ function initStockObserver() {
         entries.forEach(entry => {
             if (entry.isIntersecting && !window.isLoadingStock) {
                 const maxPage = Math.ceil(window.totalStockCount / 20);
-                if (window.currentStockPage < maxPage) {
+                if (window.currentStockPage <maxPage) {
                     const query = document.getElementById('stock-search-input').value;
                     const warehouse = document.getElementById('stock-warehouse').value;
                     window.loadStockList(query, warehouse, window.currentStockPage + 1, false);
@@ -2451,7 +2451,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
 
         // 构建HTML行
         const rows = [];
-        for (let i = 0; i < products.length; i++) {
+        for (let i = 0; i <products.length; i++) {
             const p = products[i];
             const original = p.pic || null;
             const thumb = thumbs[i];
@@ -2490,7 +2490,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
             }
             const stockShown = warehouse ? stockWarehouse : stockTotal;
             rows.push(`
-    < tr >
+    <tr>
                     <td>${idx}</td>
                     <td>
                         <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -2520,7 +2520,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
                             </button>
                         </div>
                     </td>
-                </tr >
+                </tr>
     `);
         }
         const html = rows.join('');
@@ -2532,7 +2532,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
 
         // 检查是否还有更多数据
         const maxPage = Math.ceil(window.totalStockCount / 20);
-        if (page >= maxPage && window.totalStockCount > 0) {
+        if (page>= maxPage && window.totalStockCount> 0) {
             if (noMoreData) noMoreData.style.display = 'block';
             if (window.stockObserver) window.stockObserver.disconnect();
         }
@@ -2554,7 +2554,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
 
         // 在状态重置后重新初始化观察器
         const maxPage = Math.ceil(window.totalStockCount / 20);
-        if (page < maxPage) {
+        if (page <maxPage) {
             initStockObserver();
         }
     }
@@ -2676,7 +2676,7 @@ window.openAdjustModal = function (sku) {
                 else if (type === 'set') {
                     const cur = info.current || 0;
                     const delta = qty - cur;
-                    if (delta > 0) { movement = 'adjust_add'; amount = delta; }
+                    if (delta> 0) { movement = 'adjust_add'; amount = delta; }
                     else if (delta < 0) { movement = 'adjust_reduce'; amount = -delta; }
                     else { showInfo('库存不变'); closeModal('adjust-stock-modal'); return; }
                 }
@@ -2992,7 +2992,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             val = Math.max(1, val);
             const cell = tr.querySelector('[data-role="current-stock"]');
             const max = cell ? parseInt(cell.textContent, 10) : NaN;
-            if (!Number.isNaN(max) && val > max) {
+            if (!Number.isNaN(max) && val> max) {
                 val = max;
                 showError('超过当前库存，已回退到最大可用值');
             }
@@ -3162,16 +3162,16 @@ function renderExpenses(expenses) {
 
         // 凭证列: 有图片显示图标, 无图片显示 -
         const receiptCell = expense.picture_id
-            ? `< button class="btn-view-image" onclick = "showLightbox('${expense.picture_id}')" title = "查看凭证" >
+            ? `<button class="btn-view-image" onclick = "showLightbox('${expense.picture_id}')" title = "查看凭证">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-               </button > `
-            : `< span class="text-secondary" > -</span > `;
+               </button> `
+            : `<span class="text-secondary"> -</span> `;
 
         // 类型名称
         const typeName = getSettingName('ExpenseType', expense.expense_type_code) || expense.expense_type_code;
 
         tr.innerHTML = `
-    < td > ${index + 1}</td >
+    <td> ${index + 1}</td>
             <td>${formatDate(expense.timestamp)}</td>
             <td><span class="expense-type-badge">${typeName}</span></td>
             <td class="text-right font-num">${formatCurrency(expense.amount, expense.currency || 'THB')}</td>
@@ -3194,8 +3194,8 @@ function renderExpenses(expenses) {
     // 更新统计信息
     const rateCnyToThb = currentExchangeRate || 4.8;
     document.querySelector('.expenses-list-panel .panel-info').innerHTML =
-        `共 < strong > ${expenses.length}</strong > 条记录 | 总计: <strong class="text-error">${formatCurrency(totalAmountTHB, 'THB')}</strong>` +
-        ` < span class="text-secondary" > (汇率: 1 CNY ≈ ${rateCnyToThb.toFixed(2)} THB)</span > `;
+        `共 <strong> ${expenses.length}</strong> 条记录 | 总计: <strong class="text-error">${formatCurrency(totalAmountTHB, 'THB')}</strong>` +
+        ` <span class="text-secondary"> (汇率: 1 CNY ≈ ${rateCnyToThb.toFixed(2)} THB)</span> `;
 }
 
 window.selectQuickDate = function (period) {
@@ -3259,7 +3259,7 @@ window.addExpense = async function () {
     try {
         let imageUrl = null;
 
-        if (imageInput.files.length > 0) {
+        if (imageInput.files.length> 0) {
             imageUrl = await uploadImage(imageInput.files[0], 'expenses');
             // 显示上传成功标识
             if (successBadge) successBadge.style.display = 'flex';
@@ -3392,7 +3392,7 @@ window.saveExpenseEdit = async function () {
         };
 
         // 如果选择了新图片,上传并更新
-        if (imageInput.files.length > 0) {
+        if (imageInput.files.length> 0) {
             updates.picture_id = await uploadImage(imageInput.files[0], 'expenses');
             // 显示上传成功标识
             if (successBadge) successBadge.style.display = 'flex';
@@ -3567,7 +3567,7 @@ function renderSettingList(type, items) {
     container.innerHTML = items.map(item => {
         const isDisabled = item.status === 'disabled';
         return `
-    < div class="setting-item" >
+    <div class="setting-item">
                 <span class="setting-name ${isDisabled ? 'disabled' : ''}">${item.name}</span>
                 <div class="setting-actions">
                     <button class="btn-icon-only" title="编辑" onclick="editSetting('${item.id}', '${item.name}')">
@@ -3579,7 +3579,7 @@ function renderSettingList(type, items) {
                 : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>'}
                     </button>
                 </div>
-            </div >
+            </div>
     `;
     }).join('');
 }
