@@ -3260,9 +3260,25 @@ window.addExpense = async function () {
         let imageUrl = null;
 
         if (imageInput.files.length > 0) {
+            // 显示上传中状态
+            if (typeof window.showLoading === 'function') {
+                window.showLoading('正在上传图片...');
+            }
+
             imageUrl = await uploadImage(imageInput.files[0], 'expenses');
+
+            // 隐藏加载状态
+            if (typeof window.hideLoading === 'function') {
+                window.hideLoading();
+            }
+
             // 显示上传成功标识
             if (successBadge) successBadge.style.display = 'flex';
+
+            // 显示上传成功提示
+            if (typeof window.showInfo === 'function') {
+                window.showInfo('图片上传成功');
+            }
         }
 
         await createExpense({
@@ -3287,6 +3303,11 @@ window.addExpense = async function () {
         // 刷新列表
         loadExpenses();
     } catch (err) {
+        // 确保隐藏加载状态
+        if (typeof window.hideLoading === 'function') {
+            window.hideLoading();
+        }
+
         console.error('添加费用失败:', err);
         showError('添加费用失败: ' + err.message);
     }

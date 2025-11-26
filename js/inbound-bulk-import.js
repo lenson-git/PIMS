@@ -367,10 +367,77 @@ window.updatePendingQuantity = function (index, value) {
  * 删除待入库商品
  */
 window.removePendingInboundItem = function (index) {
-    pendingInboundList.splice(index, 1);
-    renderPendingInboundList();
+    // 找到对应的行元素
+    const tbody = document.getElementById('inbound-list-body');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr');
+    const targetRow = rows[index];
+
+    if (!targetRow) {
+        console.error('找不到要删除的行');
+        return;
+    }
+
+    // 使用动画删除行
+    if (typeof window.removeRow === 'function') {
+        window.removeRow(targetRow, () => {
+            // 动画完成后,从数据中删除并更新序号
+            pendingInboundList.splice(index, 1);
+
+            // 如果列表为空,显示空状态
+            if (pendingInboundList.length === 0) {
+                const emptyState = document.getElementById('inbound-empty-state');
+                if (emptyState) emptyState.style.display = 'flex';
+            } else {
+                // 只更新序号,不重新渲染图片
+                updateRowNumbers();
+            }
+        });
+    } else {
+        // 降级方案:直接删除
+        targetRow.remove();
+        pendingInboundList.splice(index, 1);
+
+        if (pendingInboundList.length === 0) {
+            const emptyState = document.getElementById('inbound-empty-state');
+            if (emptyState) emptyState.style.display = 'flex';
+        } else {
+            updateRowNumbers();
+        }
+    }
+
     showSuccess('已删除商品');
 };
+
+/**
+ * 更新行序号(不重新渲染图片)
+ */
+function updateRowNumbers() {
+    const tbody = document.getElementById('inbound-list-body');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row, index) => {
+        // 更新序号
+        const firstCell = row.querySelector('td:first-child');
+        if (firstCell) {
+            firstCell.textContent = index + 1;
+        }
+
+        // 更新删除按钮的index参数
+        const deleteBtn = row.querySelector('button[onclick^="removePendingInboundItem"]');
+        if (deleteBtn) {
+            deleteBtn.setAttribute('onclick', `removePendingInboundItem(${index})`);
+        }
+
+        // 更新数量输入框的onchange参数
+        const quantityInput = row.querySelector('.quantity-input');
+        if (quantityInput) {
+            quantityInput.setAttribute('onchange', `updatePendingQuantity(${index}, this.value)`);
+        }
+    });
+}
 
 /**
  * 清空待入库清单
