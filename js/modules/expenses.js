@@ -439,7 +439,7 @@ export async function openEditExpenseModal(id) {
         // 填充类型下拉框
         const typeSelect = document.getElementById('edit-expense-type');
         if (typeof window.loadSelectOptions === 'function') {
-            await window.loadSelectOptions('ExpenseType', 'ExpenseType', expense.expense_type_code);
+            await window.loadSelectOptions('ExpenseType', 'ExpenseType', expense.expense_type_code, 'edit-expense-type');
         }
         typeSelect.value = expense.expense_type_code;
 

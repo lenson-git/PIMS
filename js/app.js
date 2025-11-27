@@ -194,7 +194,8 @@ function initFloatingLabels() {
 }
 
 // 加载下拉选项
-async function loadSelectOptions(selectName, type, selectedValue) {
+// 加载下拉选项
+async function loadSelectOptions(selectName, type, selectedValue, targetId = null) {
     try {
         const data = await fetchSettings(type);
 
@@ -204,7 +205,14 @@ async function loadSelectOptions(selectName, type, selectedValue) {
             window._settingsCache[type][item.code || item.name] = item.name;
         });
 
-        const selects = document.querySelectorAll('select[name="' + selectName + '"]');
+        let selects;
+        if (targetId) {
+            const el = document.getElementById(targetId);
+            selects = el ? [el] : [];
+        } else {
+            selects = document.querySelectorAll('select[name="' + selectName + '"]');
+        }
+
         selects.forEach(select => {
             let specialOptions = [];
             Array.from(select.options).forEach(opt => {
