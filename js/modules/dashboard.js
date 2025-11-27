@@ -56,7 +56,7 @@ async function fetchDashboardData(startDate, endDate) {
         fetchSettings('warehouse'),
         fetchStockMovements(startDate, endDate),
         fetchSKUs(1, 10000),  // 获取所有 SKU
-        fetchExpenses(startDate, endDate),
+        fetchExpenses({ startDate, endDate }),  // 使用 filters 对象
         fetchAllStock(),
         fetchSafetyStock()
     ]);
