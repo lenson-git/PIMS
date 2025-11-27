@@ -10,9 +10,9 @@ import {
     fetchSKUs,
     fetchExpenses,
     fetchSafetyStock
-} from './supabase-client.js';
-import { getSettingName, formatCurrency } from './utils.js';
-import { logger } from './logger.js';
+} from '../supabase-client.js';
+import { getSettingName, formatCurrency } from '../utils.js';
+import { logger } from '../logger.js';
 
 // ==========================================
 // 状态管理
@@ -50,12 +50,12 @@ async function fetchExchangeRate() {
  * 获取仪表盘所需的所有数据
  */
 async function fetchDashboardData(startDate, endDate) {
-    const [shops, salesChannels, warehouses, movements, allSkus, expenses, allStock, safetyStock] = await Promise.all([
+    const [shops, salesChannels, warehouses, movements, skusResult, expenses, allStock, safetyStock] = await Promise.all([
         fetchSettings('shop'),
         fetchSettings('sales_channel'),
         fetchSettings('warehouse'),
         fetchStockMovements(startDate, endDate),
-        fetchSKUs(),
+        fetchSKUs(1, 10000),  // 获取所有 SKU
         fetchExpenses(startDate, endDate),
         fetchAllStock(),
         fetchSafetyStock()
@@ -66,7 +66,7 @@ async function fetchDashboardData(startDate, endDate) {
         salesChannels,
         warehouses,
         movements,
-        allSkus,
+        allSkus: skusResult.data || [],  // 提取 data 字段
         expenses,
         allStock,
         safetyStock
