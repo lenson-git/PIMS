@@ -195,6 +195,16 @@ function getDBSettingType(type) {
  */
 export async function toggleSettingStatus(id, newStatus) {
     try {
+        // 先获取这个设置的类型，以便知道要刷新哪些下拉选项
+        const { data: settingData, error: fetchError } = await window.supabase
+            .from('settings')
+            .select('type')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) throw fetchError;
+
+        // 更新状态
         const { error } = await window.supabase
             .from('settings')
             .update({ status: newStatus })
@@ -203,11 +213,56 @@ export async function toggleSettingStatus(id, newStatus) {
         if (error) throw error;
 
         showSuccess(newStatus === 'active' ? '已启用' : '已禁用');
+
+        // 刷新系统设置页面
         loadSystemSettings();
-        loadSettings(); // 更新全局缓存
+
+        // 更新全局缓存
+        loadSettings();
+
+        // 自动刷新所有相关的下拉选项
+        refreshSelectOptionsByType(settingData.type);
 
     } catch (err) {
         showError('操作失败: ' + err.message);
+    }
+}
+
+/**
+ * 根据设置类型刷新对应的下拉选项
+ */
+function refreshSelectOptionsByType(type) {
+    // 类型映射：数据库类型 -> 下拉选项名称
+    const typeToSelectMap = {
+        'Shop': 'shop_code',
+        'Warehouse': 'warehouse_code',
+        'InboundType': 'inbound_type_code',
+        'OutboundType': 'outbound_type_code',
+        'ExpenseType': 'ExpenseType',
+        'Status': 'status_code',
+        'SalesChannel': 'sales_channel'
+    };
+
+    const selectName = typeToSelectMap[type];
+    if (!selectName) return;
+
+    // 转换为 fetchSettings 需要的格式
+    const typeMap = {
+        'Shop': 'shop',
+        'Warehouse': 'warehouse',
+        'InboundType': 'inbound_type',
+        'OutboundType': 'outbound_type',
+        'ExpenseType': 'expense_type',
+        'Status': 'status',
+        'SalesChannel': 'sales_channel'
+    };
+
+    const fetchType = typeMap[type];
+    if (!fetchType) return;
+
+    // 调用 loadSelectOptions 刷新所有相关下拉框
+    if (typeof window.loadSelectOptions === 'function') {
+        window.loadSelectOptions(selectName, fetchType);
     }
 }
 
