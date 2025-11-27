@@ -218,6 +218,9 @@ async function loadSelectOptions(selectName, type, selectedValue) {
             if (emptyOpt) select.appendChild(emptyOpt);
 
             data.forEach(item => {
+                // 跳过已禁用的选项
+                if (item.status === 'disabled') return;
+
                 const option = document.createElement('option');
                 option.value = item.code || item.name;
                 option.textContent = item.name;
