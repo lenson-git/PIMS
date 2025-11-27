@@ -505,7 +505,7 @@ export async function fetchSettings(type) {
 
   const { data, error } = await supabase
     .from('settings')
-    .select('code, name')
+    .select('code, name, status')
     .eq('type', normalized)
     .order('name')
 
