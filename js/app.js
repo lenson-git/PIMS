@@ -1158,7 +1158,7 @@ window.editSKU = async function (id) {
 // ==========================================
 
 function flashRow(code) {
-    const row = document.querySelector(`#inbound - list - body tr[data - code= "${code}"]`);
+    const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
     if (!row) return;
     row.classList.remove('row-flash');
     void row.offsetWidth;
@@ -1210,7 +1210,7 @@ async function renderOutboundList() {
         const qty = pendingOutbound[code] || 0;
         const stockCell = '<td class="font-num" data-role="current-stock">-</td>';
         return `
-    <tr data - code="${code}" data - sku - id="${(sku && sku.id) || ''}">
+    <tr data-code="${code}" data-sku-id="${(sku && sku.id) || ''}">
                 <td>${idx + 1}</td>
                 <td>
                     <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -1247,7 +1247,7 @@ async function renderOutboundList() {
 
     // 异步更新每行的当前库存
     codes.forEach(async (code) => {
-        const row = document.querySelector(`#outbound - list - body tr[data - code= "${code}"]`);
+        const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
         const skuId = row && row.getAttribute('data-sku-id');
         if (!row || !skuId) return;
         try {
@@ -1289,7 +1289,7 @@ async function appendOutboundRowIfNeeded(code) {
     const tbody = document.getElementById('outbound-list-body');
     const empty = document.getElementById('outbound-empty-state');
     if (!tbody) return;
-    if (document.querySelector(`#outbound - list - body tr[data - code= "${code}"]`)) return;
+    if (document.querySelector(`#outbound-list-body tr[data-code="${code}"]`)) return;
     const sku = await getSKUByBarcodeCached(code);
     const original = (sku && sku.pic) ? sku.pic : 'https://via.placeholder.com/300';
     let thumb = null;
@@ -1301,7 +1301,7 @@ async function appendOutboundRowIfNeeded(code) {
     const idx = tbody.querySelectorAll('tr').length + 1;
     const qty = pendingOutbound[code] || 0;
     const rowHtml = `
-    <tr data - code="${code}" data - sku - id="${(sku && sku.id) || ''}">
+    <tr data-code="${code}" data-sku-id="${(sku && sku.id) || ''}">
             <td>${idx}</td>
             <td>
                 <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${original ? `showLightbox('${original}')` : ''}">
@@ -1359,7 +1359,7 @@ async function appendOutboundRowIfNeeded(code) {
 }
 
 function flashOutboundRow(code) {
-    const row = document.querySelector(`#outbound - list - body tr[data - code= "${code}"]`);
+    const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
     if (!row) return;
     row.classList.remove('row-flash');
     void row.offsetWidth;
@@ -1372,7 +1372,7 @@ window.decreaseOutboundQty = (code) => updateQuantity('outbound', code, -1);
 
 window.removeOutboundItem = function (code) {
     if (pendingOutbound[code] !== null) delete pendingOutbound[code];
-    const row = document.querySelector(`#outbound - list - body tr[data - code= "${code}"]`);
+    const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
     if (row) row.remove();
     const empty = document.getElementById('outbound-empty-state');
     if (empty && Object.keys(pendingOutbound).length === 0) empty.style.display = '';
@@ -2101,7 +2101,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     await appendOutboundRowIfNeeded(code);
 
-                    const row = document.querySelector(`#outbound - list - body tr[data - code= "${code}"]`);
+                    const row = document.querySelector(`#outbound-list-body tr[data-code="${code}"]`);
                     if (row) {
                         const cell = row.querySelector('[data-role="current-stock"]');
                         const max = cell ? parseInt(cell.textContent, 10) : NaN;
