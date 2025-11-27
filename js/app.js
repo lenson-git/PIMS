@@ -4,13 +4,17 @@ import {
 } from './supabase-client.js?v=20251125-1734';
 import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
 import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
-import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
+import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml, getSKUByBarcodeCached } from './utils.js'
 import { logger } from './logger.js'
 import { safeHTML, buildAttrs, buildClass, buildStyle } from './html-builder.js'
 import { loadDashboard, fetchExchangeRate, getCurrentExchangeRate } from './modules/dashboard.js'
 import './modules/expenses.js'  // 导入 Expenses 模块（自动注册到 window）
 import './modules/settings.js'  // 导入 Settings 模块（自动注册到 window）
 import './modules/inbound.js'   // 导入 Inbound 模块（自动注册到 window）
+import './modules/ui-helpers.js' // 导入 UI 辅助函数模块
+import './modules/sku.js'        // 导入 SKU 管理模块
+import './modules/outbound.js'   // 导入出库管理模块
+import './modules/stock.js'      // 导入库存管理模块
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
@@ -25,6 +29,7 @@ window.formatDate = formatDate;
 window.escapeHtml = escapeHtml;
 window.createTransformedUrlFromPublicUrl = createTransformedUrlFromPublicUrl;
 window.createSignedUrlFromPublicUrl = createSignedUrlFromPublicUrl;
+window.getSKUByBarcodeCached = getSKUByBarcodeCached;
 
 // ==========================================
 // Core Logic
