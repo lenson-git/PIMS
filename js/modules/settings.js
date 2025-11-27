@@ -8,7 +8,7 @@ import {
     fetchWarehouseConstraints,
     fetchPriceRules
 } from '../supabase-client.js';
-import { showError, showSuccess, openModal, closeModal } from '../utils.js';
+import { showError, showSuccess } from '../utils.js';
 import { logger } from '../logger.js';
 
 // ==========================================
@@ -222,7 +222,7 @@ export function editSetting(id, currentName) {
     const input = document.getElementById('edit-setting-input');
     if (input) {
         input.value = currentName;
-        openModal('edit-setting-modal');
+        window.openModal('edit-setting-modal');
         setTimeout(() => input.focus(), 100);
     }
 }
@@ -250,7 +250,7 @@ export async function saveSettingEdit() {
         if (error) throw error;
 
         showSuccess('更新成功');
-        closeModal('edit-setting-modal');
+        window.closeModal('edit-setting-modal');
         loadSystemSettings();
         loadSettings(); // Update global cache
 
