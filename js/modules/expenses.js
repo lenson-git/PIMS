@@ -54,6 +54,85 @@ export function initExpensesView() {
     if (typeof window.initFloatingLabels === 'function') {
         window.initFloatingLabels();
     }
+
+    // 4. 绑定图片自动上传
+    setupImageAutoUpload();
+}
+
+// ==========================================
+// 图片自动上传
+// ==========================================
+
+/**
+ * 设置图片自动上传
+ */
+function setupImageAutoUpload() {
+    // 新增费用的图片上传
+    const newImageInput = document.getElementById('expense-image-input');
+    if (newImageInput) {
+        newImageInput.addEventListener('change', async (e) => {
+            await handleImageUpload(e.target, 'expense-image-success', 'new');
+        });
+    }
+
+    // 编辑费用的图片上传
+    const editImageInput = document.getElementById('edit-expense-image-input');
+    if (editImageInput) {
+        editImageInput.addEventListener('change', async (e) => {
+            await handleImageUpload(e.target, 'edit-expense-image-success', 'edit');
+        });
+    }
+}
+
+/**
+ * 处理图片上传
+ */
+async function handleImageUpload(inputElement, successBadgeId, context) {
+    const file = inputElement.files[0];
+    if (!file) return;
+
+    const successBadge = document.getElementById(successBadgeId);
+
+    try {
+        // 显示上传中状态
+        if (successBadge) {
+            successBadge.style.display = 'flex';
+            successBadge.innerHTML = '<span>上传中...</span>';
+        }
+
+        // 上传图片
+        const imageUrl = await uploadImage(file, 'expenses');
+
+        // 保存上传的 URL 到临时变量
+        if (context === 'new') {
+            window._newExpenseImageUrl = imageUrl;
+        } else if (context === 'edit') {
+            window._editExpenseImageUrl = imageUrl;
+        }
+
+        // 显示成功标识
+        if (successBadge) {
+            successBadge.innerHTML = `
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>上传成功</span>
+            `;
+        }
+
+        showSuccess('图片上传成功');
+    } catch (err) {
+        logger.error('图片上传失败:', err);
+        showError('图片上传失败: ' + err.message);
+
+        // 隐藏成功标识
+        if (successBadge) {
+            successBadge.style.display = 'none';
+        }
+
+        // 清空文件输入
+        inputElement.value = '';
+    }
 }
 
 // ==========================================
@@ -244,12 +323,8 @@ export async function addExpense() {
     }
 
     try {
-        let imageUrl = null;
-
-        if (imageInput.files.length > 0) {
-            imageUrl = await uploadImage(imageInput.files[0], 'expenses');
-            if (successBadge) successBadge.style.display = 'flex';
-        }
+        // 使用已上传的图片 URL
+        const imageUrl = window._newExpenseImageUrl || null;
 
         await createExpense({
             timestamp: date,
@@ -267,6 +342,8 @@ export async function addExpense() {
         document.getElementById('new-expense-note').value = '';
         imageInput.value = '';
 
+        // 清空临时变量和成功标识
+        window._newExpenseImageUrl = null;
         if (successBadge) successBadge.style.display = 'none';
 
         loadExpenses();
@@ -363,7 +440,6 @@ export async function saveExpenseEdit() {
     const currency = document.getElementById('edit-expense-currency').value;
     const note = document.getElementById('edit-expense-note').value;
     const imageInput = document.getElementById('edit-expense-image-input');
-    const successBadge = document.getElementById('edit-expense-image-success');
 
     if (!date || !type || !amount) {
         showError('请填写必填项:日期、类型、金额');
@@ -379,14 +455,17 @@ export async function saveExpenseEdit() {
             description: note
         };
 
-        // 如果选择了新图片,上传并更新
-        if (imageInput.files.length > 0) {
-            updates.picture_id = await uploadImage(imageInput.files[0], 'expenses');
-            if (successBadge) successBadge.style.display = 'flex';
+        // 如果有已上传的图片,使用它
+        if (window._editExpenseImageUrl) {
+            updates.picture_id = window._editExpenseImageUrl;
         }
 
         await updateExpense(id, updates);
         showSuccess('更新成功');
+
+        // 清空临时变量
+        window._editExpenseImageUrl = null;
+
         closeEditExpenseModal();
         loadExpenses();
     } catch (err) {
