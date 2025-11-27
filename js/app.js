@@ -272,6 +272,9 @@ async function loadSelectOptions(selectName, type, selectedValue) {
     }
 }
 
+// 暴露到全局
+window.loadSelectOptions = loadSelectOptions;
+
 // 打开新增配置模态框
 window.openAddSettingModal = function (type, targetSelectId) {
     document.getElementById('new-setting-type').value = type;

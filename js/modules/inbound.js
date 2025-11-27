@@ -399,6 +399,7 @@ function setInboundDisabled(disabled) {
  * 预加载入库视图
  */
 export async function preloadInbound() {
+    if (!window._viewReady) window._viewReady = {};
     window._viewReady.inbound = false;
     setInboundDisabled(true);
 
@@ -408,7 +409,9 @@ export async function preloadInbound() {
     const inboundWarehouse = document.getElementById('inbound-warehouse');
     const inboundType = document.getElementById('inbound-type');
     if (inboundWarehouse && inboundType) {
-        window.filterTypes(inboundWarehouse.value, inboundType, 'inbound');
+        if (typeof window.filterTypes === 'function') {
+            window.filterTypes(inboundWarehouse.value, inboundType, 'inbound');
+        }
     }
 
     // 设置默认值
@@ -423,7 +426,7 @@ export async function preloadInbound() {
 }
 
 // ==========================================
-// 全局暴露
+// 全局暴露（立即执行）
 // ==========================================
 
 window.renderInboundList = renderInboundList;
