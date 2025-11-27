@@ -151,26 +151,3 @@ export function escapeHtml(text) {
   div.textContent = text
   return div.innerHTML
 }
-
-/**
- * 通过条码获取 SKU (带缓存)
- * @param {string} code - SKU 条码
- * @returns {Promise<Object|null>} SKU 对象或 null
- */
-export async function getSKUByBarcodeCached(code) {
-  // 需要从 app.js 或其他地方导入 fetchSKUByBarcode
-  // 这里先声明,实际使用时需要确保已导入
-  if (window._skuCacheByBarcode && window._skuCacheByBarcode[code]) {
-    return window._skuCacheByBarcode[code];
-  }
-
-  // 动态导入以避免循环依赖
-  const { fetchSKUByBarcode } = await import('./supabase-client.js');
-  const sku = await fetchSKUByBarcode(code);
-  if (sku) {
-    if (!window._skuCacheByBarcode) window._skuCacheByBarcode = {};
-    window._skuCacheByBarcode[code] = sku;
-  }
-  return sku;
-}
-

@@ -4,7 +4,7 @@ import {
 } from './supabase-client.js?v=20251125-1734';
 import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
 import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
-import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml, getSKUByBarcodeCached } from './utils.js'
+import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
 import { logger } from './logger.js'
 import { safeHTML, buildAttrs, buildClass, buildStyle } from './html-builder.js'
 import { loadDashboard, fetchExchangeRate, getCurrentExchangeRate } from './modules/dashboard.js'
@@ -29,7 +29,19 @@ window.formatDate = formatDate;
 window.escapeHtml = escapeHtml;
 window.createTransformedUrlFromPublicUrl = createTransformedUrlFromPublicUrl;
 window.createSignedUrlFromPublicUrl = createSignedUrlFromPublicUrl;
-window.getSKUByBarcodeCached = getSKUByBarcodeCached;
+
+// 通过条码获取 SKU (带缓存) - 在 app.js 中实现避免循环依赖
+window.getSKUByBarcodeCached = async function (code) {
+    if (window._skuCacheByBarcode && window._skuCacheByBarcode[code]) {
+        return window._skuCacheByBarcode[code];
+    }
+    const sku = await fetchSKUByBarcode(code);
+    if (sku) {
+        if (!window._skuCacheByBarcode) window._skuCacheByBarcode = {};
+        window._skuCacheByBarcode[code] = sku;
+    }
+    return sku;
+};
 
 // ==========================================
 // Core Logic
