@@ -2729,7 +2729,7 @@ function renderExpenses(expenses) {
     });
 
     // 更新统计信息
-    const rateCnyToThb = currentExchangeRate || 4.8;
+    const rateCnyToThb = getCurrentExchangeRate() || 4.8;
     document.querySelector('.expenses-list-panel .panel-info').innerHTML =
         `共 <strong> ${expenses.length}</strong> 条记录 | 总计: <strong class="text-error">${formatCurrency(totalAmountTHB, 'THB')}</strong>` +
         ` <span class="text-secondary"> (汇率: 1 CNY ≈ ${rateCnyToThb.toFixed(2)} THB)</span> `;
