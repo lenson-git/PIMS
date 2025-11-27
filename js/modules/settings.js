@@ -10,7 +10,6 @@ import {
 } from '../supabase-client.js';
 import { showError, showSuccess, openModal, closeModal } from '../utils.js';
 import { logger } from '../logger.js';
-import { WAREHOUSE_RULES, PRICE_RULES } from '../config.js';
 
 // ==========================================
 // 全局配置缓存加载
@@ -57,8 +56,8 @@ export async function loadWarehouseConstraints() {
         console.log('仓库约束关系已加载:', rules);
     } catch (error) {
         logger.error('加载仓库约束关系失败:', error);
-        // 使用默认配置作为后备
-        window._warehouseConstraints = WAREHOUSE_RULES;
+        // 使用空对象作为后备
+        window._warehouseConstraints = {};
     }
 }
 
@@ -82,8 +81,8 @@ export async function loadPriceRules() {
         console.log('价格规则已加载:', rules);
     } catch (error) {
         logger.error('加载价格规则失败:', error);
-        // 使用默认配置作为后备
-        window._priceRules = PRICE_RULES;
+        // 使用空对象作为后备
+        window._priceRules = {};
     }
 }
 
