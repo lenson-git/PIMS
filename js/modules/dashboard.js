@@ -42,6 +42,13 @@ export async function fetchExchangeRate() {
     }
 }
 
+/**
+ * 获取当前汇率值
+ */
+export function getCurrentExchangeRate() {
+    return currentExchangeRate;
+}
+
 // ==========================================
 // 数据获取
 // ==========================================

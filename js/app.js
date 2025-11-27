@@ -7,7 +7,7 @@ import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './aut
 import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
 import { logger } from './logger.js'
 import { safeHTML, buildAttrs, buildClass, buildStyle } from './html-builder.js'
-import { loadDashboard, fetchExchangeRate } from './modules/dashboard.js'
+import { loadDashboard, fetchExchangeRate, getCurrentExchangeRate } from './modules/dashboard.js'
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
@@ -2690,7 +2690,7 @@ function renderExpenses(expenses) {
     expenses.forEach((expense, index) => {
         const amt = parseFloat(expense.amount || 0);
         const cur = (expense.currency || 'THB').toUpperCase();
-        const rateCnyToThb = currentExchangeRate || 4.8;
+        const rateCnyToThb = getCurrentExchangeRate() || 4.8;
         if (cur === 'THB') totalAmountTHB += amt;
         else if (cur === 'RMB' || cur === 'CNY') totalAmountTHB += amt * rateCnyToThb;
         else totalAmountTHB += amt;
