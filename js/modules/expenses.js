@@ -67,20 +67,27 @@ export function initExpensesView() {
  * 设置图片自动上传
  */
 function setupImageAutoUpload() {
-    // 新增费用的图片上传
+    // 新增费用的图片上传 - 立即绑定
     const newImageInput = document.getElementById('expense-image-input');
-    if (newImageInput) {
+    if (newImageInput && !newImageInput._uploadBound) {
         newImageInput.addEventListener('change', async (e) => {
             await handleImageUpload(e.target, 'expense-image-success', 'new');
         });
+        newImageInput._uploadBound = true;  // 标记已绑定
     }
+}
 
-    // 编辑费用的图片上传
+/**
+ * 设置编辑模态框的图片自动上传
+ */
+function setupEditImageAutoUpload() {
+    // 编辑费用的图片上传 - 在打开模态框时绑定
     const editImageInput = document.getElementById('edit-expense-image-input');
-    if (editImageInput) {
+    if (editImageInput && !editImageInput._uploadBound) {
         editImageInput.addEventListener('change', async (e) => {
             await handleImageUpload(e.target, 'edit-expense-image-success', 'edit');
         });
+        editImageInput._uploadBound = true;  // 标记已绑定
     }
 }
 
@@ -409,6 +416,9 @@ export async function openEditExpenseModal(id) {
         if (typeof window.initFloatingLabels === 'function') {
             window.initFloatingLabels();
         }
+
+        // 绑定编辑图片的自动上传
+        setupEditImageAutoUpload();
 
     } catch (err) {
         logger.error('打开编辑框失败:', err);
