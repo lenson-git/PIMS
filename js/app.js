@@ -9,7 +9,7 @@ import { logger } from './logger.js'
 import { safeHTML, buildAttrs, buildClass, buildStyle } from './html-builder.js'
 import { loadDashboard, fetchExchangeRate, getCurrentExchangeRate } from './modules/dashboard.js'
 import './modules/expenses.js'  // 导入 Expenses 模块（自动注册到 window）
-import './modules/settings.js'  // 导入 Settings 模块（自动注册到 window）
+// import './modules/settings.js'  // 导入 Settings 模块（自动注册到 window） - 暂时注释以调试
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
