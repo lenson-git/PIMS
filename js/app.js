@@ -578,10 +578,9 @@ let currentSKUId = null;
 let currentImageFile = null;
 let currentImageUrl = null;
 let lastSearchQuery = '';
-let pendingInbound = {};
+// pendingInbound 和 inboundPurchaseQty 已移至 modules/inbound.js
 let pendingOutbound = {};
 window._viewReady = { inbound: false, outbound: false, sku: false, stock: false, expenses: false };
-let inboundPurchaseQty = {};
 window._skuCacheByBarcode = {};
 let inboundLastCode = null;
 let inboundScanLock = false;
@@ -747,20 +746,25 @@ window.saveSKU = async function () {
         try {
             if (window._inboundCreateBarcode) {
                 const code = window._inboundCreateBarcode;
-                pendingInbound[code] = (pendingInbound[code] || 0) + 1;
-                await appendInboundRowIfNeeded(code);
-                const row = document.querySelector(`#inbound - list - body tr[data - code= "${code}"]`);
-                if (row) {
-                    const input = row.querySelector('input[data-role="inbound-qty"]');
-                    if (input) input.value = pendingInbound[code];
-                }
-                flashRow(code);
-                playBeep();
-                window._inboundCreateBarcode = '';
-                const inboundInputEl = document.getElementById('inbound-sku-input');
-                if (inboundInputEl) {
-                    inboundInputEl.value = '';
-                    inboundInputEl.focus();
+                const sku = await getSKUByBarcodeCached(code);
+                if (sku) {
+                    const pending = window.getPendingInbound();
+                    pending[code] = (pending[code] || 0) + 1;
+                    window.setPendingInbound(pending);
+                    await renderInboundList();
+                    const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
+                    if (row) {
+                        const input = row.querySelector('input[data-role="inbound-qty"]');
+                        if (input) input.value = pending[code];
+                    }
+                    flashRow(code);
+                    playBeep();
+                    window._inboundCreateBarcode = '';
+                    const inboundInputEl = document.getElementById('inbound-sku-input');
+                    if (inboundInputEl) {
+                        inboundInputEl.value = '';
+                        inboundInputEl.focus();
+                    }
                 }
             }
         } catch (_) { }
@@ -1685,7 +1689,7 @@ window.loadStockList = async function (query = '', warehouse = '', page = 1, res
                 continue;
             }
 
-            // 计算序号: (当前页 - 1) * 每页数量 + 当前索引 + 1
+            // 计算序号: (当前页 - 1) * 每页数量 + rows.length + 1
             const idx = (page - 1) * 20 + rows.length + 1;
             let warehouseName = '';
             if (warehouse) {
@@ -2029,22 +2033,22 @@ document.addEventListener('DOMContentLoaded', async function () {
                         editSKU(sku.id);
                         return;
                     }
-
-                    // 更新数量或新增行
-                    if (!pendingInbound[code]) pendingInbound[code] = 0;
-                    pendingInbound[code] += 1;
-
-                    await appendInboundRowIfNeeded(code);
-
-                    const row = document.querySelector(`#inbound - list - body tr[data - code= "${code}"]`);
-                    if (row) {
-                        const input = row.querySelector('input[data-role="inbound-qty"]');
-                        if (input) input.value = pendingInbound[code];
+                    if (sku) {
+                        // 添加到待入库清单
+                        const pending = window.getPendingInbound();
+                        if (!pending[code]) pending[code] = 0;
+                        pending[code] += 1;
+                        window.setPendingInbound(pending);
+                        await renderInboundList();
+                        const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
+                        if (row) {
+                            const input = row.querySelector('input[data-role="inbound-qty"]');
+                            if (input) input.value = pending[code];
+                        }
+                        flashRow(code);
+                        playBeep();
+                        inboundLastCode = code;
                     }
-
-                    flashRow(code);
-                    playBeep();
-                    inboundLastCode = code;
                 } catch (err) {
                     showError('扫描入库失败: ' + err.message);
                     // 如果失败，可能需要把码放回去？通常不需要，让用户重扫即可
@@ -2178,11 +2182,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             const tr = target.closest('tr');
             const code = tr && tr.getAttribute('data-code');
             if (!code) return;
-            let val = parseInt(target.value, 10);
-            if (Number.isNaN(val)) val = 1;
-            val = Math.max(1, val);
-            target.value = String(val);
-            pendingInbound[code] = val;
+            const val = parseInt(target.value, 10) || 0;
+            if (val < 1) target.value = 1;
+            const pending = window.getPendingInbound();
+            pending[code] = val;
+            window.setPendingInbound(pending);
         });
     }
 
