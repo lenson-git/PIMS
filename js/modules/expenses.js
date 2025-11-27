@@ -69,11 +69,22 @@ export function initExpensesView() {
 function setupImageAutoUpload() {
     // 新增费用的图片上传 - 立即绑定
     const newImageInput = document.getElementById('expense-image-input');
-    if (newImageInput && !newImageInput._uploadBound) {
-        newImageInput.addEventListener('change', async (e) => {
-            await handleImageUpload(e.target, 'expense-image-success', 'new');
-        });
-        newImageInput._uploadBound = true;  // 标记已绑定
+    if (newImageInput) {
+        console.log('[Expenses] Found new expense image input, binding change event');
+        // 移除旧的监听器（如果有）- 虽然 addEventListener 不会重复添加相同的函数引用，但这里是匿名函数
+        // 为了安全起见，我们可以先克隆节点来移除所有监听器，或者只依赖 _uploadBound 标记
+        if (!newImageInput._uploadBound) {
+            newImageInput.addEventListener('change', async (e) => {
+                console.log('[Expenses] New expense image input changed');
+                await handleImageUpload(e.target, 'expense-image-success', 'new');
+            });
+            newImageInput._uploadBound = true;  // 标记已绑定
+            console.log('[Expenses] New expense image input bound');
+        } else {
+            console.log('[Expenses] New expense image input already bound');
+        }
+    } else {
+        console.warn('[Expenses] New expense image input not found');
     }
 }
 
@@ -83,11 +94,20 @@ function setupImageAutoUpload() {
 function setupEditImageAutoUpload() {
     // 编辑费用的图片上传 - 在打开模态框时绑定
     const editImageInput = document.getElementById('edit-expense-image-input');
-    if (editImageInput && !editImageInput._uploadBound) {
-        editImageInput.addEventListener('change', async (e) => {
-            await handleImageUpload(e.target, 'edit-expense-image-success', 'edit');
-        });
-        editImageInput._uploadBound = true;  // 标记已绑定
+    if (editImageInput) {
+        console.log('[Expenses] Found edit expense image input, binding change event');
+        if (!editImageInput._uploadBound) {
+            editImageInput.addEventListener('change', async (e) => {
+                console.log('[Expenses] Edit expense image input changed');
+                await handleImageUpload(e.target, 'edit-expense-image-success', 'edit');
+            });
+            editImageInput._uploadBound = true;  // 标记已绑定
+            console.log('[Expenses] Edit expense image input bound');
+        } else {
+            console.log('[Expenses] Edit expense image input already bound');
+        }
+    } else {
+        console.warn('[Expenses] Edit expense image input not found');
     }
 }
 
@@ -95,8 +115,12 @@ function setupEditImageAutoUpload() {
  * 处理图片上传
  */
 async function handleImageUpload(inputElement, successBadgeId, context) {
+    console.log(`[Expenses] Handling image upload for context: ${context}`);
     const file = inputElement.files[0];
-    if (!file) return;
+    if (!file) {
+        console.log('[Expenses] No file selected');
+        return;
+    }
 
     const successBadge = document.getElementById(successBadgeId);
 
@@ -104,11 +128,18 @@ async function handleImageUpload(inputElement, successBadgeId, context) {
         // 显示上传中状态
         if (successBadge) {
             successBadge.style.display = 'flex';
-            successBadge.innerHTML = '<span>上传中...</span>';
+            // 临时调整样式以显示文本
+            successBadge.style.width = 'auto';
+            successBadge.style.borderRadius = '4px';
+            successBadge.style.padding = '0 8px';
+            successBadge.style.background = '#3b82f6'; // 蓝色表示处理中
+            successBadge.innerHTML = '<span style="color: white; font-size: 12px;">上传中...</span>';
         }
 
         // 上传图片
+        console.log('[Expenses] Starting upload...');
         const imageUrl = await uploadImage(file, 'expenses');
+        console.log('[Expenses] Upload success, URL:', imageUrl);
 
         // 保存上传的 URL 到临时变量
         if (context === 'new') {
@@ -119,11 +150,17 @@ async function handleImageUpload(inputElement, successBadgeId, context) {
 
         // 显示成功标识
         if (successBadge) {
+            successBadge.style.width = 'auto';
+            successBadge.style.borderRadius = '4px';
+            successBadge.style.padding = '0 6px';
+            successBadge.style.background = '#10b981'; // 绿色表示成功
             successBadge.innerHTML = `
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span>上传成功</span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span style="color: white; font-size: 12px;">上传成功</span>
+                </div>
             `;
         }
 
@@ -331,7 +368,18 @@ export async function addExpense() {
 
     try {
         // 使用已上传的图片 URL
-        const imageUrl = window._newExpenseImageUrl || null;
+        let imageUrl = window._newExpenseImageUrl || null;
+
+        // 兜底逻辑：如果自动上传没成功（imageUrl为空），但用户选了文件，则尝试手动上传
+        if (!imageUrl && imageInput.files.length > 0) {
+            console.log('[Expenses] Auto-upload URL not found, trying manual upload...');
+            if (successBadge) {
+                successBadge.style.display = 'flex';
+                successBadge.innerHTML = '<span>上传中...</span>';
+            }
+            imageUrl = await uploadImage(imageInput.files[0], 'expenses');
+            console.log('[Expenses] Manual upload success, URL:', imageUrl);
+        }
 
         await createExpense({
             timestamp: date,
@@ -357,6 +405,8 @@ export async function addExpense() {
     } catch (err) {
         logger.error('添加费用失败:', err);
         showError('添加费用失败: ' + err.message);
+        // 如果失败，也要隐藏上传标识（如果是手动上传触发的）
+        if (successBadge && !window._newExpenseImageUrl) successBadge.style.display = 'none';
     }
 }
 
@@ -468,6 +518,12 @@ export async function saveExpenseEdit() {
         // 如果有已上传的图片,使用它
         if (window._editExpenseImageUrl) {
             updates.picture_id = window._editExpenseImageUrl;
+        }
+        // 兜底逻辑：如果自动上传没成功，但用户选了文件，则尝试手动上传
+        else if (imageInput.files.length > 0) {
+            console.log('[Expenses] Auto-upload URL not found for edit, trying manual upload...');
+            updates.picture_id = await uploadImage(imageInput.files[0], 'expenses');
+            console.log('[Expenses] Manual upload success for edit');
         }
 
         await updateExpense(id, updates);
