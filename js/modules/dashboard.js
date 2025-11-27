@@ -27,7 +27,7 @@ let currentExchangeRate = 4.8; // 默认汇率 (1 CNY ≈ 4.8 THB)
 /**
  * 获取实时汇率 (CNY → THB)
  */
-async function fetchExchangeRate() {
+export async function fetchExchangeRate() {
     try {
         const response = await fetch('https://api.exchangerate-api.com/v4/latest/CNY');
         const data = await response.json();

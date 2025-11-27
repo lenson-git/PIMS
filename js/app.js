@@ -7,7 +7,7 @@ import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './aut
 import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
 import { logger } from './logger.js'
 import { safeHTML, buildAttrs, buildClass, buildStyle } from './html-builder.js'
-import { loadDashboard } from './modules/dashboard.js'
+import { loadDashboard, fetchExchangeRate } from './modules/dashboard.js'
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
