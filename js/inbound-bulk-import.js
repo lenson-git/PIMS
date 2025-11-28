@@ -1,5 +1,4 @@
-/* global XLSX, supabase, showSuccess, showError, openModal, closeModal */
-const logger = window.logger || console;
+/* global XLSX, supabase, showSuccess, showError, openModal, closeModal, logger */
 /**
  * 入库批量导入模块
  * Version: 20251125-1201-fix-default-values
