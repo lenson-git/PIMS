@@ -596,11 +596,43 @@ window.showDuplicateList = function () {
     html += '<ul class="duplicate-items">';
 
     differentDuplicates.forEach((dup, index) => {
+        // 计算具体哪些字段不同
+        const differences = [];
+
+        const normalizeStr = (str) => {
+            if (!str) return '';
+            return String(str).trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        };
+
+        const existingInfo = normalizeStr(dup.existing.product_info);
+        const importingInfo = normalizeStr(dup.importing.product_info);
+        const existingPrice = parseFloat(dup.existing.purchase_price_rmb || 0);
+        const importingPrice = parseFloat(dup.importing.purchase_price_rmb || 0);
+        const existingSelling = parseFloat(dup.existing.selling_price_thb || 0);
+        const importingSelling = parseFloat(dup.importing.selling_price_thb || 0);
+        const existingShop = normalizeStr(dup.existing.shop_code).toUpperCase();
+        const importingShop = normalizeStr(dup.importing.shop_code).toUpperCase();
+
+        if (existingInfo !== importingInfo) {
+            differences.push(`产品信息: "${existingInfo.substring(0, 30)}..." → "${importingInfo.substring(0, 30)}..."`);
+        }
+        if (existingPrice !== importingPrice) {
+            differences.push(`采购价: ¥${existingPrice} → ¥${importingPrice}`);
+        }
+        if (existingSelling !== importingSelling) {
+            differences.push(`销售价: ฿${existingSelling} → ฿${importingSelling}`);
+        }
+        if (existingShop !== importingShop) {
+            differences.push(`店铺: ${existingShop} → ${importingShop}`);
+        }
+
+        const diffText = differences.length > 0 ? differences.join('; ') : '数据不一致';
+
         html += `<li class="different">`;
         html += `<span class="dup-icon">⚠</span>`;
         html += `<span class="dup-sku">${dup.sku}</span>`;
         html += `<span class="dup-info">${dup.existing.product_info}</span>`;
-        html += `<span class="dup-status">数据不一致，将自动更新</span>`;
+        html += `<span class="dup-status">${diffText}</span>`;
         html += '</li>';
     });
 
