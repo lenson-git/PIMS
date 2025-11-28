@@ -385,7 +385,7 @@ window.updatePendingQuantity = function (index, value) {
  */
 window.removePendingInboundItem = function (index) {
     // 找到对应的行
-    const tbody = document.getElementById('pending-inbound-list');
+    const tbody = document.getElementById('inbound-list-body');
     if (!tbody) {
         // 如果找不到表格,使用原有逻辑
         pendingInboundList.splice(index, 1);
