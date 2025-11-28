@@ -614,16 +614,16 @@ window.showDuplicateList = function () {
         const importingShop = normalizeStr(dup.importing.shop_code).toUpperCase();
 
         if (existingInfo !== importingInfo) {
-            differences.push(`产品信息: "${existingInfo.substring(0, 30)}..." → "${importingInfo.substring(0, 30)}..."`);
+            differences.push(`产品信息: "${importingInfo.substring(0, 20)}..."(Excel) → "${existingInfo.substring(0, 20)}..."(系统,将被覆盖)`);
         }
         if (existingPrice !== importingPrice) {
-            differences.push(`采购价: ¥${existingPrice} → ¥${importingPrice}`);
+            differences.push(`采购价: ¥${importingPrice}(Excel) → ¥${existingPrice}(系统,将被覆盖)`);
         }
         if (existingSelling !== importingSelling) {
-            differences.push(`销售价: ฿${existingSelling} → ฿${importingSelling}`);
+            differences.push(`销售价: ฿${importingSelling}(Excel) → ฿${existingSelling}(系统,将被覆盖)`);
         }
         if (existingShop !== importingShop) {
-            differences.push(`店铺: ${existingShop} → ${importingShop}`);
+            differences.push(`店铺: ${importingShop}(Excel) → ${existingShop}(系统,将被覆盖)`);
         }
 
         const diffText = differences.length > 0 ? differences.join('; ') : '数据不一致';
