@@ -104,23 +104,29 @@ window.handleBulkImportFile = async function (event) {
 
     try {
         logger.debug('开始解析 Excel...');
-        const data = await parseSKUExcel(file);
-        logger.debug('Excel 解析完成，数据行数:', data.length);
+
+        // 解析 Excel
+        const data = await parseExcelFile(file);
+        logger.debug('Excel 解析完成，数据行数:', data ? data.length : 0);
 
         if (!data || data.length === 0) {
             showError('Excel 文件为空或格式不正确');
             return;
         }
 
-        // 验证数据
-        logger.debug('开始验证数据...');
-        const validation = await validateSKUData(data);
-        logger.debug('验证完成');
+        // 保存数据
+        currentImportData = data;
+        logger.debug('数据已保存');
 
         // 显示预览
-        displaySKUPreview(data, validation);
-        openModal('sku-import-modal');
-        showSuccess(`成功解析 ${data.length} 条数据`);
+        logger.debug('开始渲染预览...');
+        renderImportPreview(data);
+        logger.debug('预览渲染完成');
+
+        // 验证数据
+        logger.debug('开始验证数据...');
+        await validateAndShowResult(data);
+        logger.debug('验证完成');
 
     } catch (error) {
         logger.error('文件处理失败:', error);
