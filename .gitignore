@@ -37,3 +37,6 @@ build/
 .gemini/
 .trae/
 js/app.js.backup
+
+# 测试覆盖率
+coverage/

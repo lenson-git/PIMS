@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/lenson-git/PIMS#readme",
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.14",
     "jsdom": "^27.2.0",
     "vitest": "^4.0.14"
   }

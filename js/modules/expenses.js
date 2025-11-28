@@ -436,11 +436,13 @@ export async function openEditExpenseModal(id) {
         document.getElementById('edit-expense-currency').value = expense.currency || 'THB';
         document.getElementById('edit-expense-note').value = expense.description || '';
 
-        // 填充类型下拉框
+        // 填充类型下拉框 - 修复：不传入 selectedValue，避免影响筛选器
         const typeSelect = document.getElementById('edit-expense-type');
         if (typeof window.loadSelectOptions === 'function') {
-            await window.loadSelectOptions('ExpenseType', 'ExpenseType', expense.expense_type_code, 'edit-expense-type');
+            // 只加载选项，不设置选中值（避免影响其他同名 select）
+            await window.loadSelectOptions('ExpenseType', 'ExpenseType', null, 'edit-expense-type');
         }
+        // 手动设置编辑模态框的选中值
         typeSelect.value = expense.expense_type_code;
 
         // 显示当前图片

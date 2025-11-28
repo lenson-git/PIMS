@@ -166,46 +166,9 @@ function navigate(viewName) {
 window.navigate = navigate;
 
 // 暴露给全局以便 HTML onclick 调用
-window.openModal = function (modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.add('active');
-        try {
-            setTimeout(initFloatingLabels, 50);
-        } catch (e) {
-            logger.error('Error initializing floating labels:', e);
-        }
-    } else {
-        logger.error('Modal not found:', modalId);
-    }
-}
+// window.openModal, window.closeModal, initFloatingLabels 已在 modules/ui-helpers.js 中定义并暴露
+// 这里无需重复定义，避免冲突
 
-window.closeModal = function (modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.remove('active');
-}
-
-// 初始化浮动标签
-function initFloatingLabels() {
-    document.querySelectorAll('.floating-label-group select').forEach(select => {
-        if (select.dataset.floatingInit) return;
-        select.dataset.floatingInit = 'true';
-
-        function updateLabel() {
-            if (select.value && select.value !== '') {
-                select.parentElement.classList.add('active');
-            } else {
-                select.parentElement.classList.remove('active');
-            }
-        }
-
-        updateLabel();
-        select.addEventListener('change', updateLabel);
-        select.addEventListener('focus', () => {
-            select.parentElement.classList.add('active');
-        });
-    });
-}
 
 // 加载下拉选项
 // 加载下拉选项

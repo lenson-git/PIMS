@@ -127,6 +127,7 @@ export function closeLightbox() {
 
 window.openModal = openModal;
 window.closeModal = closeModal;
+window.initFloatingLabels = initFloatingLabels;
 window.flashRow = flashRow;
 window.playBeep = playBeep;
 window.showLightbox = showLightbox;
