@@ -97,6 +97,7 @@
   font-weight: 500;
 }
 
+@keyframes spin {
   to { transform: rotate(360deg); }
 }
 
