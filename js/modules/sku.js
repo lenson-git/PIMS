@@ -37,37 +37,77 @@ let lastSearchQuery = '';
 /**
  * 处理图片选择
  */
-function handleImageSelect(e) {
+async function handleImageSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // 显示加载状态
-    const area = document.getElementById('sku-upload-area');
-    const label = area.querySelector('.upload-label');
-    if (label) {
-        label.style.pointerEvents = 'none';
-        label.style.opacity = '0.7';
-        label.innerHTML = `
-            <div class="loading-spinner-small"></div>
-            <span>处理中...</span>
-        `;
-    }
-
     currentImageFile = file;
 
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        currentImageBase64 = e.target.result;
-        // 稍微延迟一下以展示动画效果（可选，这里直接渲染）
+    // 显示加载状态
+    const area = document.getElementById('sku-upload-area');
+    // 保持高度防止抖动
+    const height = area.offsetHeight;
+    area.style.height = height + 'px';
+
+    area.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #6b7280;">
+            <div class="loading-spinner"></div>
+            <div style="margin-top: 12px; font-size: 14px;">正在上传...</div>
+        </div>
+    `;
+
+    try {
+        // 1. 生成文件名
+        const filename = `sku-${Date.now()}-${file.name}`;
+
+        // 2. 上传图片
+        const imageUrl = await uploadImage(file, filename);
+        currentImageUrl = imageUrl;
+        currentImageBase64 = imageUrl; // 预览直接用 URL
+
+        // 3. 显示成功状态和图片
+        area.innerHTML = `
+            <div class="img-preview-wrapper" style="position: relative; width: 100%; height: 100%; opacity: 0; transition: opacity 0.3s;">
+                <img src="${imageUrl}" style="width: 100%; height: 100%; object-fit: contain;" />
+                
+                <!-- 成功标记 -->
+                <div class="upload-success-overlay" style="position: absolute; inset: 0; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 10;">
+                    <div style="text-align: center;">
+                        <div class="success-checkmark-anim" style="width: 48px; height: 48px; margin: 0 auto 8px; border-radius: 50%; background: #10b981; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);">
+                            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div style="color: #059669; font-weight: 600; font-size: 14px;">上传成功</div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="clearImageSelection()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 20;">&times;</button>
+            </div>`;
+
+        // 4. 动画展示
         requestAnimationFrame(() => {
-            area.innerHTML = `
-                <div class="img-preview-wrapper" style="position: relative; width: 100%; height: 100%;">
-                    <img src="${currentImageBase64}" style="width: 100%; height: 100%; object-fit: contain;" />
-                    <button type="button" onclick="clearImageSelection()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">&times;</button>
-                </div>`;
+            const wrapper = area.querySelector('.img-preview-wrapper');
+            if (wrapper) wrapper.style.opacity = '1';
+
+            // 1.5秒后淡出成功遮罩
+            setTimeout(() => {
+                const overlay = area.querySelector('.upload-success-overlay');
+                if (overlay) {
+                    overlay.style.transition = 'opacity 0.5s';
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.remove(), 500);
+                }
+            }, 1500);
         });
-    };
-    reader.readAsDataURL(file);
+
+    } catch (error) {
+        console.error('上传失败:', error);
+        showError('图片上传失败，请重试');
+        clearImageSelection();
+    } finally {
+        area.style.height = ''; // 恢复高度自适应
+    }
 }
 
 /**
@@ -193,13 +233,8 @@ export async function saveSKU() {
             }
             return;
         }
-        let imageUrl = null;
-        if (currentImageFile) {
-            const filename = `sku-${Date.now()}-${currentImageFile.name}`;
-            imageUrl = await uploadImage(currentImageFile, filename);
-        } else if (currentSKUId) {
-            imageUrl = currentImageUrl;
-        }
+        // 图片已经自动上传，直接使用 currentImageUrl
+        let imageUrl = currentImageUrl;
 
         const urlVal = (formData.get('url') || '').trim();
         const skuData = {

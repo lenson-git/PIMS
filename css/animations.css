@@ -97,8 +97,17 @@
   font-weight: 500;
 }
 
-@keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes success-pop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.success-checkmark-anim {
+  animation: success-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 /* ==========================================
