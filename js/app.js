@@ -889,9 +889,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (e.key === 'Enter') {
                 const q = searchInput.value.trim();
                 if (!q) return;
-                if (q === lastSearchQuery) { showInfo('已搜索过该条码或关键词'); return; }
-                lastSearchQuery = q;
-                loadSKUs(1, q);
+                if (typeof window.handleSearch === 'function') {
+                    window.handleSearch();
+                } else if (typeof window.loadSKUs === 'function') {
+                    window.loadSKUs(1, q);
+                }
                 searchInput.value = '';
                 searchInput.focus();
             }
