@@ -1,20 +1,21 @@
 import {
     fetchSKUs, createSKU, uploadImage, fetchSettings, createSignedUrlFromPublicUrl, fetchSKUByBarcode, createStockMovement, fetchStockMovements, fetchSKUById, fetchStockTotalBySKU, fetchStockTotalBySKUs, fetchStockBySKUsWarehouse, fetchSales30dBySKU, updateSKU, createTransformedUrlFromPublicUrl, deleteSKU, fetchWarehouseStockMap, fetchStockBySKUWarehouse, createSetting, fetchAllStock, fetchSafetyStock,
     fetchExpenses, createExpense, updateExpense, deleteExpense, fetchWarehouseConstraints, fetchPriceRules, supabase
-} from './supabase-client.js?v=20251125-1734';
-import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js'
-import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js'
-import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js'
-import { logger } from './logger.js'
-import { safeHTML, buildAttrs, buildClass, buildStyle } from './html-builder.js'
-import { loadDashboard, fetchExchangeRate, getCurrentExchangeRate } from './modules/dashboard.js'
-import './modules/expenses.js'  // 导入 Expenses 模块（自动注册到 window）
-import './modules/settings.js'  // 导入 Settings 模块（自动注册到 window）
-import './modules/inbound.js'   // 导入 Inbound 模块（自动注册到 window）
-import './modules/ui-helpers.js' // 导入 UI 辅助函数模块
-import './modules/sku.js'        // 导入 SKU 管理模块
-import './modules/outbound.js'   // 导入出库管理模块
-import './modules/stock.js'      // 导入库存管理模块
+} from './supabase-client.js?v=20251128-001';
+import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js?v=20251128-001'
+import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js?v=20251128-001'
+import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js?v=20251128-001'
+import { logger } from './logger.js?v=20251128-001'
+import { safeHTML, buildAttrs, buildClass, buildStyle } from './html-builder.js?v=20251128-001'
+import { loadDashboard, fetchExchangeRate, getCurrentExchangeRate } from './modules/dashboard.js?v=20251128-001'
+import { renderSettingList, getDBSettingType } from './modules/settings.js?v=20251128-001'
+import './modules/expenses.js?v=20251128-001'
+import './modules/settings.js?v=20251128-001'
+import './modules/inbound.js?v=20251128-001'
+import './modules/ui-helpers.js?v=20251128-001'
+import './modules/sku.js?v=20251128-001'
+import './modules/outbound.js?v=20251128-001'
+import './modules/stock.js?v=20251128-001'
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
@@ -59,10 +60,6 @@ window._settingsCache = {
 window._warehouseConstraints = null;
 // 价格规则缓存 (动态加载)
 window._priceRules = null;
-
-// ==========================================
-// Dashboard Logic (已移至 modules/dashboard.js)
-// ==========================================
 
 // 页面导航控制
 function navigate(viewName) {
@@ -516,9 +513,6 @@ window.saveNewSetting = async function () {
     }
 }
 
-// 移除 addSetting 函数，因为它已被模态框取代
-// window.addSetting = ... (deleted)
-
 // 根据选中的仓库过滤入/出库类型选项，仅显示允许的集合（选项值为代码）
 /**
  * 根据仓库类型过滤移库类型
@@ -597,31 +591,9 @@ function getUnitPriceForMovement(sku, movementType) {
     return { unit_price_rmb: null, unit_price_thb: value };
 }
 
-// ==========================================
-// SKU Logic (已移至 modules/sku.js)
-// ==========================================
-
 // 保留必要的全局状态变量
 window._viewReady = { inbound: false, outbound: false, sku: false, stock: false, expenses: false };
 window._skuCacheByBarcode = {};
-
-// ==========================================
-// Inbound Logic (已移至 modules/inbound.js)
-// ==========================================
-
-// ==========================================
-// UI Helper Functions (已移至 modules/ui-helpers.js)
-// ==========================================
-
-// ==========================================
-// Outbound Logic (已移至 modules/outbound.js)
-// ==========================================
-
-// ==========================================
-// Stock Logic (已移至 modules/stock.js)
-// ==========================================
-
-// ==========================================
 
 // ==========================================
 // Initialization
@@ -926,18 +898,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    window.handleImgError = async function (img) {
-        try {
-            const signed = await createSignedUrlFromPublicUrl(img.src, 3600);
-            if (signed) {
-                img.onerror = null;
-                img.src = signed;
-                return;
-            }
-        } catch (_) { }
-        img.onerror = null;
-        img.src = 'https://via.placeholder.com/300';
-    }
 
     // Bind Global Events
     document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -955,27 +915,22 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 });
 
-async function getSKUByBarcodeCached(code) {
-    if (window._skuCacheByBarcode[code]) return window._skuCacheByBarcode[code];
-    const sku = await fetchSKUByBarcode(code);
-    if (sku) window._skuCacheByBarcode[code] = sku;
-    return sku;
-}
-
 // Expose auth actions
 window.loginWithGoogle = loginWithGoogle;
 window.logout = logout;
 
-// ==========================================
-// ==========================================
-// ==========================================
-// Expenses Logic (已移至 modules/expenses.js)
-// ==========================================
-
-// ==========================================
-// ==========================================
-// System Settings Logic (已移至 modules/settings.js)
-// ==========================================
+window.handleImgError = async function (img) {
+    try {
+        const signed = await createSignedUrlFromPublicUrl(img.src, 3600);
+        if (signed) {
+            img.onerror = null;
+            img.src = signed;
+            return;
+        }
+    } catch (_) { }
+    img.onerror = null;
+    img.src = 'https://via.placeholder.com/300';
+}
 
 // 切换侧边栏 (移动端)
 window.toggleSidebar = function () {

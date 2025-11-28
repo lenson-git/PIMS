@@ -145,7 +145,7 @@ export async function loadSystemSettings() {
 /**
  * 渲染设置列表
  */
-function renderSettingList(type, items) {
+export function renderSettingList(type, items) {
     const container = document.getElementById(`${type}-list`);
     if (!container) return;
 
@@ -177,7 +177,7 @@ function renderSettingList(type, items) {
 /**
  * 获取数据库存储的类型名称 (PascalCase)
  */
-function getDBSettingType(type) {
+export function getDBSettingType(type) {
     const typeMap = {
         shop: 'Shop',
         warehouse: 'Warehouse',

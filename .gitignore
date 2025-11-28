@@ -36,3 +36,4 @@ build/
 # Gemini 工作目录（不上传）
 .gemini/
 .trae/
+js/app.js.backup

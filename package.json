@@ -1,0 +1,25 @@
+{
+  "name": "pims-web",
+  "version": "1.0.0",
+  "description": "基于 Supabase + GitHub Pages 的纯前端库存管理系统。",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lenson-git/PIMS.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/lenson-git/PIMS/issues"
+  },
+  "homepage": "https://github.com/lenson-git/PIMS#readme",
+  "devDependencies": {
+    "jsdom": "^27.2.0",
+    "vitest": "^4.0.14"
+  }
+}
