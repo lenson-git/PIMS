@@ -41,17 +41,31 @@ function handleImageSelect(e) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // 显示加载状态
+    const area = document.getElementById('sku-upload-area');
+    const label = area.querySelector('.upload-label');
+    if (label) {
+        label.style.pointerEvents = 'none';
+        label.style.opacity = '0.7';
+        label.innerHTML = `
+            <div class="loading-spinner-small"></div>
+            <span>处理中...</span>
+        `;
+    }
+
     currentImageFile = file;
 
     const reader = new FileReader();
     reader.onload = function (e) {
         currentImageBase64 = e.target.result;
-        const area = document.getElementById('sku-upload-area');
-        area.innerHTML = `
-            <div class="img-preview-wrapper" style="position: relative; width: 100%; height: 100%;">
-                <img src="${currentImageBase64}" style="width: 100%; height: 100%; object-fit: contain;" />
-                <button type="button" onclick="clearImageSelection()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">&times;</button>
-            </div>`;
+        // 稍微延迟一下以展示动画效果（可选，这里直接渲染）
+        requestAnimationFrame(() => {
+            area.innerHTML = `
+                <div class="img-preview-wrapper" style="position: relative; width: 100%; height: 100%;">
+                    <img src="${currentImageBase64}" style="width: 100%; height: 100%; object-fit: contain;" />
+                    <button type="button" onclick="clearImageSelection()" style="position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;">&times;</button>
+                </div>`;
+        });
     };
     reader.readAsDataURL(file);
 }

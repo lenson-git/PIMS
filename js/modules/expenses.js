@@ -127,13 +127,20 @@ async function handleImageUpload(inputElement, successBadgeId, context) {
     try {
         // 显示上传中状态
         if (successBadge) {
-            successBadge.style.display = 'flex';
-            // 临时调整样式以显示文本
-            successBadge.style.width = 'auto';
-            successBadge.style.borderRadius = '4px';
-            successBadge.style.padding = '0 8px';
-            successBadge.style.background = '#3b82f6'; // 蓝色表示处理中
-            successBadge.innerHTML = '<span style="color: white; font-size: 12px;">上传中...</span>';
+            successBadge.style.display = 'none'; // 先隐藏成功标记
+        }
+
+        // 找到触发按钮
+        const wrapper = inputElement.closest('.image-upload-wrapper');
+        const btn = wrapper ? wrapper.querySelector('.btn') : null;
+        const originalBtnText = btn ? btn.innerHTML : '';
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = `
+                <div class="loading-spinner-small"></div>
+                上传中...
+            `;
         }
 
         // 上传图片
@@ -148,19 +155,23 @@ async function handleImageUpload(inputElement, successBadgeId, context) {
             window._editExpenseImageUrl = imageUrl;
         }
 
-        // 显示成功标识
+        // 恢复按钮状态
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnText;
+        }
+
+        // 显示成功标记
         if (successBadge) {
-            successBadge.style.width = 'auto';
-            successBadge.style.borderRadius = '4px';
-            successBadge.style.padding = '0 6px';
-            successBadge.style.background = '#10b981'; // 绿色表示成功
+            successBadge.style.display = 'flex';
+            successBadge.style.width = '';
+            successBadge.style.borderRadius = '';
+            successBadge.style.padding = '';
+            successBadge.style.background = '';
             successBadge.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 4px;">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                    <span style="color: white; font-size: 12px;">上传成功</span>
-                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
             `;
         }
 
