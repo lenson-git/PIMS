@@ -406,7 +406,10 @@ window.removePendingInboundItem = function (index) {
     // 使用删除动画
     if (typeof window.removeRow === 'function') {
         window.removeRow(row, () => {
-            // 动画完成后,从数据中删除
+            // 动画完成后，先从 DOM 中移除元素
+            row.remove();
+
+            // 从数据中删除
             pendingInboundList.splice(index, 1);
 
             // 更新剩余行的序号和 data-index
