@@ -1,38 +1,21 @@
 /* global supabase, XLSX */
+const logger = window.logger || console;
 /**
  * SKU 批量导入功能模块
  * 功能：从 Excel 批量导入 SKU，支持数据验证、重复检测和智能对比
  */
 
 // 辅助函数：如果全局没有定义，则使用本地实现
+// 注意：animations.js 会覆盖这些定义，这里仅作为最后的防线
 if (typeof window.showError === 'undefined') {
-    window.showError = function (message) {
-        alert('错误: ' + message);
-    };
+    window.showError = (msg) => console.error(msg);
 }
-
 if (typeof window.showSuccess === 'undefined') {
-    window.showSuccess = function (message) {
-        alert(message);
-    };
+    window.showSuccess = (msg) => console.log(msg);
 }
-
-if (typeof window.openModal === 'undefined') {
-    window.openModal = function (modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'flex';
-        }
-    };
-}
-
-if (typeof window.closeModal === 'undefined') {
-    window.closeModal = function (modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    };
+if (typeof window.showProgress === 'undefined') {
+    window.showProgress = () => { };
+    window.hideProgress = () => { };
 }
 
 // 全局变量：存储当前导入的数据
@@ -100,25 +83,25 @@ window.importSKU = function () {
  * 处理文件选择
  */
 window.handleBulkImportFile = async function (event) {
-    console.log('[DEBUG] handleBulkImportFile 开始');
+    logger.debug('handleBulkImportFile 开始');
     const file = event.target.files[0];
     if (!file) return;
 
     // 检查文件类型
     const fileName = file.name.toLowerCase();
-    console.log('[DEBUG] 文件名:', fileName);
+    logger.debug('文件名:', fileName);
     if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
         showError('请选择 Excel 文件 (.xlsx 或 .xls)');
         return;
     }
 
     try {
-        // 显示加载状态（使用控制台日志代替阻塞性提示）
-        console.log('[DEBUG] 开始解析 Excel...');
+        showLoading('正在解析 Excel...');
+        logger.debug('开始解析 Excel...');
 
         // 解析 Excel
         const data = await parseExcelFile(file);
-        console.log('[DEBUG] Excel 解析完成，数据行数:', data ? data.length : 0);
+        logger.debug('Excel 解析完成，数据行数:', data ? data.length : 0);
 
         if (!data || data.length === 0) {
             showError('Excel 文件为空或格式不正确');
@@ -127,21 +110,23 @@ window.handleBulkImportFile = async function (event) {
 
         // 保存数据
         currentImportData = data;
-        console.log('[DEBUG] 数据已保存');
+        logger.debug('数据已保存');
 
         // 显示预览
-        console.log('[DEBUG] 开始渲染预览...');
+        logger.debug('开始渲染预览...');
         renderImportPreview(data);
-        console.log('[DEBUG] 预览渲染完成');
+        logger.debug('预览渲染完成');
 
         // 验证数据
-        console.log('[DEBUG] 开始验证数据...');
+        logger.debug('开始验证数据...');
         await validateAndShowResult(data);
-        console.log('[DEBUG] 验证完成');
+        logger.debug('验证完成');
 
     } catch (error) {
-        console.error('解析文件失败:', error);
+        logger.error('解析文件失败:', error);
         showError('解析文件失败: ' + error.message);
+    } finally {
+        hideLoading();
     }
 };
 
@@ -755,14 +740,23 @@ window.confirmBulkImport = async function () {
         confirmBtn.disabled = true;
         confirmBtn.textContent = '导入中...';
 
+        // 使用顶部进度条
+        window.showProgress(0);
+
         let successCount = 0;
         let skipCount = 0;
         let updateCount = 0;
         let failCount = 0;
+        const total = currentImportData.length;
 
         // 处理每条数据
-        for (const row of currentImportData) {
+        for (let i = 0; i < total; i++) {
+            const row = currentImportData[i];
             const sku = row.external_barcode;
+
+            // 更新进度条
+            const percent = Math.round(((i + 1) / total) * 100);
+            window.showProgress(percent);
 
             // 检查是否是重复项
             const duplicate = currentValidationResult.duplicates.find(d => d.sku === sku);
@@ -788,7 +782,7 @@ window.confirmBulkImport = async function () {
                         if (error) throw error;
                         updateCount++;
                     } catch (error) {
-                        console.error('更新 SKU 失败:', sku, error);
+                        logger.error('更新 SKU 失败:', sku, error);
                         failCount++;
                     }
                     continue;
@@ -831,35 +825,37 @@ window.confirmBulkImport = async function () {
 
                 if (error) throw error;
             } catch (error) {
-                console.error('创建运费记录失败:', error);
+                logger.error('创建运费记录失败:', error);
             }
         }
 
+        // 隐藏进度条
+        window.hideProgress();
+
         // 显示结果
-        let message = `导入完成！\n新增: ${successCount} 条\n更新: ${updateCount} 条\n跳过: ${skipCount} 条`;
+        let msg = `导入完成！\n成功新增: ${successCount}\n成功更新: ${updateCount}\n跳过: ${skipCount}`;
         if (failCount > 0) {
-            message += `\n失败: ${failCount} 条`;
-        }
-        if (currentValidationResult.totalShipping > 0) {
-            message += `\n运费记录已创建: ¥${currentValidationResult.totalShipping.toFixed(2)}`;
+            msg += `\n失败: ${failCount}`;
+            showError(msg);
+        } else {
+            showSuccess(msg);
         }
 
-        showSuccess(message);
-
-        // 关闭模态框
+        // 关闭模态框并刷新列表
         window.closeModal('bulk-import-modal');
-
-        // 刷新 SKU 列表
-        if (typeof loadSKUs === 'function') {
-            loadSKUs();
+        if (window.loadSKUs) {
+            window.loadSKUs();
         }
 
     } catch (error) {
-        console.error('批量导入失败:', error);
-        showError('批量导入失败: ' + error.message);
+        logger.error('导入过程出错:', error);
+        showError('导入过程出错: ' + error.message);
     } finally {
+        window.hideProgress();
         const confirmBtn = document.getElementById('confirm-bulk-import-btn');
-        confirmBtn.disabled = false;
-        confirmBtn.textContent = '确认导入';
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = '确认导入';
+        }
     }
 };

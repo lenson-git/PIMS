@@ -363,6 +363,13 @@ export async function addExpense() {
 
     if (!date || !type || !amount) {
         showError('请填写必填项：日期、类型、金额');
+        // 摇动第一个空的必填项
+        const firstEmpty = !date ? document.getElementById('new-expense-date') :
+            !type ? document.getElementById('new-expense-type') :
+                document.getElementById('new-expense-amount');
+        if (firstEmpty && typeof window.shakeElement === 'function') {
+            window.shakeElement(firstEmpty.parentElement || firstEmpty);
+        }
         return;
     }
 
@@ -505,6 +512,13 @@ export async function saveExpenseEdit() {
 
     if (!date || !type || !amount) {
         showError('请填写必填项:日期、类型、金额');
+        // 摇动第一个空的必填项
+        const firstEmpty = !date ? document.getElementById('edit-expense-date') :
+            !type ? document.getElementById('edit-expense-type') :
+                document.getElementById('edit-expense-amount');
+        if (firstEmpty && typeof window.shakeElement === 'function') {
+            window.shakeElement(firstEmpty.parentElement || firstEmpty);
+        }
         return;
     }
 

@@ -1,9 +1,12 @@
 # PIMS 项目 AI 助手规则 (.cursorrules)
 
 你是一位 Google Deepmind 的高级全栈工程师，专注于代码质量、性能优化和安全性。你正在协助开发 PIMS (Product Inventory Management System) 项目。
-所有输出必须使用中文
-任何我输入的需求,你必须先输出你的理解,然后告诉我你的解决方案,再输出todo列表,经过我的同意后才能执行.执行完输出todo列表,告诉我你做了哪些工作.
-每次修改添加版本号来强制刷新缓存
+
+## 🚨 全局规则 (必须严格遵守)
+
+1. **所有输出必须使用中文**。
+2. **严格的交互流程**: 任何我输入的需求,你必须先输出你的**理解**,然后告诉我你的**解决方案**,再输出**todo列表**,经过我的**同意**后才能执行.执行完输出todo列表,告诉我你做了哪些工作.
+3. **版本控制**: 每次修改添加版本号来强制刷新缓存.
 
 ## 🛠️ 技术栈
 
@@ -11,6 +14,19 @@
 - **后端**: Supabase (PostgreSQL, Auth, Storage)
 - **工具**: Git, VS Code
 - **部署**: GitHub Pages (静态托管)
+
+## 📦 仓库约束关系 (业务规则)
+
+### 入库
+- **主仓**: 采购入库 / 售后入库
+- **售后仓**: 售后入库
+
+### 出库
+- **主仓**: 销售出库 / 换货出库
+- **售后仓**: 退给供应商
+
+### 库存调整
+- **仅在库存管理,操作模态框中使用**: 库存调整(增加) / 库存调整(减少)
 
 ## 📝 代码规范
 
@@ -66,4 +82,780 @@
 - `js/supabase-client.js`: Supabase 客户端配置
 - `css/`: 样式文件
 
-遵循这些规则，共同打造高质量、安全、可维护的 PIMS 系统！
+---
+
+# Web应用动画系统实施规范 v1.0
+------------------------
+> **适用范围**: 所有现代Web应用(SPA、MPA、管理后台、电商平台等)  
+> **设计理念**: Material Design 3 + 渐进增强 + 性能优先  
+> **最后更新**: 2025-11-26
+
+---
+
+## 📐 核心设计原则
+
+### 1. 渐进反馈原则
+**定义**: 操作的每个阶段都应有可见信号
+
+```
+操作生命周期 → 视觉反馈
+├─ 开始     → 加载动画/按钮状态变化
+├─ 进行中   → 进度条/加载器
+└─ 结束     → 成功/失败提示
+```
+
+**实施要点**:
+- ✅ 任何超过100ms的操作必须有加载反馈
+- ✅ 超过2秒的操作必须有进度指示
+- ✅ 操作结果必须有明确的成功/失败提示
+
+---
+
+### 2. 微交互优先原则
+**定义**: 以轻量动画突出关键变化,不喧宾夺主
+
+**时长标准**:
+```
+微交互:     150-300ms  (hover, focus, 高亮)
+短动画:     300-500ms  (淡入淡出, 滑动)
+中等动画:   500-800ms  (复杂状态变化)
+长动画:     800-1200ms (仪式感动画, 如成功勾选)
+```
+
+**曲线标准**:
+```css
+/* 标准缓动曲线 */
+--ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);      /* 元素进入 */
+--ease-in: cubic-bezier(0.4, 0.0, 1, 1);         /* 元素退出 */
+--ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);   /* 双向变化 */
+--ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1); /* 弹性效果 */
+```
+
+---
+
+### 3. 低认知负担原则
+**定义**: 动画信息与文案一致,位置与语义匹配
+
+**位置规范**:
+```
+中心区域   → 全局加载、模态框
+右上角     → 操作结果提示(成功/失败/信息)
+顶部       → 进度条
+底部       → Cookie提示、更新通知
+原地       → 列表项变化、表单验证
+```
+
+**颜色编码**:
+```css
+成功 → #10b981 (绿色)
+失败 → #ef4444 (红色)
+警告 → #f59e0b (橙色)
+信息 → #3b82f6 (蓝色)
+加载 → #1a1a1a (主色调)
+```
+
+---
+
+### 4. 可预期时长原则
+**定义**: 用户能预判动画何时结束
+
+**实施标准**:
+- ✅ 微交互: 150-300ms,用户几乎无感知
+- ✅ 加载动画: 1-2s可见占位,持续到数据返回
+- ✅ 长任务: 使用进度条/阶段提示,量化进度
+- ✅ 无限加载: 明确告知"正在处理",提供取消选项
+
+---
+
+### 5. 不阻塞操作原则
+**定义**: 除必要遮罩外,采用非阻塞提示
+
+**遮罩使用规范**:
+```
+必须使用遮罩:
+- 全局数据加载(页面初始化)
+- 关键操作提交(支付、删除)
+- 模态框交互
+
+禁止使用遮罩:
+- 列表加载
+- 搜索/筛选
+- 非关键操作反馈
+```
+
+---
+
+### 6. 可叠加层级原则
+**定义**: 统一z-index规范,确保层级正确
+
+**标准层级**:
+```css
+/* Z-Index 层级规范 */
+--z-base: 1;              /* 基础内容 */
+--z-dropdown: 100;        /* 下拉菜单 */
+--z-sticky: 200;          /* 固定元素 */
+--z-modal-backdrop: 1000; /* 模态框背景 */
+--z-modal: 1100;          /* 模态框 */
+--z-loading: 2500;        /* 加载遮罩 */
+--z-toast: 3000;          /* 提示框 */
+--z-progress: 3000;       /* 进度条 */
+```
+
+---
+
+### 7. 可访问性原则
+**定义**: 颜色+图标+文案三重编码,支持无障碍访问
+
+**实施标准**:
+```html
+<!-- ✅ 正确示例 -->
+<div class="toast toast-success" role="alert" aria-live="polite">
+  <svg class="icon-success">...</svg>
+  <span>保存成功</span>
+</div>
+
+<!-- ❌ 错误示例 -->
+<div class="toast-success">保存成功</div>
+```
+
+**尊重用户偏好**:
+```css
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+---
+
+## 🎨 标准动画清单
+
+### 1. 中心加载动画 (旋转圆环)
+
+**用途**: 接口调用、图片/数据加载的进行中状态  
+**作用**: 告知"正在处理",缓解等待焦虑
+
+**实现标准**:
+```css
+.loading-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: var(--z-loading);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-overlay.active { display: flex; }
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #1a1a1a;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+```
+
+**应用场景**:
+- API调用(>500ms响应时间)
+- 批量操作提交
+- 页面切换
+- 大文件上传
+
+---
+
+### 2. 顶部进度条
+
+**用途**: 明显且可预期的长任务(批量导入、报表生成)  
+**作用**: 量化进度,减少不确定性
+
+**实现标准**:
+```css
+.progress-bar-container {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: #e5e7eb;
+  z-index: var(--z-progress);
+  display: none;
+}
+
+.progress-bar-container.active { display: block; }
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #1a1a1a, #4b5563);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+```
+
+**JS接口**:
+```javascript
+// 显示进度
+showProgress(percent); // 0-100
+
+// 隐藏进度
+hideProgress();
+
+// 自动进度(模拟)
+autoProgress(duration); // 适用于无法获取真实进度的场景
+```
+
+**应用场景**:
+- 批量导入(SKU、订单、库存)
+- 数据导出
+- 报表生成
+- 文件处理
+
+---
+
+### 3. 右上角提示框 (Toast)
+
+**用途**: 操作结果即时反馈(保存、删除、提交)  
+**作用**: 不打断用户流程,保持页面可操作性
+
+**实现标准**:
+```css
+.toast-container {
+  position: fixed;
+  top: 16px; right: 16px;
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.toast {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid currentColor;
+  padding: 12px 16px;
+  border-radius: 6px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  font-size: 14px;
+  min-width: 280px;
+  max-width: 400px;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s var(--ease-out);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast-success { color: #10b981; }
+.toast-error { color: #ef4444; }
+.toast-warning { color: #f59e0b; }
+.toast-info { color: #3b82f6; }
+```
+
+**JS接口**:
+```javascript
+showSuccess(message, duration = 3000);
+showError(message, duration = 5000);
+showWarning(message, duration = 4000);
+showInfo(message, duration = 3000);
+```
+
+**应用场景**:
+- 保存成功/失败
+- 删除确认
+- 表单提交结果
+- 操作权限提示
+
+---
+
+### 4. 列表新增高亮
+
+**用途**: SKU/费用等列表的增删变化  
+**作用**: 视觉定位变化项,提升可感知性
+
+**实现标准**:
+```css
+@keyframes highlight {
+  0% { background-color: #fef3c7; }
+  100% { background-color: transparent; }
+}
+
+.row-highlight {
+  animation: highlight 800ms ease-out;
+}
+```
+
+**应用场景**:
+- 新增列表项
+- 更新列表项
+- 搜索结果高亮
+
+---
+
+### 5. 列表删除滑出
+
+**用途**: 列表项删除的视觉反馈  
+**作用**: 避免突兀,提供视觉连续性
+
+**实现标准**:
+```css
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.row-removing {
+  animation: slideOutRight 300ms ease-out forwards;
+}
+```
+
+**JS使用**:
+```javascript
+function removeRow(element) {
+  element.classList.add('row-removing');
+  setTimeout(() => element.remove(), 300);
+}
+```
+
+---
+
+### 6. 骨架屏 + 图片占位
+
+**用途**: 页面/块级加载的空窗期(数据、图片)  
+**作用**: 结构先行,避免"白屏";图片加载更自然
+
+**实现标准**:
+```css
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 100%;
+  background: #f3f4f6;
+  position: absolute;
+  top: 0; left: 0;
+}
+
+.skeleton-image + img {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.skeleton-image + img.loaded {
+  opacity: 1;
+}
+```
+
+**应用场景**:
+- 列表加载
+- 图片懒加载
+- 卡片内容加载
+- 表格数据加载
+
+---
+
+### 7. 成功勾选动画
+
+**用途**: 关键操作达成(确认、入库完成)  
+**作用**: 强化"完成"的仪式感
+
+**实现标准**:
+```html
+<svg class="checkmark" viewBox="0 0 52 52">
+  <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+  <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+</svg>
+```
+
+```css
+.checkmark {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  stroke-width: 2;
+  stroke: #10b981;
+  stroke-miterlimit: 10;
+}
+
+.checkmark-circle {
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: stroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark-check {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: stroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards;
+}
+
+@keyframes stroke {
+  100% { stroke-dashoffset: 0; }
+}
+```
+
+**应用场景**:
+- 订单提交成功
+- 支付完成
+- 批量操作完成
+- 重要操作确认
+
+---
+
+### 8. 错误抖动
+
+**用途**: 表单校验失败、不可用操作  
+**作用**: 引导视线到问题控件,降低纠错成本
+
+**实现标准**:
+```css
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+  20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+.shake {
+  animation: shake 0.4s ease-in-out;
+}
+```
+
+**应用场景**:
+- 表单验证失败
+- 密码错误
+- 权限不足
+- 操作不可用
+
+---
+
+### 9. 扫描引导动画
+
+**用途**: 条码扫描器启动状态  
+**作用**: 明确"正在扫描",增强操作沉浸感
+
+**实现标准**:
+```css
+.scanner-line {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #10b981,
+    transparent
+  );
+  animation: scan 2s linear infinite;
+}
+
+@keyframes scan {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(300px); }
+}
+```
+
+---
+
+### 10. 按钮涟漪效果
+
+**用途**: 点击反馈  
+**作用**: 提高按压感与可用性感知
+
+**实现标准**:
+```css
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:active::after {
+  width: 300px;
+  height: 300px;
+}
+```
+
+---
+
+## 🛠️ 技术实施标准
+
+### 文件组织结构
+
+```
+project/
+├── css/
+│   ├── animations.css      # 动画定义
+│   ├── variables.css       # CSS变量(时长、曲线、颜色)
+│   └── components.css      # 组件样式
+├── js/
+│   ├── animations.js       # 动画工具函数
+│   ├── toast.js           # Toast组件
+│   ├── loading.js         # 加载组件
+│   └── progress.js        # 进度条组件
+└── index.html
+```
+
+### CSS变量定义
+
+```css
+:root {
+  /* 动画时长 */
+  --duration-instant: 0ms;
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --duration-slower: 800ms;
+  
+  /* 缓动曲线 */
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0.0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* Z-Index */
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal-backdrop: 1000;
+  --z-modal: 1100;
+  --z-loading: 2500;
+  --z-toast: 3000;
+  --z-progress: 3000;
+  
+  /* 状态颜色 */
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+}
+```
+
+### JS工具函数标准
+
+```javascript
+// animations.js - 标准接口
+
+// 加载动画
+export function showLoading(message = '加载中...');
+export function hideLoading();
+
+// 进度条
+export function showProgress(percent);
+export function hideProgress();
+export function autoProgress(duration);
+
+// Toast提示
+export function showSuccess(message, duration = 3000);
+export function showError(message, duration = 5000);
+export function showWarning(message, duration = 4000);
+export function showInfo(message, duration = 3000);
+
+// 列表动画
+export function highlightRow(element);
+export function removeRow(element, callback);
+
+// 表单动画
+export function shakeElement(element);
+export function showCheckmark(container);
+
+// 工具函数
+export function waitForAnimation(element);
+export function prefersReducedMotion();
+```
+
+---
+
+## 📋 实施流程
+
+### 阶段1: 准备 (0.5天)
+
+**任务清单**:
+- [ ] 创建 `animations.css` 文件
+- [ ] 定义 CSS 变量
+- [ ] 创建 `animations.js` 工具库
+- [ ] 更新 [index.html](file:///Users/lenson/Library/CloudStorage/GoogleDrive-lenson.sz@gmail.com/%E6%88%91%E7%9A%84%E4%BA%91%E7%AB%AF%E7%A1%AC%E7%9B%98/E-commerce/PIMS-Web/index.html) 引入文件
+
+**交付物**:
+- 完整的动画基础设施
+- 标准化的CSS变量
+- 可复用的JS工具函数
+
+### 阶段2: 核心动画 (1-2天)
+
+**优先级**:
+1. 中心加载动画 (P0)
+2. 顶部进度条 (P0)
+3. Toast提示框 (P0)
+
+**任务清单**:
+- [ ] 实现加载遮罩和旋转圆环
+- [ ] 实现进度条组件
+- [ ] 优化Toast组件(如已存在)
+- [ ] 应用到所有API调用
+
+### 阶段3: 列表动画 (0.5-1天)
+
+**任务清单**:
+- [ ] 实现列表高亮动画
+- [ ] 实现列表删除滑出
+- [ ] 实现骨架屏(如未实现)
+- [ ] 应用到所有列表场景
+
+### 阶段4: 精致化 (1-2天)
+
+**任务清单**:
+- [ ] 实现成功勾选动画
+- [ ] 实现错误抖动
+- [ ] 实现按钮涟漪
+- [ ] 实现扫描引导(如适用)
+
+### 阶段5: 测试优化 (0.5-1天)
+
+**测试清单**:
+- [ ] 功能测试(所有动画正常)
+- [ ] 性能测试(无卡顿,FPS>60)
+- [ ] 兼容性测试(Chrome/Safari/Firefox)
+- [ ] 可访问性测试(键盘、屏幕阅读器)
+- [ ] 移动端测试(触摸、性能)
+
+**优化清单**:
+- [ ] 添加 `will-change` 优化
+- [ ] 实现 `prefers-reduced-motion`
+- [ ] 优化动画性能
+- [ ] 添加ARIA属性
+
+---
+
+## 📊 质量检查清单
+
+### 设计一致性
+- [ ] 所有动画时长符合标准
+- [ ] 所有缓动曲线使用CSS变量
+- [ ] 所有颜色使用语义化变量
+- [ ] 所有层级符合z-index规范
+
+### 用户体验
+- [ ] 加载状态明确可见
+- [ ] 操作反馈及时准确
+- [ ] 动画不影响操作流程
+- [ ] 错误提示清晰易懂
+
+### 性能标准
+- [ ] 动画帧率 ≥ 60 FPS
+- [ ] 使用 GPU 加速(transform/opacity)
+- [ ] 避免 layout thrashing
+- [ ] 长列表使用虚拟滚动
+
+### 可访问性
+- [ ] 支持 `prefers-reduced-motion`
+- [ ] 提供 ARIA 属性
+- [ ] 颜色+图标+文案三重编码
+- [ ] 键盘导航不受影响
+
+### 代码质量
+- [ ] CSS使用变量,易于维护
+- [ ] JS函数接口统一
+- [ ] 代码有注释文档
+- [ ] 通过ESLint/Stylelint检查
+
+---
+
+## 🎯 成功指标
+
+### 定量指标
+- **加载感知时间** ↓ 30%
+- **操作错误率** ↓ 20%
+- **用户满意度** ↑ 25%
+- **页面性能分数** ≥ 90
+
+### 定性指标
+- ✅ 用户反馈"系统响应快"
+- ✅ 用户反馈"操作有反馈"
+- ✅ 用户反馈"界面流畅"
+- ✅ 用户反馈"专业精致"
+
+---
+
+## 🔄 版本历史
+
+### v1.0 (2025-11-26)
+- ✅ 初始版本发布
+- ✅ 定义7大核心原则
+- ✅ 标准化10种动画类型
+- ✅ 建立实施流程
+- ✅ 制定质量标准
+
+---
+
+## 📞 维护与更新
+
+**维护周期**: 每季度review一次  
+**更新触发**:
+- 新的设计趋势
+- 用户反馈
+- 性能优化
+- 技术栈升级
+
+**责任人**: 前端团队负责人
+
+---
+
+## 💡 最佳实践
+
+### DO ✅
+- ✅ 使用CSS动画优先(GPU加速)
+- ✅ 动画时长保持在300ms以内(微交互)
+- ✅ 提供降级方案(prefers-reduced-motion)
+- ✅ 使用语义化的类名
+- ✅ 测试不同设备和网络条件
+
+### DON'T ❌
+- ❌ 过度使用动画(喧宾夺主)
+- ❌ 阻塞用户操作(除必要遮罩)
+- ❌ 忽略性能影响
+- ❌ 仅依赖颜色传达信息
+- ❌ 硬编码动画参数
+
+---
+
+**本规范适用于所有Web应用项目,可根据具体需求调整细节,但核心原则应保持一致。**

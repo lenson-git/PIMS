@@ -1,5 +1,6 @@
 // Version: 20251125-1715-complete-dynamic-config
 import { supabase } from './config.js'
+import { showLoading, hideLoading } from './utils.js'
 export { supabase }
 
 // 获取 SKU 列表 (使用视图获取关联名称)
@@ -21,13 +22,18 @@ export async function fetchSKUs(page = 1, pageSize = 20, search = '') {
 
 // 创建 SKU
 export async function createSKU(skuData) {
-  const { data, error } = await supabase
-    .from('skus')
-    .insert([skuData])
-    .select()
+  showLoading('正在创建 SKU...');
+  try {
+    const { data, error } = await supabase
+      .from('skus')
+      .insert([skuData])
+      .select()
 
-  if (error) throw error
-  return data[0]
+    if (error) throw error
+    return data[0]
+  } finally {
+    hideLoading();
+  }
 }
 
 // 根据条码获取 SKU (使用视图)
@@ -313,13 +319,18 @@ export async function fetchSales30dBySKU(id) {
 
 // 创建库存变动记录
 export async function createStockMovement(payload) {
-  const { data, error } = await supabase
-    .from('stock_movements')
-    .insert(payload)
-    .select()
+  showLoading('正在提交库存变动...');
+  try {
+    const { data, error } = await supabase
+      .from('stock_movements')
+      .insert(payload)
+      .select()
 
-  if (error) throw error
-  return data[0]
+    if (error) throw error
+    return data[0]
+  } finally {
+    hideLoading();
+  }
 }
 
 // 获取库存变动记录 (用于财务计算)
@@ -348,37 +359,52 @@ export async function fetchStockMovements(filters = {}) {
 }
 
 export async function updateSKU(id, patch) {
-  const { data, error } = await supabase
-    .from('skus')
-    .update(patch)
-    .eq('id', id)
-    .select()
-  if (error) throw error
-  return data && data[0] ? data[0] : null
+  showLoading('正在更新 SKU...');
+  try {
+    const { data, error } = await supabase
+      .from('skus')
+      .update(patch)
+      .eq('id', id)
+      .select()
+    if (error) throw error
+    return data && data[0] ? data[0] : null
+  } finally {
+    hideLoading();
+  }
 }
 
 export async function deleteSKU(id) {
-  const { data, error } = await supabase
-    .from('skus')
-    .delete()
-    .eq('id', id)
-    .select()
-  if (error) throw error
-  return data
+  showLoading('正在删除 SKU...');
+  try {
+    const { data, error } = await supabase
+      .from('skus')
+      .delete()
+      .eq('id', id)
+      .select()
+    if (error) throw error
+    return data
+  } finally {
+    hideLoading();
+  }
 }
 
 // 上传图片
 export async function uploadImage(file, filename) {
-  const processed = await compressIfNeeded(file, 500 * 1024)
-  const ext = inferExt(processed) || 'jpg'
-  const key = generateStorageKey(ext)
-  const { data, error } = await supabase.storage
-    .from('products')
-    .upload(key, processed, { upsert: true })
-  if (error) throw error
-  return supabase.storage
-    .from('products')
-    .getPublicUrl(key).data.publicUrl
+  showLoading('正在上传图片...');
+  try {
+    const processed = await compressIfNeeded(file, 500 * 1024)
+    const ext = inferExt(processed) || 'jpg'
+    const key = generateStorageKey(ext)
+    const { data, error } = await supabase.storage
+      .from('products')
+      .upload(key, processed, { upsert: true })
+    if (error) throw error
+    return supabase.storage
+      .from('products')
+      .getPublicUrl(key).data.publicUrl
+  } finally {
+    hideLoading();
+  }
 }
 
 let __seq = 0
@@ -516,14 +542,19 @@ export async function fetchSettings(type) {
 
 // 创建配置项
 export async function createSetting(code, name, type) {
-  const { data, error } = await supabase
-    .from('settings')
-    .insert([{ code, name, type }])
-    .select()
-    .single();
+  showLoading('正在保存配置...');
+  try {
+    const { data, error } = await supabase
+      .from('settings')
+      .insert([{ code, name, type }])
+      .select()
+      .single();
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data;
+  } finally {
+    hideLoading();
+  }
 }
 
 // ==========================================
@@ -561,36 +592,51 @@ export async function fetchExpenses(filters = {}) {
 }
 
 export async function createExpense(expenseData) {
-  const { data, error } = await supabase
-    .from('expenses')
-    .insert([expenseData])
-    .select()
-    .single();
+  showLoading('正在保存费用...');
+  try {
+    const { data, error } = await supabase
+      .from('expenses')
+      .insert([expenseData])
+      .select()
+      .single();
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data;
+  } finally {
+    hideLoading();
+  }
 }
 
 export async function updateExpense(id, updates) {
-  const { data, error } = await supabase
-    .from('expenses')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
+  showLoading('正在更新费用...');
+  try {
+    const { data, error } = await supabase
+      .from('expenses')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data;
+  } finally {
+    hideLoading();
+  }
 }
 
 export async function deleteExpense(id) {
-  const { error } = await supabase
-    .from('expenses')
-    .delete()
-    .eq('id', id);
+  showLoading('正在删除费用...');
+  try {
+    const { error } = await supabase
+      .from('expenses')
+      .delete()
+      .eq('id', id);
 
-  if (error) throw error;
-  return true;
+    if (error) throw error;
+    return true;
+  } finally {
+    hideLoading();
+  }
 }
 
 // ==========================================

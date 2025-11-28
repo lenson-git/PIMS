@@ -143,6 +143,10 @@ export async function saveSKU() {
     const barcode = (formData.get('barcode') || '').trim();
     if (!barcode) {
         showError('请输入 SKU / 条码');
+        const input = document.getElementById('modal-barcode-input');
+        if (input && typeof window.shakeElement === 'function') {
+            window.shakeElement(input.parentElement || input);
+        }
         return;
     }
 
@@ -161,10 +165,18 @@ export async function saveSKU() {
         const existing = await fetchSKUByBarcode(barcode);
         if (!currentSKUId && existing) {
             showError('外部条码已存在，不能重复创建');
+            const input = document.getElementById('modal-barcode-input');
+            if (input && typeof window.shakeElement === 'function') {
+                window.shakeElement(input.parentElement || input);
+            }
             return;
         }
         if (currentSKUId && existing && String(existing.id) !== String(currentSKUId)) {
             showError('该条码已被其他 SKU 使用');
+            const input = document.getElementById('modal-barcode-input');
+            if (input && typeof window.shakeElement === 'function') {
+                window.shakeElement(input.parentElement || input);
+            }
             return;
         }
         let imageUrl = null;
@@ -198,6 +210,15 @@ export async function saveSKU() {
         window.closeModal('sku-modal');
         loadSKUs();
         showSuccess('保存成功');
+
+        // 高亮新增/修改的行
+        setTimeout(() => {
+            const row = document.querySelector(`.sku-row[data-sku-id="${savedSKU.id}"]`);
+            if (row && typeof window.highlightRow === 'function') {
+                window.highlightRow(row);
+            }
+        }, 300);
+
         if (savedSKU && savedSKU.external_barcode) {
             window._skuCacheByBarcode[savedSKU.external_barcode] = savedSKU;
         }
@@ -308,14 +329,27 @@ export async function deleteSKUConfirm(id) {
     try {
         const ok = window.confirm('确认删除该 SKU 吗？此操作不可恢复');
         if (!ok) return;
+
+        // 找到对应的行并添加删除动画
+        const row = document.querySelector(`.sku-row[data-sku-id="${id}"]`);
+
         const sku = await fetchSKUById(id);
         const code = sku && sku.external_barcode;
         await updateSKU(id, { status_code: 'down' });
         if (code && window._skuCacheByBarcode && window._skuCacheByBarcode[code]) {
             delete window._skuCacheByBarcode[code];
         }
-        showSuccess('删除成功');
-        loadSKUs();
+
+        // 使用删除动画
+        if (row && typeof window.removeRow === 'function') {
+            window.removeRow(row, () => {
+                showSuccess('删除成功');
+                loadSKUs();
+            });
+        } else {
+            showSuccess('删除成功');
+            loadSKUs();
+        }
     } catch (err) {
         showError('删除失败: ' + err.message);
     }
@@ -446,7 +480,7 @@ function renderSKUTable(products, append = false) {
     }
 
     const html = products.map(p => `
-        <tr class="sku-row">
+        <tr class="sku-row" data-sku-id="${p.id}">
             <td>${p.__seqId}</td>
             <td>
                 <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${p.__original ? `showLightbox('${p.__original}')` : ''}">
