@@ -36,8 +36,23 @@ window.handleInboundImportFile = async function (event) {
 
     logger.debug('文件名:', file.name);
 
+    // 找到触发按钮并显示处理状态
+    const importBtn = document.querySelector('button[onclick*="inbound-import-file"]');
+    const originalBtnText = importBtn ? importBtn.innerHTML : '';
+    if (importBtn) {
+        importBtn.disabled = true;
+        importBtn.innerHTML = `
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" opacity="0.25"></circle>
+                <path d="M12 2 A10 10 0 0 1 22 12" stroke-dasharray="31.4" stroke-dashoffset="0">
+                    <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+                </path>
+            </svg>
+            处理中...
+        `;
+    }
+
     try {
-        showLoading('正在解析文件...');
         // 解析 Excel
         logger.debug('开始解析 Excel...');
         const data = await parseInboundExcel(file);
@@ -54,14 +69,18 @@ window.handleInboundImportFile = async function (event) {
         } else {
             // 添加到待入库清单
             addToPendingInbound(data, validation.skuDetails);
-            // 移除成功提示
+            showSuccess(`成功导入 ${data.length} 个商品`);
         }
 
     } catch (error) {
         logger.error('文件处理失败:', error);
         showError('文件处理失败: ' + error.message);
     } finally {
-        hideLoading();
+        // 恢复按钮状态
+        if (importBtn) {
+            importBtn.disabled = false;
+            importBtn.innerHTML = originalBtnText;
+        }
         // 清空文件输入
         event.target.value = '';
     }
@@ -410,7 +429,14 @@ window.submitInbound = async function () {
     }
 
     try {
-        showLoading('正在提交入库...');
+        // 找到提交按钮并显示处理状态
+        const submitBtn = document.querySelector('#inbound-view .panel-header .btn');
+        const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '提交中...';
+        }
+
         logger.debug('开始批量入库...');
 
         // 从输入框读取实际入库数量
@@ -432,6 +458,10 @@ window.submitInbound = async function () {
 
         if (records.length === 0) {
             showError('请至少输入一个商品的入库数量');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
             return;
         }
 
@@ -455,10 +485,22 @@ window.submitInbound = async function () {
             window.loadStockList();
         }
 
+        // 恢复按钮状态
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+
     } catch (error) {
         logger.error('入库失败:', error);
         showError('入库失败: ' + error.message);
-    } finally {
-        hideLoading();
+
+        // 恢复按钮状态
+        const submitBtn = document.querySelector('#inbound-view .panel-header .btn');
+        const originalBtnText = submitBtn ? submitBtn.getAttribute('data-original-text') : '确认入库';
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText || '确认入库';
+        }
     }
 };

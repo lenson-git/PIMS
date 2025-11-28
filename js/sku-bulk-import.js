@@ -86,46 +86,53 @@ window.handleBulkImportFile = async function (event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // 检查文件类型
-    const fileName = file.name.toLowerCase();
-    logger.debug('文件名:', fileName);
-    if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
-        showError('请选择 Excel 文件 (.xlsx 或 .xls)');
-        return;
+    // 找到触发按钮并显示处理状态
+    const importBtn = document.querySelector('button[onclick*="sku-import-file"]');
+    const originalBtnText = importBtn ? importBtn.innerHTML : '';
+    if (importBtn) {
+        importBtn.disabled = true;
+        importBtn.innerHTML = `
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" opacity="0.25"></circle>
+                <path d="M12 2 A10 10 0 0 1 22 12" stroke-dasharray="31.4" stroke-dashoffset="0">
+                    <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+                </path>
+            </svg>
+            解析中...
+        `;
     }
 
     try {
-        showLoading('正在解析 Excel...');
         logger.debug('开始解析 Excel...');
-
-        // 解析 Excel
-        const data = await parseExcelFile(file);
-        logger.debug('Excel 解析完成，数据行数:', data ? data.length : 0);
+        const data = await parseSKUExcel(file);
+        logger.debug('Excel 解析完成，数据行数:', data.length);
 
         if (!data || data.length === 0) {
             showError('Excel 文件为空或格式不正确');
             return;
         }
 
-        // 保存数据
-        currentImportData = data;
-        logger.debug('数据已保存');
-
-        // 显示预览
-        logger.debug('开始渲染预览...');
-        renderImportPreview(data);
-        logger.debug('预览渲染完成');
-
         // 验证数据
         logger.debug('开始验证数据...');
-        await validateAndShowResult(data);
+        const validation = await validateSKUData(data);
         logger.debug('验证完成');
 
+        // 显示预览
+        displaySKUPreview(data, validation);
+        openModal('sku-import-modal');
+        showSuccess(`成功解析 ${data.length} 条数据`);
+
     } catch (error) {
-        logger.error('解析文件失败:', error);
-        showError('解析文件失败: ' + error.message);
+        logger.error('文件处理失败:', error);
+        showError('文件处理失败: ' + error.message);
     } finally {
-        hideLoading();
+        // 恢复按钮状态
+        if (importBtn) {
+            importBtn.disabled = false;
+            importBtn.innerHTML = originalBtnText;
+        }
+        // 清空文件输入
+        event.target.value = '';
     }
 };
 
