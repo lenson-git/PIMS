@@ -322,7 +322,7 @@ async function renderPendingInboundList() {
         }
 
         return `
-                    <tr>
+                    <tr data-index="${index}">
                         <td>${index + 1}</td>
                         <td>
                             <div class="img-thumbnail-small">
@@ -384,9 +384,59 @@ window.updatePendingQuantity = function (index, value) {
  * 删除待入库商品
  */
 window.removePendingInboundItem = function (index) {
-    pendingInboundList.splice(index, 1);
-    renderPendingInboundList();
-    showSuccess('已删除商品');
+    // 找到对应的行
+    const tbody = document.getElementById('pending-inbound-list');
+    if (!tbody) {
+        // 如果找不到表格,使用原有逻辑
+        pendingInboundList.splice(index, 1);
+        renderPendingInboundList();
+        showSuccess('已删除商品');
+        return;
+    }
+
+    const row = tbody.querySelector(`tr[data-index="${index}"]`);
+    if (!row) {
+        // 如果找不到行,使用原有逻辑
+        pendingInboundList.splice(index, 1);
+        renderPendingInboundList();
+        showSuccess('已删除商品');
+        return;
+    }
+
+    // 使用删除动画
+    if (typeof window.removeRow === 'function') {
+        window.removeRow(row, () => {
+            // 动画完成后,从数据中删除
+            pendingInboundList.splice(index, 1);
+
+            // 更新剩余行的序号和 data-index
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach((r, i) => {
+                const seqCell = r.querySelector('td:first-child');
+                if (seqCell) seqCell.textContent = i + 1;
+                r.setAttribute('data-index', i);
+
+                // 更新删除按钮的 onclick
+                const deleteBtn = r.querySelector('button[onclick*="removePendingInboundItem"]');
+                if (deleteBtn) {
+                    deleteBtn.setAttribute('onclick', `removePendingInboundItem(${i})`);
+                }
+
+                // 更新数量输入框的 onchange
+                const qtyInput = r.querySelector('input.quantity-input');
+                if (qtyInput) {
+                    qtyInput.setAttribute('onchange', `updatePendingQuantity(${i}, this.value)`);
+                }
+            });
+
+            showSuccess('已删除商品');
+        });
+    } else {
+        // 如果动画函数不存在,使用原有逻辑
+        pendingInboundList.splice(index, 1);
+        renderPendingInboundList();
+        showSuccess('已删除商品');
+    }
 };
 
 /**
