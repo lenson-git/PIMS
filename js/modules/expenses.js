@@ -176,6 +176,16 @@ async function handleImageUpload(inputElement, successBadgeId, context) {
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
             `;
+
+            // 1秒后淡出
+            setTimeout(() => {
+                successBadge.style.transition = 'opacity 0.5s';
+                successBadge.style.opacity = '0';
+                setTimeout(() => {
+                    successBadge.style.display = 'none';
+                    successBadge.style.opacity = '1'; // 重置透明度,下次使用时正常显示
+                }, 500);
+            }, 1000);
         }
 
         showSuccess('图片上传成功');
@@ -592,10 +602,10 @@ export async function deleteExpenseAction(id) {
 
 window.loadExpenses = loadExpenses;
 window.addExpense = addExpense;
-window.editExpense = openEditExpenseModal; // Assuming editExpense maps to openEditExpenseModal
+window.openEditExpenseModal = openEditExpenseModal;
 window.saveExpenseEdit = saveExpenseEdit;
-window.deleteExpense = deleteExpenseAction; // Assuming deleteExpense maps to deleteExpenseAction
-window.filterExpenses = applyFilters; // Assuming filterExpenses maps to applyFilters
+window.deleteExpenseAction = deleteExpenseAction;
+window.applyFilters = applyFilters;
 window.initExpensesView = initExpensesView;
 window.selectQuickDate = selectQuickDate;
 window.resetFilters = resetFilters;
