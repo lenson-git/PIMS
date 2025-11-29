@@ -212,16 +212,14 @@ export async function toggleSettingStatus(id, newStatus) {
 
         if (error) throw error;
 
-        showSuccess(newStatus === 'active' ? '已启用' : '已禁用');
-
-        // 刷新系统设置页面
-        loadSystemSettings();
-
-        // 更新全局缓存
-        loadSettings();
+        // 先刷新UI,再显示成功消息
+        await loadSystemSettings();
+        await loadSettings();
 
         // 自动刷新所有相关的下拉选项
         refreshSelectOptionsByType(settingData.type);
+
+        showSuccess(newStatus === 'active' ? '已启用' : '已禁用');
 
     } catch (err) {
         showError('操作失败: ' + err.message);

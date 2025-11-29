@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>图片上传测试</title>
+    <link rel="stylesheet" href="css/animations.css?v=20251129-001">
+    <style>
+        body { padding: 50px; font-family: sans-serif; }
+        .test-area {
+            width: 400px;
+            height: 300px;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>图片上传动画测试</h1>
+    <div id="test-area" class="test-area">
+        <input type="file" id="test-input" accept="image/*" hidden>
+        <label for="test-input" style="cursor: pointer; padding: 10px 20px; background: #000; color: #fff; border-radius: 4px;">
+            选择图片
+        </label>
+    </div>
+
+    <script>
+        const input = document.getElementById('test-input');
+        const area = document.getElementById('test-area');
+
+        input.addEventListener('change', async (e) => {
+            console.log('File selected!');
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // 显示加载动画
+            area.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #6b7280;">
+                    <div class="loading-spinner"></div>
+                    <div style="margin-top: 12px; font-size: 14px;">正在上传...</div>
+                </div>
+            `;
+
+            // 模拟上传
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // 显示成功
+            area.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="success-checkmark-anim" style="width: 48px; height: 48px; margin: 0 auto 8px; border-radius: 50%; background: #10b981; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3);">
+                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="white" stroke-width="3">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div style="color: #059669; font-weight: 600; font-size: 14px;">上传成功</div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #666;">${file.name}</div>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>
