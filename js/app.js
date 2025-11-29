@@ -1,21 +1,21 @@
 import {
     fetchSKUs, createSKU, uploadImage, fetchSettings, createSignedUrlFromPublicUrl, fetchSKUByBarcode, createStockMovement, fetchStockMovements, fetchSKUById, fetchStockTotalBySKU, fetchStockTotalBySKUs, fetchStockBySKUsWarehouse, fetchSales30dBySKU, updateSKU, createTransformedUrlFromPublicUrl, deleteSKU, fetchWarehouseStockMap, fetchStockBySKUWarehouse, createSetting, fetchAllStock, fetchSafetyStock,
     fetchExpenses, createExpense, updateExpense, deleteExpense, fetchWarehouseConstraints, fetchPriceRules, supabase
-} from './supabase-client.js?v=20251128-001';
-import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js?v=20251128-001'
-import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js?v=20251128-001'
-import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js?v=20251128-001'
-import { logger } from './logger.js?v=20251128-001'
-import { safeHTML, buildAttrs, buildClass, buildStyle } from './html-builder.js?v=20251128-001'
-import { loadDashboard, fetchExchangeRate, getCurrentExchangeRate } from './modules/dashboard.js?v=20251128-001'
-import { renderSettingList, getDBSettingType } from './modules/settings.js?v=20251128-001'
-import './modules/expenses.js?v=20251128-001'
-import './modules/settings.js?v=20251128-001'
-import './modules/inbound.js?v=20251128-001'
-import './modules/ui-helpers.js?v=20251128-001'
-import './modules/sku.js?v=20251128-001'
-import './modules/outbound.js?v=20251128-001'
-import './modules/stock.js?v=20251128-001'
+} from './supabase-client.js?v=20251129-001';
+import { WAREHOUSE_RULES, PRICE_RULES, FIELD_LABELS } from './config.js?v=20251129-001'
+import { checkAuth, loginWithGoogle, initAuth, logout, enforceAuth } from './auth.js?v=20251129-001'
+import { getSettingName, showError, showInfo, showSuccess, formatCurrency, formatDate, escapeHtml } from './utils.js?v=20251129-001'
+import { logger } from './logger.js?v=20251129-001'
+import { safeHTML, buildAttrs, buildClass, buildStyle } from './html-builder.js?v=20251129-001'
+import { loadDashboard, fetchExchangeRate, getCurrentExchangeRate } from './modules/dashboard.js?v=20251129-001'
+import { renderSettingList, getDBSettingType } from './modules/settings.js?v=20251129-001'
+import './modules/expenses.js?v=20251129-001'
+import './modules/settings.js?v=20251129-001'
+import './modules/inbound.js?v=20251129-001'
+import './modules/ui-helpers.js?v=20251129-001'
+import './modules/sku.js?v=20251129-001'
+import './modules/outbound.js?v=20251129-001'
+import './modules/stock.js?v=20251129-001'
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;

@@ -38,8 +38,13 @@ let lastSearchQuery = '';
  * 处理图片选择
  */
 async function handleImageSelect(e) {
+    console.log('[DEBUG] handleImageSelect triggered');
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+        console.log('[DEBUG] No file selected');
+        return;
+    }
+    console.log('[DEBUG] File selected:', file.name);
 
     currentImageFile = file;
 

@@ -389,8 +389,9 @@ export async function deleteSKU(id) {
 }
 
 // 上传图片
+// 上传图片
 export async function uploadImage(file, filename) {
-  showLoading('正在上传图片...');
+  // showLoading('正在上传图片...'); // 移除全局loading，使用局部动画
   try {
     const processed = await compressIfNeeded(file, 500 * 1024)
     const ext = inferExt(processed) || 'jpg'
@@ -403,7 +404,7 @@ export async function uploadImage(file, filename) {
       .from('products')
       .getPublicUrl(key).data.publicUrl
   } finally {
-    hideLoading();
+    // hideLoading();
   }
 }
 
