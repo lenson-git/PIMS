@@ -136,11 +136,14 @@ async function handleImageUpload(inputElement, successBadgeId, context) {
         const originalBtnText = btn ? btn.innerHTML : '';
 
         if (btn) {
+            console.log('[Expenses] Setting button to loading state');
             btn.disabled = true;
             btn.innerHTML = `
                 <div class="loading-spinner-small"></div>
                 上传中...
             `;
+        } else {
+            console.warn('[Expenses] Button not found for loading state');
         }
 
         // 上传图片
@@ -587,13 +590,26 @@ export async function deleteExpenseAction(id) {
 // 全局暴露
 // ==========================================
 
-window.initExpensesView = initExpensesView;
 window.loadExpenses = loadExpenses;
-window.selectQuickDate = selectQuickDate;
-window.applyFilters = applyFilters;
-window.resetFilters = resetFilters;
 window.addExpense = addExpense;
-window.openEditExpenseModal = openEditExpenseModal;
-window.closeEditExpenseModal = closeEditExpenseModal;
+window.editExpense = openEditExpenseModal; // Assuming editExpense maps to openEditExpenseModal
 window.saveExpenseEdit = saveExpenseEdit;
-window.deleteExpenseAction = deleteExpenseAction;
+window.deleteExpense = deleteExpenseAction; // Assuming deleteExpense maps to deleteExpenseAction
+window.filterExpenses = applyFilters; // Assuming filterExpenses maps to applyFilters
+window.initExpensesView = initExpensesView;
+window.selectQuickDate = selectQuickDate;
+window.resetFilters = resetFilters;
+window.closeEditExpenseModal = closeEditExpenseModal;
+
+
+// 初始化费用图片上传事件监听器(在模块加载时立即执行)
+function initExpenseImageUploadOnLoad() {
+    console.log('[Expenses] Module loaded, attempting to bind image upload');
+    // 使用 setTimeout 确保 DOM 已经准备好
+    setTimeout(() => {
+        setupImageAutoUpload();
+    }, 100);
+}
+
+// 立即执行初始化
+initExpenseImageUploadOnLoad();
