@@ -722,5 +722,19 @@ window.totalSKUCount = 0;
 window.isLoadingSKUs = false;
 window.skuObserver = null;
 
+// 初始化图片上传事件监听器
+function initSKUImageUpload() {
+    console.log('[SKU] Initializing image upload event listener');
+    const input = document.getElementById('sku-img-input');
+    if (input && !input._uploadBound) {
+        input.addEventListener('change', handleImageSelect);
+        input._uploadBound = true;
+        console.log('[SKU] Image upload event listener bound');
+    }
+}
+
 // 初始化图片加载
 window.setupImageLoading();
+
+// 初始化图片上传
+initSKUImageUpload();
