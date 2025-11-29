@@ -156,6 +156,15 @@ async function handleImageUpload(inputElement, successBadgeId, context) {
             window._newExpenseImageUrl = imageUrl;
         } else if (context === 'edit') {
             window._editExpenseImageUrl = imageUrl;
+
+            // 立即更新编辑模态框中的图片预览
+            const previewContainer = document.getElementById('edit-expense-current-image');
+            const previewImg = document.getElementById('edit-expense-image-preview');
+            if (previewContainer && previewImg) {
+                previewImg.src = imageUrl;
+                previewContainer.style.display = 'block';
+                console.log('[Expenses] Updated image preview with new URL');
+            }
         }
 
         // 恢复按钮状态
