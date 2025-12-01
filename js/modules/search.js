@@ -99,8 +99,8 @@ async function renderSearchResults(products) {
 
     // 渲染产品卡片
     const html = productsWithThumbs.map(p => `
-        <div class="product-card" onclick="showProductDetail('${p.id}')">
-            <div class="product-image">
+        <div class="product-card-horizontal" onclick="showProductDetail('${p.id}')">
+            <div class="product-image-horizontal">
                 ${p.__thumb ? `
                     <div class="image-container">
                         <div class="skeleton-image"></div>
@@ -110,23 +110,38 @@ async function renderSearchResults(products) {
                     <div class="image-placeholder">📦</div>
                 `}
             </div>
-            <div class="product-info">
-                <div class="product-barcode">${escapeHtml(p.external_barcode || '-')}</div>
-                <div class="product-name">${escapeHtml((p.product_info || '').split('\\n')[0] || '-')}</div>
-                <div class="product-meta">
-                    <span class="meta-item">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                        </svg>
-                        库存: <span id="stock-${p.id}">-</span>
-                    </span>
-                    <span class="meta-item">
+            <div class="product-info-horizontal">
+                <div class="product-header">
+                    <div class="product-barcode">${escapeHtml(p.external_barcode || '-')}</div>
+                    <div class="product-status">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
                             <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
                         ${getSettingName('status', p.status_code) || '-'}
+                    </div>
+                </div>
+                <div class="product-name">${escapeHtml((p.product_info || '').split('\\n')[0] || '-')}</div>
+                <div class="product-details">
+                    ${(p.product_info || '').split('\\n').slice(1, 3).map(line =>
+        `<div class="product-detail-line">${escapeHtml(line)}</div>`
+    ).join('')}
+                </div>
+                <div class="product-meta-horizontal">
+                    <span class="meta-item">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        库存: <strong id="stock-${p.id}">-</strong>
+                    </span>
+                    <span class="meta-item">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="1" x2="12" y2="5"></line>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                        </svg>
+                        店铺: ${getSettingName('shop', p.shop_code) || '-'}
                     </span>
                 </div>
             </div>
@@ -134,7 +149,7 @@ async function renderSearchResults(products) {
     `).join('');
 
     resultsContainer.innerHTML = `
-        <div class="search-results-grid">
+        <div class="search-results-list">
             ${html}
         </div>
     `;
