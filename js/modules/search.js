@@ -92,7 +92,7 @@ async function renderSearchResults(products) {
         // 获取500x500缩略图
         let thumb = null;
         if (p.pic) {
-            thumb = await createTransformedUrlFromPublicUrl(p.pic, 400, 400);
+            thumb = await createTransformedUrlFromPublicUrl(p.pic, 300, 300);
             if (!thumb) thumb = await createSignedUrlFromPublicUrl(p.pic);
         }
 
@@ -126,7 +126,7 @@ async function renderSearchResults(products) {
 
         return `<div class="product-card-detailed">
             <div class="product-image-large"${p.__original ? ` onclick="showLightbox('${p.__original}')" style="cursor:zoom-in;"` : ''}>
-                ${p.__thumb ? `<img src="${p.__thumb}" alt="Product" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 font-size=%2264%22%3E📦%3C/text%3E%3C/svg%3E'">` : `<div class="image-placeholder">📦</div>`}
+                ${p.__thumb ? `<img src="${p.__thumb}" alt="Product" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 font-size=%2248%22%3E📦%3C/text%3E%3C/svg%3E'">` : `<div class="image-placeholder">📦</div>`}
             </div>
             <div class="product-info-detailed">
                 <div class="product-header">

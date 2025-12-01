@@ -2838,9 +2838,9 @@ button:active svg {
 
 /* 大图片区域 */
 .product-image-large {
-    width: 400px;
-    min-width: 400px;
-    height: 400px;
+    width: 300px;
+    min-width: 300px;
+    height: 300px;
     background: #f9fafb;
     display: flex;
     align-items: center;
@@ -2857,18 +2857,19 @@ button:active svg {
 }
 
 .product-image-large .image-placeholder {
-    font-size: 64px;
+    font-size: 48px;
 }
 
 /* 详细信息区域 */
 .product-info-detailed {
     flex: 1;
-    padding: 24px;
+    padding: 16px !important;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    height: 400px;
+    gap: 8px !important;
+    height: 300px;
     overflow: hidden;
+    /* flex: 1; 移除此属性，防止占据剩余空间 */
 }
 
 /* 产品头部 */
@@ -3029,27 +3030,30 @@ button:active svg {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    font-size: 16px !important; /* 稍微减小字体 */
+    font-size: 15px !important; /* 再次减小字体 */
+    line-height: 1.3;
 }
 
 .product-info-detailed .product-details {
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2; /* 减少到2行 */
     -webkit-box-orient: vertical;
     overflow: hidden;
     /* flex: 1; 移除此属性，防止占据剩余空间 */
+    font-size: 13px;
+    line-height: 1.4;
 }
 
 /* 紧凑网格容器 */
 .data-grid-compact {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px 8px;
-    padding-top: 16px;
+    gap: 8px 4px; /* 减小间距 */
+    padding-top: 12px; /* 减小顶部内边距 */
     border-top: 1px solid #e5e7eb;
-    margin-top: 16px; /* 改为固定间距，而不是推到底部 */
+    margin-top: 8px; /* 减小顶部外边距 */
     background: #f9fafb;
-    padding: 16px;
+    padding: 12px; /* 减小内边距 */
     border-radius: 8px;
 }
 
