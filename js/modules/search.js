@@ -87,20 +87,46 @@ async function renderSearchResults(products) {
     const resultsContainer = document.getElementById('search-results');
     if (!resultsContainer) return;
 
-    // 获取缩略图
-    const productsWithThumbs = await Promise.all(products.map(async (p) => {
+    // 并发获取所有产品的详细信息
+    const productsWithDetails = await Promise.all(products.map(async (p) => {
+        // 获取500x500缩略图
         let thumb = null;
         if (p.pic) {
-            thumb = await createTransformedUrlFromPublicUrl(p.pic, 600, 600);
+            thumb = await createTransformedUrlFromPublicUrl(p.pic, 500, 500);
             if (!thumb) thumb = await createSignedUrlFromPublicUrl(p.pic);
         }
-        return { ...p, __thumb: thumb, __original: p.pic };
+
+        // 并发获取详细数据
+        const [stockTotal, mainStock, aftersaleStock, sales30d, safetyStockData] = await Promise.all([
+            fetchStockTotalBySKU(p.id),
+            fetchStockBySKUWarehouse(p.id, 'MAIN'),
+            fetchStockBySKUWarehouse(p.id, 'AFTERSALE'),
+            fetchSales30dBySKU(p.id),
+            fetchSafetyStock()
+        ]);
+
+        // 查找安全库存
+        const safetyStock = safetyStockData?.find(s => s.sku_id === p.id)?.safety_stock_30d || null;
+
+        return {
+            ...p,
+            __thumb: thumb,
+            __original: p.pic,
+            __stockTotal: stockTotal,
+            __mainStock: mainStock,
+            __aftersaleStock: aftersaleStock,
+            __sales30d: sales30d,
+            __safetyStock: safetyStock
+        };
     }));
 
-    // 渲染产品卡片
-    const html = productsWithThumbs.map(p => `
-        <div class="product-card-horizontal" onclick="showProductDetail('${p.id}')">
-            <div class="product-image-horizontal">
+    // 渲染产品卡片,直接显示所有信息
+    const html = productsWithDetails.map(p => {
+        const mapName = (t, c) => (window._settingsCache[t] && window._settingsCache[t][c]) ? window._settingsCache[t][c] : c;
+
+        return `
+        <div class="product-card-detailed">
+            <div class="product-image-large" ${p.__original ? `onclick="showLightbox('${p.__original}')"` : ''}>
                 ${p.__thumb ? `
                     <div class="image-container">
                         <div class="skeleton-image"></div>
@@ -110,7 +136,8 @@ async function renderSearchResults(products) {
                     <div class="image-placeholder">📦</div>
                 `}
             </div>
-            <div class="product-info-horizontal">
+            <div class="product-info-detailed">
+                <!-- 头部: 条码和状态 -->
                 <div class="product-header">
                     <div class="product-barcode">${escapeHtml(p.external_barcode || '-')}</div>
                     <div class="product-status">
@@ -118,52 +145,108 @@ async function renderSearchResults(products) {
                             <circle cx="12" cy="12" r="10"></circle>
                             <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
-                        ${getSettingName('status', p.status_code) || '-'}
+                        ${mapName('status', p.status_code) || '-'}
                     </div>
                 </div>
+
+                <!-- 产品名称 -->
                 <div class="product-name">${escapeHtml((p.product_info || '').split('\\n')[0] || '-')}</div>
+
+                <!-- 产品详情 -->
                 <div class="product-details">
-                    ${(p.product_info || '').split('\\n').slice(1, 3).map(line =>
-        `<div class="product-detail-line">${escapeHtml(line)}</div>`
-    ).join('')}
+                    ${(p.product_info || '').split('\\n').slice(1).filter(Boolean).map(line =>
+            `<div class="product-detail-line">${escapeHtml(line)}</div>`
+        ).join('')}
                 </div>
-                <div class="product-meta-horizontal">
-                    <span class="meta-item">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                        </svg>
-                        库存: <strong id="stock-${p.id}">-</strong>
-                    </span>
-                    <span class="meta-item">
+
+                <!-- 产品链接 -->
+                ${p.url ? `
+                    <div class="product-url">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="1" x2="12" y2="5"></line>
-                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 0 20"></path>
+                            <path d="M12 2a15.3 15.3 0 0 0 0 20"></path>
                         </svg>
-                        店铺: ${getSettingName('shop', p.shop_code) || '-'}
-                    </span>
+                        <a href="${p.url}" target="_blank" rel="noopener">${p.url.replace(/^https?:\/\/([^\/]+).*$/, '$1')}</a>
+                    </div>
+                ` : ''}
+
+                <!-- 价格信息 -->
+                <div class="info-section">
+                    <div class="section-title">价格信息</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">采购价 (RMB)</span>
+                            <span class="info-value">${p.purchase_price_rmb ? `¥ ${p.purchase_price_rmb}` : '-'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">销售价 (THB)</span>
+                            <span class="info-value">${p.selling_price_thb ? `฿ ${p.selling_price_thb}` : '-'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 库存信息 -->
+                <div class="info-section">
+                    <div class="section-title">库存信息</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">总库存</span>
+                            <span class="info-value highlight">${p.__stockTotal === null ? '-' : p.__stockTotal}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">主仓库存</span>
+                            <span class="info-value">${p.__mainStock === null ? '-' : p.__mainStock}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">售后仓库存</span>
+                            <span class="info-value">${p.__aftersaleStock === null ? '-' : p.__aftersaleStock}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">安全库存 (30天)</span>
+                            <span class="info-value">${p.__safetyStock === null ? '-' : p.__safetyStock}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 销售数据 -->
+                <div class="info-section">
+                    <div class="section-title">销售数据</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">30天销售量</span>
+                            <span class="info-value highlight">${p.__sales30d === null ? '-' : p.__sales30d}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 其他信息 -->
+                <div class="info-section">
+                    <div class="section-title">其他信息</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">店铺</span>
+                            <span class="info-value">${mapName('shop', p.shop_code) || '-'}</span>
+                        </div>
+                        ${p.created_at ? `
+                            <div class="info-item">
+                                <span class="info-label">创建时间</span>
+                                <span class="info-value">${new Date(p.created_at).toLocaleString('zh-CN')}</span>
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 
     resultsContainer.innerHTML = `
         <div class="search-results-list">
             ${html}
         </div>
     `;
-
-    // 异步加载库存数据
-    productsWithThumbs.forEach(async (p) => {
-        try {
-            const stock = await fetchStockTotalBySKU(p.id);
-            const stockEl = document.getElementById(`stock-${p.id}`);
-            if (stockEl) {
-                stockEl.textContent = stock === null ? '-' : stock;
-            }
-        } catch (_) { }
-    });
 
     // 设置图片加载监听
     if (typeof window.setupImageLoading === 'function') {
