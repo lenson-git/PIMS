@@ -126,7 +126,7 @@ async function renderSearchResults(products) {
 
         return `
         <div class="product-card-detailed">
-            <div class="product-image-large" ${p.__original ? `onclick="showLightbox('${p.__original}')"` : ''}>
+            <div class="product-image-large"${p.__original ? ` onclick="showLightbox('${p.__original}')"` : ''}>
                 ${p.__thumb ? `
                     <div class="image-container">
                         <div class="skeleton-image"></div>
