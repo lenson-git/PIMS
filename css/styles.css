@@ -3037,7 +3037,7 @@ button:active svg {
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    flex: 1; /* 占据剩余空间，但受限于line-clamp */
+    /* flex: 1; 移除此属性，防止占据剩余空间 */
 }
 
 /* 紧凑网格容器 */
