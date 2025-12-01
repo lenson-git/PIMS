@@ -51,7 +51,7 @@ async function calculateStockStatistics() {
     try {
         const now = Date.now();
         if (stockStatsCache && (now - stockStatsCacheTime) < STOCK_STATS_CACHE_DURATION) {
-            console.log('[库存统计] 使用缓存数据');
+            logger.debug('[库存统计] 使用缓存数据');
             updateStockStatistics(...stockStatsCache);
             return;
         }
@@ -69,7 +69,7 @@ async function calculateStockStatistics() {
         stockStatsCacheTime = now;
         updateStockStatistics(...stockStatsCache);
 
-        console.log('[库存统计]', {
+        logger.debug('[库存统计]', {
             SKU: window.totalStockCount,
             总库存: totalQuantity,
             主仓: mainStock,
@@ -87,7 +87,7 @@ async function calculateStockStatistics() {
 export function clearStockStatsCache() {
     stockStatsCache = null;
     stockStatsCacheTime = 0;
-    console.log('[库存统计] 缓存已清除');
+    logger.debug('[库存统计] 缓存已清除');
 }
 
 // ==========================================

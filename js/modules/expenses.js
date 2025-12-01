@@ -70,21 +70,21 @@ function setupImageAutoUpload() {
     // 新增费用的图片上传 - 立即绑定
     const newImageInput = document.getElementById('expense-image-input');
     if (newImageInput) {
-        console.log('[Expenses] Found new expense image input, binding change event');
+        logger.debug('[Expenses] Found new expense image input, binding change event');
         // 移除旧的监听器（如果有）- 虽然 addEventListener 不会重复添加相同的函数引用，但这里是匿名函数
         // 为了安全起见，我们可以先克隆节点来移除所有监听器，或者只依赖 _uploadBound 标记
         if (!newImageInput._uploadBound) {
             newImageInput.addEventListener('change', async (e) => {
-                console.log('[Expenses] New expense image input changed');
+                logger.debug('[Expenses] New expense image input changed');
                 await handleImageUpload(e.target, 'expense-image-success', 'new');
             });
             newImageInput._uploadBound = true;  // 标记已绑定
-            console.log('[Expenses] New expense image input bound');
+            logger.debug('[Expenses] New expense image input bound');
         } else {
-            console.log('[Expenses] New expense image input already bound');
+            logger.debug('[Expenses] New expense image input already bound');
         }
     } else {
-        console.warn('[Expenses] New expense image input not found');
+        logger.warn('[Expenses] New expense image input not found');
     }
 }
 
@@ -95,19 +95,19 @@ function setupEditImageAutoUpload() {
     // 编辑费用的图片上传 - 在打开模态框时绑定
     const editImageInput = document.getElementById('edit-expense-image-input');
     if (editImageInput) {
-        console.log('[Expenses] Found edit expense image input, binding change event');
+        logger.debug('[Expenses] Found edit expense image input, binding change event');
         if (!editImageInput._uploadBound) {
             editImageInput.addEventListener('change', async (e) => {
-                console.log('[Expenses] Edit expense image input changed');
+                logger.debug('[Expenses] Edit expense image input changed');
                 await handleImageUpload(e.target, 'edit-expense-image-success', 'edit');
             });
             editImageInput._uploadBound = true;  // 标记已绑定
-            console.log('[Expenses] Edit expense image input bound');
+            logger.debug('[Expenses] Edit expense image input bound');
         } else {
-            console.log('[Expenses] Edit expense image input already bound');
+            logger.debug('[Expenses] Edit expense image input already bound');
         }
     } else {
-        console.warn('[Expenses] Edit expense image input not found');
+        logger.warn('[Expenses] Edit expense image input not found');
     }
 }
 
@@ -115,10 +115,10 @@ function setupEditImageAutoUpload() {
  * 处理图片上传
  */
 async function handleImageUpload(inputElement, successBadgeId, context) {
-    console.log(`[Expenses] Handling image upload for context: ${context}`);
+    logger.debug(`[Expenses] Handling image upload for context: ${context}`);
     const file = inputElement.files[0];
     if (!file) {
-        console.log('[Expenses] No file selected');
+        logger.debug('[Expenses] No file selected');
         return;
     }
 
@@ -136,20 +136,20 @@ async function handleImageUpload(inputElement, successBadgeId, context) {
         const originalBtnText = btn ? btn.innerHTML : '';
 
         if (btn) {
-            console.log('[Expenses] Setting button to loading state');
+            logger.debug('[Expenses] Setting button to loading state');
             btn.disabled = true;
             btn.innerHTML = `
                 <div class="loading-spinner-small"></div>
                 上传中...
             `;
         } else {
-            console.warn('[Expenses] Button not found for loading state');
+            logger.warn('[Expenses] Button not found for loading state');
         }
 
         // 上传图片
-        console.log('[Expenses] Starting upload...');
+        logger.debug('[Expenses] Starting upload...');
         const imageUrl = await uploadImage(file, 'expenses');
-        console.log('[Expenses] Upload success, URL:', imageUrl);
+        logger.debug('[Expenses] Upload success, URL:', imageUrl);
 
         // 保存上传的 URL 到临时变量
         if (context === 'new') {
@@ -163,7 +163,7 @@ async function handleImageUpload(inputElement, successBadgeId, context) {
             if (previewContainer && previewImg) {
                 previewImg.src = imageUrl;
                 previewContainer.style.display = 'block';
-                console.log('[Expenses] Updated image preview with new URL');
+                logger.debug('[Expenses] Updated image preview with new URL');
             }
         }
 
@@ -412,13 +412,13 @@ export async function addExpense() {
 
         // 兜底逻辑：如果自动上传没成功（imageUrl为空），但用户选了文件，则尝试手动上传
         if (!imageUrl && imageInput.files.length > 0) {
-            console.log('[Expenses] Auto-upload URL not found, trying manual upload...');
+            logger.debug('[Expenses] Auto-upload URL not found, trying manual upload...');
             if (successBadge) {
                 successBadge.style.display = 'flex';
                 successBadge.innerHTML = '<span>上传中...</span>';
             }
             imageUrl = await uploadImage(imageInput.files[0], 'expenses');
-            console.log('[Expenses] Manual upload success, URL:', imageUrl);
+            logger.debug('[Expenses] Manual upload success, URL:', imageUrl);
         }
 
         await createExpense({
@@ -570,9 +570,9 @@ export async function saveExpenseEdit() {
         }
         // 兜底逻辑：如果自动上传没成功，但用户选了文件，则尝试手动上传
         else if (imageInput.files.length > 0) {
-            console.log('[Expenses] Auto-upload URL not found for edit, trying manual upload...');
+            logger.debug('[Expenses] Auto-upload URL not found for edit, trying manual upload...');
             updates.picture_id = await uploadImage(imageInput.files[0], 'expenses');
-            console.log('[Expenses] Manual upload success for edit');
+            logger.debug('[Expenses] Manual upload success for edit');
         }
 
         await updateExpense(id, updates);
@@ -623,7 +623,7 @@ window.closeEditExpenseModal = closeEditExpenseModal;
 
 // 初始化费用图片上传事件监听器(在模块加载时立即执行)
 function initExpenseImageUploadOnLoad() {
-    console.log('[Expenses] Module loaded, attempting to bind image upload');
+    logger.debug('[Expenses] Module loaded, attempting to bind image upload');
     // 使用 setTimeout 确保 DOM 已经准备好
     setTimeout(() => {
         setupImageAutoUpload();

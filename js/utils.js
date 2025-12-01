@@ -49,7 +49,7 @@ export function showInfo(message) {
   if (typeof window.showInfo === 'function') {
     window.showInfo(message);
   } else {
-    console.log(message);
+    logger.info(message);
   }
 }
 

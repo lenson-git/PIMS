@@ -38,13 +38,13 @@ let lastSearchQuery = '';
  * 处理图片选择
  */
 async function handleImageSelect(e) {
-    console.log('[DEBUG] handleImageSelect triggered');
+    logger.debug('[DEBUG] handleImageSelect triggered');
     const file = e.target.files[0];
     if (!file) {
-        console.log('[DEBUG] No file selected');
+        logger.debug('[DEBUG] No file selected');
         return;
     }
-    console.log('[DEBUG] File selected:', file.name);
+    logger.debug('[DEBUG] File selected:', file.name);
 
     currentImageFile = file;
 
@@ -417,7 +417,7 @@ export async function deleteSKUConfirm(id) {
  * 初始化无限滚动观察器
  */
 function initSKUObserver() {
-    console.log('[DEBUG] initSKUObserver called');
+    logger.debug('[DEBUG] initSKUObserver called');
     if (window.skuObserver) {
         window.skuObserver.disconnect();
     }
@@ -430,10 +430,10 @@ function initSKUObserver() {
 
     window.skuObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            console.log('[DEBUG] Observer entry:', entry.isIntersecting, window.isLoadingSKUs);
+            logger.debug('[DEBUG] Observer entry:', entry.isIntersecting, window.isLoadingSKUs);
             if (entry.isIntersecting && !window.isLoadingSKUs) {
                 const maxPage = Math.ceil(window.totalSKUCount / 20);
-                console.log('[DEBUG] Loading next page:', window.currentSKUPage + 1, 'Max:', maxPage);
+                logger.debug('[DEBUG] Loading next page:', window.currentSKUPage + 1, 'Max:', maxPage);
                 if (window.currentSKUPage < maxPage) {
                     window.loadSKUs(window.currentSKUPage + 1, document.getElementById('sku-main-input').value, false);
                 }
@@ -443,7 +443,7 @@ function initSKUObserver() {
 
     const sentinel = document.getElementById('sku-loading-sentinel');
     if (sentinel) {
-        console.log('[DEBUG] Sentinel found, observing');
+        logger.debug('[DEBUG] Sentinel found, observing');
         window.skuObserver.observe(sentinel);
     } else {
         logger.error('[DEBUG] Sentinel NOT found');
@@ -498,7 +498,7 @@ export async function loadSKUs(page = 1, search = '', reset = true) {
         renderSKUTable(withThumbs, !reset);
 
         const maxPage = Math.ceil(window.totalSKUCount / 20);
-        console.log('[DEBUG] Page loaded:', page, 'Total:', window.totalSKUCount, 'MaxPage:', maxPage);
+        logger.debug('[DEBUG] Page loaded:', page, 'Total:', window.totalSKUCount, 'MaxPage:', maxPage);
 
         if (page >= maxPage && window.totalSKUCount > 0) {
             if (noMoreData) noMoreData.style.display = 'block';
@@ -724,12 +724,12 @@ window.skuObserver = null;
 
 // 初始化图片上传事件监听器
 function initSKUImageUpload() {
-    console.log('[SKU] Initializing image upload event listener');
+    logger.debug('[SKU] Initializing image upload event listener');
     const input = document.getElementById('sku-img-input');
     if (input && !input._uploadBound) {
         input.addEventListener('change', handleImageSelect);
         input._uploadBound = true;
-        console.log('[SKU] Image upload event listener bound');
+        logger.debug('[SKU] Image upload event listener bound');
     }
 }
 

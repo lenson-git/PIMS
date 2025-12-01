@@ -28,7 +28,7 @@ export async function loadSettings() {
                 window._settingsCache[type][item.code] = item.name;
             });
         }));
-        console.log('Settings cache updated');
+        logger.debug('Settings cache updated');
     } catch (err) {
         logger.error('Failed to load settings cache:', err);
     }
@@ -53,7 +53,7 @@ export async function loadWarehouseConstraints() {
         });
 
         window._warehouseConstraints = rules;
-        console.log('仓库约束关系已加载:', rules);
+        logger.debug('仓库约束关系已加载:', rules);
     } catch (error) {
         logger.error('加载仓库约束关系失败:', error);
         // 使用空对象作为后备
@@ -78,7 +78,7 @@ export async function loadPriceRules() {
         });
 
         window._priceRules = rules;
-        console.log('价格规则已加载:', rules);
+        logger.debug('价格规则已加载:', rules);
     } catch (error) {
         logger.error('加载价格规则失败:', error);
         // 使用空对象作为后备

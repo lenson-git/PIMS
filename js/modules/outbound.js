@@ -403,9 +403,9 @@ function setOutboundDefaults() {
             warehouseSelect.value = mainWarehouse.value;
             // 触发 change 事件以更新 UI (浮动标签) 和过滤出库类型
             warehouseSelect.dispatchEvent(new Event('change'));
-            console.log('[出库默认值] 默认仓库已设置:', mainWarehouse.text);
+            logger.debug('[出库默认值] 默认仓库已设置:', mainWarehouse.text);
         } else {
-            console.warn('[出库默认值] 未找到"主仓"');
+            logger.warn('[出库默认值] 未找到"主仓"');
         }
     }
 
@@ -427,9 +427,9 @@ function setOutboundDefaults() {
             if (salesType) {
                 typeSelect.value = salesType.value;
                 typeSelect.dispatchEvent(new Event('change'));
-                console.log('[出库默认值] 默认出库类型已设置:', salesType.text);
+                logger.debug('[出库默认值] 默认出库类型已设置:', salesType.text);
             } else {
-                console.warn('[出库默认值] 未找到"销售出库"类型');
+                logger.warn('[出库默认值] 未找到"销售出库"类型');
             }
         }
     }, 300); // 延迟 300ms 确保仓库过滤完成

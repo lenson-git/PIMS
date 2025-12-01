@@ -307,7 +307,7 @@ document.getElementById('new-setting-name').addEventListener('input', function (
 async function reloadSettingsByType(type) {
     try {
         const dbType = getDBSettingType(type);
-        console.log(`Reloading settings for type: ${type} (DB: ${dbType})`);
+        logger.debug(`Reloading settings for type: ${type} (DB: ${dbType})`);
 
         const { data, error } = await supabase
             .from('settings')
@@ -318,7 +318,7 @@ async function reloadSettingsByType(type) {
         if (error) throw error;
 
         renderSettingList(type, data);
-        console.log(`Refreshed ${data.length} items for ${type}`);
+        logger.debug(`Refreshed ${data.length} items for ${type}`);
 
         // 同时更新全局缓存
         if (!window._settingsCache[type]) window._settingsCache[type] = {};
@@ -386,7 +386,7 @@ window.saveNewSetting = async function () {
 
         // 如果有 targetSelectId 且不为空，说明是下拉框触发的，刷新对应下拉框
         if (targetSelectId && targetSelectId !== '') {
-            console.log('Refreshing select options for:', targetSelectId);
+            logger.debug('Refreshing select options for:', targetSelectId);
             // 查找所有使用该类型的下拉框并重新加载
             const selectMap = {
                 'shop': 'shop_code',
@@ -439,7 +439,7 @@ window.saveNewSetting = async function () {
                 }
             }
         } else {
-            console.log('Refreshing settings list for type:', type);
+            logger.debug('Refreshing settings list for type:', type);
             // 针对性刷新当前类型的列表
             await reloadSettingsByType(type);
 
@@ -459,7 +459,7 @@ window.saveNewSetting = async function () {
             if (selectName) {
                 // 查找所有 name 属性匹配的 select 元素并刷新
                 const selects = document.querySelectorAll(`select[name = "${selectName}"]`);
-                console.log(`Found ${selects.length} select elements with name = "${selectName}", refreshing...`);
+                logger.debug(`Found ${selects.length} select elements with name = "${selectName}", refreshing...`);
 
                 for (const select of selects) {
                     const currentValue = select.value;
