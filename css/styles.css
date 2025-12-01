@@ -3040,6 +3040,7 @@ button:active svg {
     border-radius: 6px;
     scrollbar-width: none; /* 隐藏滚动条(Firefox) */
     -ms-overflow-style: none; /* 隐藏滚动条(IE/Edge) */
+    align-items: center; /* 垂直居中 */
 }
 
 /* 隐藏滚动条(Chrome/Safari) */
@@ -3050,22 +3051,29 @@ button:active svg {
 /* 网格项 */
 .data-grid-compact .data-item {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    flex-direction: row; /* 改为水平排列 */
+    align-items: center; /* 垂直居中 */
+    gap: 4px;
     flex-shrink: 0; /* 防止被压缩 */
     min-width: fit-content;
 }
 
 .data-grid-compact .data-item.full-width {
     /* 在单行模式下，不再需要跨列，直接作为普通项显示 */
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
 }
 
 .data-grid-compact .info-label {
     font-size: 12px;
     color: #6b7280;
+    white-space: nowrap;
+    margin-right: 4px;
+}
+
+.data-grid-compact .info-label::after {
+    content: ":"; /* 添加冒号分隔 */
 }
 
 .data-grid-compact .info-value {
