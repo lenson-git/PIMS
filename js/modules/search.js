@@ -136,58 +136,43 @@ async function renderSearchResults(products) {
                 <div class="product-name">${escapeHtml((p.product_info || '').split('\\n')[0] || '-')}</div>
                 <div class="product-details">${(p.product_info || '').split('\\n').slice(1).filter(Boolean).map(line => `<div class="product-detail-line">${escapeHtml(line)}</div>`).join('')}</div>
                 ${p.url ? `<div class="product-url"><a href="${p.url}" target="_blank" rel="noopener">${p.url.replace(/^https?:\/\/([^\/]+).*$/, '$1')}</a></div>` : ''}
-                <div class="info-section">
-                    <div class="section-title">价格信息</div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">采购价 (RMB)</span>
-                            <span class="info-value">${p.purchase_price_rmb ? `¥ ${p.purchase_price_rmb}` : '-'}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">销售价 (THB)</span>
-                            <span class="info-value">${p.selling_price_thb ? `฿ ${p.selling_price_thb}` : '-'}</span>
-                        </div>
+                
+                <div class="data-grid-compact">
+                    <div class="data-item">
+                        <span class="info-label">采购价</span>
+                        <span class="info-value">${p.purchase_price_rmb ? `¥${p.purchase_price_rmb}` : '-'}</span>
                     </div>
-                </div>
-                <div class="info-section">
-                    <div class="section-title">库存信息</div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">总库存</span>
-                            <span class="info-value highlight">${p.__stockTotal === null ? '-' : p.__stockTotal}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">主仓库存</span>
-                            <span class="info-value">${p.__mainStock === null ? '-' : p.__mainStock}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">售后仓库存</span>
-                            <span class="info-value">${p.__aftersaleStock === null ? '-' : p.__aftersaleStock}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">安全库存 (30天)</span>
-                            <span class="info-value">${p.__safetyStock === null ? '-' : p.__safetyStock}</span>
-                        </div>
+                    <div class="data-item">
+                        <span class="info-label">销售价</span>
+                        <span class="info-value">${p.selling_price_thb ? `฿${p.selling_price_thb}` : '-'}</span>
                     </div>
-                </div>
-                <div class="info-section">
-                    <div class="section-title">销售数据</div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">30天销售量</span>
-                            <span class="info-value highlight">${p.__sales30d === null ? '-' : p.__sales30d}</span>
-                        </div>
+                    <div class="data-item">
+                        <span class="info-label">30天销量</span>
+                        <span class="info-value highlight">${p.__sales30d === null ? '-' : p.__sales30d}</span>
                     </div>
-                </div>
-                <div class="info-section">
-                    <div class="section-title">其他信息</div>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">店铺</span>
-                            <span class="info-value">${mapName('shop', p.shop_code) || '-'}</span>
-                        </div>
-                        ${p.created_at ? `<div class="info-item"><span class="info-label">创建时间</span><span class="info-value">${new Date(p.created_at).toLocaleString('zh-CN')}</span></div>` : ''}
+                    <div class="data-item">
+                        <span class="info-label">总库存</span>
+                        <span class="info-value highlight">${p.__stockTotal === null ? '-' : p.__stockTotal}</span>
                     </div>
+                    
+                    <div class="data-item">
+                        <span class="info-label">主仓</span>
+                        <span class="info-value">${p.__mainStock === null ? '-' : p.__mainStock}</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="info-label">售后仓</span>
+                        <span class="info-value">${p.__aftersaleStock === null ? '-' : p.__aftersaleStock}</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="info-label">安全库存</span>
+                        <span class="info-value">${p.__safetyStock === null ? '-' : p.__safetyStock}</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="info-label">店铺</span>
+                        <span class="info-value">${mapName('shop', p.shop_code) || '-'}</span>
+                    </div>
+                    
+                    ${p.created_at ? `<div class="data-item full-width"><span class="info-label">创建时间</span><span class="info-value">${new Date(p.created_at).toLocaleString('zh-CN')}</span></div>` : ''}
                 </div>
             </div>
         </div>`;
