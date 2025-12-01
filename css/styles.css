@@ -3047,7 +3047,7 @@ button:active svg {
     gap: 12px 8px;
     padding-top: 16px;
     border-top: 1px solid #e5e7eb;
-    margin-top: auto; /* 推到底部 */
+    margin-top: 16px; /* 改为固定间距，而不是推到底部 */
     background: #f9fafb;
     padding: 16px;
     border-radius: 8px;
