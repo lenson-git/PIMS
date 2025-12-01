@@ -16,6 +16,7 @@ import './modules/ui-helpers.js?v=20251129-001'
 import './modules/sku.js?v=20251129-001'
 import './modules/outbound.js?v=20251129-001'
 import './modules/stock.js?v=20251129-001'
+import './modules/search.js?v=20251201-001'
 
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
@@ -96,6 +97,7 @@ function navigate(viewName) {
     // 更新标题
     const titles = {
         'dashboard': '仪表盘',
+        'search': '搜索',
         'sku': 'SKU管理',
         'inbound': '入库',
         'outbound': '出库',
@@ -106,7 +108,9 @@ function navigate(viewName) {
     const titleEl = document.getElementById('page-title');
     if (titleEl) titleEl.textContent = titles[viewName] || 'PIMS';
 
-    if (viewName === 'sku') {
+    if (viewName === 'search') {
+        setTimeout(() => document.getElementById('search-input')?.focus(), 100);
+    } else if (viewName === 'sku') {
         loadSKUs();
         setTimeout(() => document.getElementById('sku-main-input')?.focus(), 100);
     } else if (viewName === 'dashboard') {
