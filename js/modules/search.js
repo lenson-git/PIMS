@@ -124,55 +124,18 @@ async function renderSearchResults(products) {
     const html = productsWithDetails.map(p => {
         const mapName = (t, c) => (window._settingsCache[t] && window._settingsCache[t][c]) ? window._settingsCache[t][c] : c;
 
-        return `
-        <div class="product-card-detailed">
-            <div class="product-image-large"${p.__original ? ` onclick="showLightbox('${p.__original}')"` : ''}>
-                ${p.__thumb ? `
-                    <div class="image-container">
-                        <div class="skeleton-image"></div>
-                        <img src="${p.__thumb}" alt="Product" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\"image-placeholder\\">📦</div>'">
-                    </div>
-                ` : `
-                    <div class="image-placeholder">📦</div>
-                `}
+        return `<div class="product-card-detailed">
+            <div class="product-image-large"${p.__original ? ` onclick="showLightbox('${p.__original}')" style="cursor:zoom-in;"` : ''}>
+                ${p.__thumb ? `<img src="${p.__thumb}" alt="Product" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22500%22%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 font-size=%2264%22%3E📦%3C/text%3E%3C/svg%3E'">` : `<div class="image-placeholder">📦</div>`}
             </div>
             <div class="product-info-detailed">
-                <!-- 头部: 条码和状态 -->
                 <div class="product-header">
                     <div class="product-barcode">${escapeHtml(p.external_barcode || '-')}</div>
-                    <div class="product-status">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                        ${mapName('status', p.status_code) || '-'}
-                    </div>
+                    <div class="product-status">${mapName('status', p.status_code) || '-'}</div>
                 </div>
-
-                <!-- 产品名称 -->
                 <div class="product-name">${escapeHtml((p.product_info || '').split('\\n')[0] || '-')}</div>
-
-                <!-- 产品详情 -->
-                <div class="product-details">
-                    ${(p.product_info || '').split('\\n').slice(1).filter(Boolean).map(line =>
-            `<div class="product-detail-line">${escapeHtml(line)}</div>`
-        ).join('')}
-                </div>
-
-                <!-- 产品链接 -->
-                ${p.url ? `
-                    <div class="product-url">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="2" y1="12" x2="22" y2="12"></line>
-                            <path d="M12 2a15.3 15.3 0 0 1 0 20"></path>
-                            <path d="M12 2a15.3 15.3 0 0 0 0 20"></path>
-                        </svg>
-                        <a href="${p.url}" target="_blank" rel="noopener">${p.url.replace(/^https?:\/\/([^\/]+).*$/, '$1')}</a>
-                    </div>
-                ` : ''}
-
-                <!-- 价格信息 -->
+                <div class="product-details">${(p.product_info || '').split('\\n').slice(1).filter(Boolean).map(line => `<div class="product-detail-line">${escapeHtml(line)}</div>`).join('')}</div>
+                ${p.url ? `<div class="product-url"><a href="${p.url}" target="_blank" rel="noopener">${p.url.replace(/^https?:\/\/([^\/]+).*$/, '$1')}</a></div>` : ''}
                 <div class="info-section">
                     <div class="section-title">价格信息</div>
                     <div class="info-grid">
@@ -186,8 +149,6 @@ async function renderSearchResults(products) {
                         </div>
                     </div>
                 </div>
-
-                <!-- 库存信息 -->
                 <div class="info-section">
                     <div class="section-title">库存信息</div>
                     <div class="info-grid">
@@ -209,8 +170,6 @@ async function renderSearchResults(products) {
                         </div>
                     </div>
                 </div>
-
-                <!-- 销售数据 -->
                 <div class="info-section">
                     <div class="section-title">销售数据</div>
                     <div class="info-grid">
@@ -220,8 +179,6 @@ async function renderSearchResults(products) {
                         </div>
                     </div>
                 </div>
-
-                <!-- 其他信息 -->
                 <div class="info-section">
                     <div class="section-title">其他信息</div>
                     <div class="info-grid">
@@ -229,17 +186,11 @@ async function renderSearchResults(products) {
                             <span class="info-label">店铺</span>
                             <span class="info-value">${mapName('shop', p.shop_code) || '-'}</span>
                         </div>
-                        ${p.created_at ? `
-                            <div class="info-item">
-                                <span class="info-label">创建时间</span>
-                                <span class="info-value">${new Date(p.created_at).toLocaleString('zh-CN')}</span>
-                            </div>
-                        ` : ''}
+                        ${p.created_at ? `<div class="info-item"><span class="info-label">创建时间</span><span class="info-value">${new Date(p.created_at).toLocaleString('zh-CN')}</span></div>` : ''}
                     </div>
                 </div>
             </div>
-        </div>
-    `;
+        </div>`;
     }).join('');
 
     resultsContainer.innerHTML = `
