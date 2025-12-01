@@ -3027,12 +3027,14 @@ button:active svg {
 /* 限制文本行数，防止溢出 */
 .product-info-detailed .product-name {
     display: -webkit-box;
-    -webkit-line-clamp: 1; /* 限制为1行 */
+    -webkit-line-clamp: 2; /* 恢复为2行，确保能看到 */
     -webkit-box-orient: vertical;
     overflow: hidden;
     font-size: 14px !important;
     line-height: 1.3;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
+    min-height: 18px; /* 确保最小高度 */
+    font-weight: 600;
 }
 
 .product-info-detailed .product-details {
@@ -3044,9 +3046,9 @@ button:active svg {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 6px 4px;
-    padding-top: 8px;
+    padding-top: 4px; /* 进一步减小 */
     border-top: 1px solid #e5e7eb;
-    margin-top: 4px;
+    margin-top: 2px; /* 进一步减小 */
     background: #f9fafb;
     padding: 8px;
     border-radius: 6px;
