@@ -130,12 +130,14 @@ async function renderSearchResults(products) {
             </div>
             <div class="product-info-detailed">
                 <div class="product-header">
-                    <div class="product-barcode">${escapeHtml(p.external_barcode || '-')}</div>
+                    <div class="product-barcode">
+                        ${escapeHtml(p.external_barcode || '-')}
+                        ${p.url ? `<a href="${p.url}" target="_blank" rel="noopener" class="barcode-url-icon" title="打开链接">🔗</a>` : ''}
+                    </div>
                     <div class="product-status">${mapName('status', p.status_code) || '-'}</div>
                 </div>
                 <div class="product-name">${escapeHtml((p.product_info || '').split('\\n')[0] || '-')}</div>
                 <div class="product-details">${(p.product_info || '').split('\\n').slice(1).filter(Boolean).map(line => `<div class="product-detail-line">${escapeHtml(line)}</div>`).join('')}</div>
-                ${p.url ? `<div class="product-url"><a href="${p.url}" target="_blank" rel="noopener">${p.url.replace(/^https?:\/\/([^\/]+).*$/, '$1')}</a></div>` : ''}
                 
                 <div class="data-grid-compact">
                     <div class="data-item">
@@ -171,8 +173,6 @@ async function renderSearchResults(products) {
                         <span class="info-label">店铺</span>
                         <span class="info-value">${mapName('shop', p.shop_code) || '-'}</span>
                     </div>
-                    
-                    ${p.created_at ? `<div class="data-item full-width"><span class="info-label">创建时间</span><span class="info-value">${new Date(p.created_at).toLocaleString('zh-CN')}</span></div>` : ''}
                 </div>
             </div>
         </div>`;

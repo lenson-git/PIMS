@@ -3024,21 +3024,30 @@ button:active svg {
     gap: 6px !important;
 }
 
+/* URL图标样式 */
+.barcode-url-icon {
+    text-decoration: none;
+    margin-left: 8px;
+    font-size: 14px;
+    vertical-align: middle;
+}
+
 /* 限制文本行数，防止溢出 */
 .product-info-detailed .product-name {
-    display: -webkit-box;
-    -webkit-line-clamp: 2; /* 恢复为2行，确保能看到 */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    /* 移除行数限制，显示全部 */
     font-size: 14px !important;
     line-height: 1.3;
     margin-bottom: 4px;
-    min-height: 18px; /* 确保最小高度 */
     font-weight: 600;
+    white-space: normal; /* 允许换行 */
 }
 
 .product-info-detailed .product-details {
-    display: none; /* 在200px高度下隐藏详情文本，空间不足 */
+    display: block; /* 恢复显示 */
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.4;
+    white-space: normal; /* 允许换行 */
 }
 
 /* 紧凑网格容器 */
