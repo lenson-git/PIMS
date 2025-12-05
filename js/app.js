@@ -25,17 +25,17 @@ window.supabase = supabase;
 // 这些函数不再委派给 utils.js,而是直接实现 UI 逻辑
 window.showSuccess = (message) => {
     // 将来可以替换为自定义 toast
-    alert(message);
+    console.log('✅ SUCCESS:', message);
 };
 
 window.showError = (message) => {
     logger.error(message);
-    alert(message);
+    console.error('❌ ERROR:', message);
 };
 
 window.showInfo = (message) => {
     logger.info(message);
-    console.log(message);
+    console.log('ℹ️ INFO:', message);
 };
 
 // 其他工具函数可以安全地委派,因为它们不会递归
