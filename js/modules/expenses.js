@@ -441,7 +441,31 @@ export async function addExpense() {
         window._newExpenseImageUrl = null;
         if (successBadge) successBadge.style.display = 'none';
 
-        loadExpenses();
+        // 检查并更新筛选日期范围
+        const dateFromInput = document.getElementById('date-from');
+        const dateToInput = document.getElementById('date-to');
+        const filterFrom = dateFromInput.value;
+        const filterTo = dateToInput.value;
+        let filterUpdated = false;
+
+        if (filterFrom && date < filterFrom) {
+            dateFromInput.value = date;
+            filterUpdated = true;
+        }
+        if (filterTo && date > filterTo) {
+            dateToInput.value = date;
+            filterUpdated = true;
+        }
+
+        if (filterUpdated) {
+            showSuccess('已自动更新筛选日期范围以显示新费用');
+            // 更新浮动标签状态
+            if (typeof window.initFloatingLabels === 'function') {
+                window.initFloatingLabels();
+            }
+        }
+
+        await loadExpenses();
     } catch (err) {
         logger.error('添加费用失败:', err);
         showError('添加费用失败: ' + err.message);
