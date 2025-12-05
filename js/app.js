@@ -21,16 +21,16 @@ import './modules/search.js?v=20251201-001'
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
 
-// 将工具函数暴露到全局作用域
-window.showSuccess = showSuccess;
-window.showError = showError;
-window.showInfo = showInfo;
-window.getSettingName = getSettingName;
-window.formatCurrency = formatCurrency;
-window.formatDate = formatDate;
-window.escapeHtml = escapeHtml;
-window.createTransformedUrlFromPublicUrl = createTransformedUrlFromPublicUrl;
-window.createSignedUrlFromPublicUrl = createSignedUrlFromPublicUrl;
+// 将工具函数暴露到全局作用域 - 使用包装函数避免循环依赖
+window.showSuccess = (message) => showSuccess(message);
+window.showError = (message) => showError(message);
+window.showInfo = (message) => showInfo(message);
+window.getSettingName = (type, code) => getSettingName(type, code);
+window.formatCurrency = (amount, currency) => formatCurrency(amount, currency);
+window.formatDate = (dateString) => formatDate(dateString);
+window.escapeHtml = (text) => escapeHtml(text);
+window.createTransformedUrlFromPublicUrl = (publicUrl, width, height) => createTransformedUrlFromPublicUrl(publicUrl, width, height);
+window.createSignedUrlFromPublicUrl = (publicUrl, expires) => createSignedUrlFromPublicUrl(publicUrl, expires);
 
 // 通过条码获取 SKU (带缓存) - 在 app.js 中实现避免循环依赖
 window.getSKUByBarcodeCached = async function (code) {
