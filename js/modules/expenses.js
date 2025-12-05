@@ -430,24 +430,25 @@ export async function addExpense() {
             picture_id: imageUrl
         });
 
-        showSuccess('添加费用成功');
-
-        // 清空表单
+        // 1. 先清空表单 (确保用户看到反馈)
         document.getElementById('new-expense-amount').value = '';
         document.getElementById('new-expense-note').value = '';
-        imageInput.value = '';
+        imageInput.value = ''; // 清空文件选择
 
         // 清空临时变量和成功标识
         window._newExpenseImageUrl = null;
         if (successBadge) successBadge.style.display = 'none';
 
-        // 检查并更新筛选日期范围
+        showSuccess('添加费用成功');
+
+        // 2. 检查并更新筛选日期范围 (为了显示新添加的费用)
         const dateFromInput = document.getElementById('date-from');
         const dateToInput = document.getElementById('date-to');
         const filterFrom = dateFromInput.value;
         const filterTo = dateToInput.value;
         let filterUpdated = false;
 
+        // 简单的字符串比较 (YYYY-MM-DD格式支持直接比较)
         if (filterFrom && date < filterFrom) {
             dateFromInput.value = date;
             filterUpdated = true;
@@ -458,14 +459,16 @@ export async function addExpense() {
         }
 
         if (filterUpdated) {
-            showSuccess('已自动更新筛选日期范围以显示新费用');
+            showSuccess('已自动更新日期范围以显示新费用');
             // 更新浮动标签状态
             if (typeof window.initFloatingLabels === 'function') {
                 window.initFloatingLabels();
             }
         }
 
+        // 3. 刷新列表
         await loadExpenses();
+
     } catch (err) {
         logger.error('添加费用失败:', err);
         showError('添加费用失败: ' + err.message);
