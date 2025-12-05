@@ -325,7 +325,7 @@ async function renderPendingInboundList() {
                     <tr data-index="${index}">
                         <td>${index + 1}</td>
                         <td>
-                            <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${item.pic ? `showLightbox('${item.pic.trim()}')` : ''}" style="cursor: ${item.pic ? 'pointer' : 'default'}">
+                            <div class="img-thumbnail-small" onclick="event.stopPropagation(); ${item.pic ? `showLightbox('${item.pic.trim()}')` : ''}" style="cursor: ${item.pic ? 'zoom-in' : 'default'}">
                                 <div class="image-container" data-img-id="bulk-${index}">
                                     ${imgHtml}
                                 </div>
