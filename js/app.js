@@ -21,10 +21,24 @@ import './modules/search.js?v=20251201-001'
 // 将 supabase 暴露到全局作用域，供非模块脚本使用
 window.supabase = supabase;
 
-// 将工具函数暴露到全局作用域 - 使用包装函数避免循环依赖
-window.showSuccess = (message) => showSuccess(message);
-window.showError = (message) => showError(message);
-window.showInfo = (message) => showInfo(message);
+// 将工具函数暴露到全局作用域 - 直接实现避免循环依赖
+// 这些函数不再委派给 utils.js,而是直接实现 UI 逻辑
+window.showSuccess = (message) => {
+    // 将来可以替换为自定义 toast
+    alert(message);
+};
+
+window.showError = (message) => {
+    logger.error(message);
+    alert(message);
+};
+
+window.showInfo = (message) => {
+    logger.info(message);
+    console.log(message);
+};
+
+// 其他工具函数可以安全地委派,因为它们不会递归
 window.getSettingName = (type, code) => getSettingName(type, code);
 window.formatCurrency = (amount, currency) => formatCurrency(amount, currency);
 window.formatDate = (dateString) => formatDate(dateString);

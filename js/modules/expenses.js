@@ -626,7 +626,7 @@ export async function deleteExpenseAction(id) {
     try {
         await deleteExpense(id);
         showSuccess('删除成功');
-        loadExpenses();
+        await loadExpenses();
     } catch (err) {
         showError('删除失败: ' + err.message);
     }
