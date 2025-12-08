@@ -1,8 +1,9 @@
 /* global XLSX, supabase, showSuccess, showError, openModal, closeModal, logger */
 /**
  * 入库批量导入模块
- * Version: 20251125-1201-fix-default-values
+ * Version: 20251207-001-bulk-import-stats
  * 直接选择文件后验证并显示在待入库清单中
+ * 新增: 批量导入统计、扫描置顶、确认弹窗
  */
 
 // 备用函数：如果全局没有定义，则使用本地实现
@@ -22,6 +23,14 @@ if (typeof window.closeModal === 'undefined') {
 
 // 全局状态：待入库商品列表
 let pendingInboundList = [];
+
+// 批量导入模式标识和统计
+let isBulkImportMode = false;
+let bulkImportStats = {
+    skuCount: 0,        // SKU数量
+    purchaseQty: 0,     // 采购数量
+    scannedQty: 0       // 已扫描数量
+};
 
 if (window.logger) window.logger.info('Inbound Bulk Import Script Loaded');
 
@@ -161,6 +170,9 @@ function showMissingSKUsError(missingSkus) {
 function addToPendingInbound(data, skuDetails) {
     const skuMap = new Map(skuDetails.map(s => [s.external_barcode, s]));
 
+    // 启用批量导入模式
+    isBulkImportMode = true;
+
     // 合并到现有清单
     data.forEach(row => {
         const sku = skuMap.get(row.sku_id);
@@ -178,14 +190,53 @@ function addToPendingInbound(data, skuDetails) {
                     product_info: sku.product_info,
                     pic: sku.pic,
                     purchase_price_rmb: sku.purchase_price_rmb,
-                    quantity: row.quantity
+                    quantity: row.quantity,
+                    scannedQty: 0  // 初始化已扫描数量
                 });
             }
         }
     });
 
+    // 计算统计信息
+    updateBulkImportStats();
+
     // 渲染清单
     renderPendingInboundList();
+}
+
+/**
+ * 更新批量导入统计信息
+ */
+function updateBulkImportStats() {
+    if (!isBulkImportMode) return;
+
+    bulkImportStats.skuCount = pendingInboundList.length;
+    bulkImportStats.purchaseQty = pendingInboundList.reduce((sum, item) => sum + item.quantity, 0);
+    bulkImportStats.scannedQty = pendingInboundList.reduce((sum, item) => sum + (item.scannedQty || 0), 0);
+
+    // 更新UI显示
+    renderBulkImportStats();
+}
+
+/**
+ * 渲染批量导入统计信息
+ */
+function renderBulkImportStats() {
+    const panelTitle = document.querySelector('#inbound-view .inbound-list-panel .panel-title');
+    if (!panelTitle) return;
+
+    // 移除旧的统计信息
+    const oldStats = panelTitle.querySelector('.bulk-stats');
+    if (oldStats) oldStats.remove();
+
+    // 如果是批量导入模式,添加统计信息
+    if (isBulkImportMode && pendingInboundList.length > 0) {
+        const statsSpan = document.createElement('span');
+        statsSpan.className = 'bulk-stats';
+        statsSpan.style.cssText = 'color: #6b7280; font-size: 14px; font-weight: normal; margin-left: 12px;';
+        statsSpan.textContent = `(SKU:${bulkImportStats.skuCount}个 / 采购数量:${bulkImportStats.purchaseQty}个 / 已扫描:${bulkImportStats.scannedQty}个)`;
+        panelTitle.appendChild(statsSpan);
+    }
 }
 
 // 盒子图标 SVG 常量
@@ -363,6 +414,9 @@ async function renderPendingInboundList() {
             console.warn('[批量入库] setupImageLoading 函数未找到');
         }
     });
+
+    // 渲染统计信息
+    renderBulkImportStats();
 }
 
 /**
@@ -371,7 +425,25 @@ async function renderPendingInboundList() {
 window.updatePendingQuantity = function (index, value) {
     const quantity = parseInt(value);
     if (quantity > 0 && pendingInboundList[index]) {
-        pendingInboundList[index].quantity = quantity;
+        const item = pendingInboundList[index];
+        const oldScannedQty = item.scannedQty || 0;
+
+        // 更新已扫描数量
+        item.scannedQty = quantity;
+
+        // 如果是批量导入模式且数量发生变化,将该SKU移到顶部
+        if (isBulkImportMode && quantity !== oldScannedQty && index !== 0) {
+            // 从当前位置移除
+            const [movedItem] = pendingInboundList.splice(index, 1);
+            // 插入到顶部
+            pendingInboundList.unshift(movedItem);
+
+            // 重新渲染列表
+            renderPendingInboundList();
+        } else {
+            // 只更新统计信息
+            updateBulkImportStats();
+        }
     }
 };
 
@@ -445,13 +517,22 @@ window.clearPendingInbound = function () {
         return;
     }
 
-    // 直接清空，不弹出确认框
+    // 直接清空,不弹出确认框
     pendingInboundList = [];
+
+    // 重置批量导入模式和统计
+    isBulkImportMode = false;
+    bulkImportStats = {
+        skuCount: 0,
+        purchaseQty: 0,
+        scannedQty: 0
+    };
+
     renderPendingInboundList();
 };
 
 /**
- * 确认入库（统一入库）
+ * 确认入库(统一入库)
  */
 window.submitInbound = async function () {
     if (pendingInboundList.length === 0) {
@@ -459,6 +540,138 @@ window.submitInbound = async function () {
         return;
     }
 
+    // 如果是批量导入模式,先显示确认弹窗
+    if (isBulkImportMode) {
+        showInboundConfirmModal();
+        return;
+    }
+
+    // 非批量导入模式,直接执行入库
+    await executeInbound();
+};
+
+/**
+ * 显示入库确认弹窗
+ */
+function showInboundConfirmModal() {
+    // 计算差异
+    const differences = [];
+    pendingInboundList.forEach(item => {
+        const scannedQty = item.scannedQty || 0;
+        const diff = scannedQty - item.quantity;
+        if (diff !== 0) {
+            differences.push({
+                barcode: item.external_barcode,
+                productInfo: item.product_info,
+                purchaseQty: item.quantity,
+                scannedQty: scannedQty,
+                diff: diff
+            });
+        }
+    });
+
+    const totalDiff = Math.abs(bulkImportStats.scannedQty - bulkImportStats.purchaseQty);
+    const hasDifference = differences.length > 0;
+
+    // 构建弹窗内容
+    let modalContent = `
+        <div style="padding: 20px;">
+            <h3 style="margin: 0 0 16px 0; font-size: 18px;">入库确认</h3>
+            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                <div style="font-size: 14px; line-height: 1.8;">
+                    <div><strong>本次入库SKU:</strong> ${bulkImportStats.skuCount}个</div>
+                    <div><strong>采购数量:</strong> ${bulkImportStats.purchaseQty}个</div>
+                    <div><strong>已扫描:</strong> ${bulkImportStats.scannedQty}个</div>
+                    <div style="color: ${hasDifference ? '#ef4444' : '#10b981'};"><strong>差异:</strong> ${totalDiff}个</div>
+                </div>
+            </div>
+    `;
+
+    if (hasDifference) {
+        modalContent += `
+            <div style="margin-bottom: 16px;">
+                <h4 style="margin: 0 0 12px 0; font-size: 16px; color: #ef4444;">差异明细</h4>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 8px; text-align: left;">SKU(条码)</th>
+                                <th style="padding: 8px; text-align: center;">采购数量</th>
+                                <th style="padding: 8px; text-align: center;">入库数量</th>
+                                <th style="padding: 8px; text-align: center;">差异</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+
+        differences.forEach(item => {
+            const diffColor = item.diff > 0 ? '#10b981' : '#ef4444';
+            const diffText = item.diff > 0 ? `+${item.diff}` : item.diff;
+            modalContent += `
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 8px;">
+                        <div style="font-weight: 500;">${item.barcode}</div>
+                        <div style="color: #6b7280; font-size: 12px;">${item.productInfo || '-'}</div>
+                    </td>
+                    <td style="padding: 8px; text-align: center;">${item.purchaseQty}</td>
+                    <td style="padding: 8px; text-align: center;">${item.scannedQty}</td>
+                    <td style="padding: 8px; text-align: center; color: ${diffColor}; font-weight: 500;">${diffText}</td>
+                </tr>
+            `;
+        });
+
+        modalContent += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    modalContent += `
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn btn-outline" onclick="closeInboundConfirmModal()">取消</button>
+                <button class="btn btn-black" onclick="confirmAndExecuteInbound()">确认入库</button>
+            </div>
+        </div>
+    `;
+
+    // 创建或更新模态框
+    let modal = document.getElementById('inbound-confirm-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'inbound-confirm-modal';
+        modal.className = 'modal-overlay';
+        modal.style.display = 'none';
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `<div class="modal" style="max-width: 700px;">${modalContent}</div>`;
+    modal.style.display = 'flex';
+}
+
+/**
+ * 关闭入库确认弹窗
+ */
+window.closeInboundConfirmModal = function () {
+    const modal = document.getElementById('inbound-confirm-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+};
+
+/**
+ * 确认并执行入库
+ */
+window.confirmAndExecuteInbound = async function () {
+    closeInboundConfirmModal();
+    await executeInbound();
+};
+
+/**
+ * 执行入库操作
+ */
+async function executeInbound() {
     // 获取仓库和入库类型
     const warehouseSelect = document.getElementById('inbound-warehouse');
     const typeSelect = document.getElementById('inbound-type');
@@ -526,9 +739,18 @@ window.submitInbound = async function () {
 
         // 清空清单
         pendingInboundList = [];
+
+        // 重置批量导入模式和统计
+        isBulkImportMode = false;
+        bulkImportStats = {
+            skuCount: 0,
+            purchaseQty: 0,
+            scannedQty: 0
+        };
+
         renderPendingInboundList();
 
-        // 刷新库存列表（如果在库存页面）
+        // 刷新库存列表(如果在库存页面)
         if (typeof window.loadStockList === 'function') {
             window.loadStockList();
         }
