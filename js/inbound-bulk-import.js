@@ -1,9 +1,10 @@
 /* global XLSX, supabase, showSuccess, showError, openModal, closeModal, logger */
 /**
  * 入库批量导入模块
- * Version: 20251207-001-bulk-import-stats
+ * Version: 20251208-001-fix-manual-scan
  * 直接选择文件后验证并显示在待入库清单中
  * 新增: 批量导入统计、扫描置顶、确认弹窗
+ * 修复: 手动扫描时置顶和数量更新
  */
 
 // 备用函数：如果全局没有定义，则使用本地实现
@@ -795,8 +796,13 @@ window.addSKUToInboundList = async function (sku, quantity = 1) {
             const item = pendingInboundList[existingIndex];
             item.scannedQty = (item.scannedQty || 0) + quantity;
 
-            // 如果是批量导入模式,移至顶部
-            if (isBulkImportMode && existingIndex !== 0) {
+            // 如果不是批量导入模式,也需要增加采购数量(因为手动扫描时两者相等)
+            if (!isBulkImportMode) {
+                item.quantity = (item.quantity || 0) + quantity;
+            }
+
+            // 移至顶部(无论是否批量导入模式)
+            if (existingIndex !== 0) {
                 const [movedItem] = pendingInboundList.splice(existingIndex, 1);
                 pendingInboundList.unshift(movedItem);
             }
