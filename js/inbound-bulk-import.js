@@ -1,10 +1,11 @@
 /* global XLSX, supabase, showSuccess, showError, openModal, closeModal, logger */
 /**
  * 入库批量导入模块
- * Version: 20251208-001-fix-manual-scan
+ * Version: 20251208-002-optimize-scan
  * 直接选择文件后验证并显示在待入库清单中
  * 新增: 批量导入统计、扫描置顶、确认弹窗
  * 修复: 手动扫描时置顶和数量更新
+ * 优化: 手动扫描时只更新数量不重新渲染图片
  */
 
 // 备用函数：如果全局没有定义，则使用本地实现
@@ -792,7 +793,7 @@ window.addSKUToInboundList = async function (sku, quantity = 1) {
         const existingIndex = pendingInboundList.findIndex(item => item.sku_id === sku.id);
 
         if (existingIndex >= 0) {
-            // 已存在,增加已扫描数量
+            // 已存在,增加数量
             const item = pendingInboundList[existingIndex];
             item.scannedQty = (item.scannedQty || 0) + quantity;
 
@@ -805,9 +806,36 @@ window.addSKUToInboundList = async function (sku, quantity = 1) {
             if (existingIndex !== 0) {
                 const [movedItem] = pendingInboundList.splice(existingIndex, 1);
                 pendingInboundList.unshift(movedItem);
+
+                // 只重新渲染列表(移动行位置)
+                await renderPendingInboundList();
+            } else {
+                // 已经在顶部,只更新数量显示
+                const tbody = document.getElementById('inbound-list-body');
+                if (tbody) {
+                    const row = tbody.querySelector('tr[data-index="0"]');
+                    if (row) {
+                        // 更新采购数量显示
+                        const purchaseQtyCell = row.cells[3];
+                        if (purchaseQtyCell) {
+                            purchaseQtyCell.textContent = item.quantity;
+                        }
+
+                        // 更新入库数量输入框
+                        const qtyInput = row.querySelector('.quantity-input');
+                        if (qtyInput) {
+                            qtyInput.value = item.scannedQty || 0;
+                        }
+                    }
+                }
+
+                // 更新统计信息
+                if (isBulkImportMode) {
+                    updateBulkImportStats();
+                }
             }
         } else {
-            // 不存在,添加新商品
+            // 不存在,添加新商品到顶部
             const newItem = {
                 sku_id: sku.id,
                 external_barcode: sku.external_barcode,
@@ -820,15 +848,15 @@ window.addSKUToInboundList = async function (sku, quantity = 1) {
 
             // 添加到顶部
             pendingInboundList.unshift(newItem);
+
+            // 重新渲染列表(因为是新商品,需要渲染)
+            await renderPendingInboundList();
         }
 
         // 更新统计信息
         if (isBulkImportMode) {
             updateBulkImportStats();
         }
-
-        // 重新渲染列表
-        await renderPendingInboundList();
 
         return true;
     } catch (error) {
