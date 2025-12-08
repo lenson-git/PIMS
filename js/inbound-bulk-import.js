@@ -1,10 +1,10 @@
 /* global XLSX, supabase, showSuccess, showError, openModal, closeModal, logger */
 /**
  * 入库批量导入模块
- * Version: 20251208-002-optimize-scan
+ * Version: 20251208-003-fix-quantity
  * 直接选择文件后验证并显示在待入库清单中
  * 新增: 批量导入统计、扫描置顶、确认弹窗
- * 修复: 手动扫描时置顶和数量更新
+ * 修复: 手动扫描时置顶和数量更新、入库数量初始值显示
  * 优化: 手动扫描时只更新数量不重新渲染图片
  */
 
@@ -391,7 +391,7 @@ async function renderPendingInboundList() {
                         <td>${item.quantity}</td>
                         <td>
                             <input type="number" class="quantity-input"
-                                value="0" min="0"
+                                value="${item.scannedQty || 0}" min="0"
                                 onchange="updatePendingQuantity(${index}, this.value)"
                                 style="width: 80px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px;">
                         </td>
