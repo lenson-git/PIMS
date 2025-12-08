@@ -657,14 +657,14 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     const inboundInput = document.getElementById('inbound-sku-input');
     if (inboundInput) {
-        // 移除 focus 自动清空，避免误操作
+        // 移除 focus 自动清空,避免误操作
         // inboundInput.addEventListener('focus', ...);
 
         inboundInput.addEventListener('keydown', async (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault(); // 阻止默认提交行为
                 const code = inboundInput.value.trim();
-                // 立即清空输入框，防止重复或叠加
+                // 立即清空输入框,防止重复或叠加
                 inboundInput.value = '';
 
                 if (!code) return;
@@ -674,7 +674,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 try {
                     const sku = await getSKUByBarcodeCached(code);
                     if (!sku) {
-                        showError('该产品不存在或已下架，禁止入库');
+                        showError('该产品不存在或已下架,禁止入库');
                         inboundLastCode = code;
                         return;
                     }
@@ -686,24 +686,32 @@ document.addEventListener('DOMContentLoaded', async function () {
                         return;
                     }
                     if (sku) {
-                        // 添加到待入库清单
-                        const pending = window.getPendingInbound();
-                        if (!pending[code]) pending[code] = 0;
-                        pending[code] += 1;
-                        window.setPendingInbound(pending);
-                        await renderInboundList();
-                        const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
-                        if (row) {
-                            const input = row.querySelector('input[data-role="inbound-qty"]');
-                            if (input) input.value = pending[code];
+                        // 使用新的批量导入系统添加SKU
+                        if (typeof window.addSKUToInboundList === 'function') {
+                            await window.addSKUToInboundList(sku, 1);
+                            flashRow(code);
+                            playBeep();
+                            inboundLastCode = code;
+                        } else {
+                            // 降级到旧系统(如果新函数不可用)
+                            const pending = window.getPendingInbound();
+                            if (!pending[code]) pending[code] = 0;
+                            pending[code] += 1;
+                            window.setPendingInbound(pending);
+                            await renderInboundList();
+                            const row = document.querySelector(`#inbound-list-body tr[data-code="${code}"]`);
+                            if (row) {
+                                const input = row.querySelector('input[data-role="inbound-qty"]');
+                                if (input) input.value = pending[code];
+                            }
+                            flashRow(code);
+                            playBeep();
+                            inboundLastCode = code;
                         }
-                        flashRow(code);
-                        playBeep();
-                        inboundLastCode = code;
                     }
                 } catch (err) {
                     showError('扫描入库失败: ' + err.message);
-                    // 如果失败，可能需要把码放回去？通常不需要，让用户重扫即可
+                    // 如果失败,可能需要把码放回去?通常不需要,让用户重扫即可
                 } finally {
                     setTimeout(() => { inboundScanLock = false; }, 200);
                     inboundInput.focus(); // 保持聚焦

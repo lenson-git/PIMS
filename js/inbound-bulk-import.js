@@ -774,3 +774,60 @@ async function executeInbound() {
         }
     }
 };
+
+/**
+ * 手动扫描时添加SKU到入库列表
+ * @param {Object} sku - SKU对象
+ * @param {number} quantity - 数量(默认为1)
+ */
+window.addSKUToInboundList = async function (sku, quantity = 1) {
+    if (!sku || !sku.id) {
+        showError('无效的SKU数据');
+        return;
+    }
+
+    try {
+        // 查找是否已存在
+        const existingIndex = pendingInboundList.findIndex(item => item.sku_id === sku.id);
+
+        if (existingIndex >= 0) {
+            // 已存在,增加已扫描数量
+            const item = pendingInboundList[existingIndex];
+            item.scannedQty = (item.scannedQty || 0) + quantity;
+
+            // 如果是批量导入模式,移至顶部
+            if (isBulkImportMode && existingIndex !== 0) {
+                const [movedItem] = pendingInboundList.splice(existingIndex, 1);
+                pendingInboundList.unshift(movedItem);
+            }
+        } else {
+            // 不存在,添加新商品
+            const newItem = {
+                sku_id: sku.id,
+                external_barcode: sku.external_barcode,
+                product_info: sku.product_info,
+                pic: sku.pic,
+                purchase_price_rmb: sku.purchase_price_rmb,
+                quantity: quantity,  // 采购数量(手动扫描时等于扫描数量)
+                scannedQty: quantity // 已扫描数量
+            };
+
+            // 添加到顶部
+            pendingInboundList.unshift(newItem);
+        }
+
+        // 更新统计信息
+        if (isBulkImportMode) {
+            updateBulkImportStats();
+        }
+
+        // 重新渲染列表
+        await renderPendingInboundList();
+
+        return true;
+    } catch (error) {
+        logger.error('添加SKU到入库列表失败:', error);
+        showError('添加失败: ' + error.message);
+        return false;
+    }
+};
