@@ -18,8 +18,14 @@ import './modules/outbound.js?v=20251129-001'
 import './modules/stock.js?v=20251129-001'
 import './modules/search.js?v=20251201-001'
 
-// 将 supabase 暴露到全局作用域，供非模块脚本使用
+// 将 supabase 暴露到全局作用域,供非模块脚本使用
 window.supabase = supabase;
+
+// 扫描锁变量,防止重复扫描
+let inboundScanLock = false;
+let outboundScanLock = false;
+let inboundLastCode = '';
+let outboundLastCode = '';
 
 // 将工具函数暴露到全局作用域 - 直接实现避免循环依赖
 // 这些函数不再委派给 utils.js,而是直接实现 UI 逻辑

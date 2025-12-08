@@ -715,6 +715,7 @@ window.handleCreate = handleCreate;
 window.resetForm = resetForm;
 window.clearImageSelection = clearImageSelection;
 window.setupImageLoading = setupImageLoading;
+window.handleImageSelect = handleImageSelect;
 
 // 初始化全局状态变量
 window.currentSKUPage = 1;
