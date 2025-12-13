@@ -434,8 +434,16 @@ window.updatePendingQuantity = function (index, value) {
 
     if (pendingInboundList[index]) {
         const item = pendingInboundList[index];
+        const oldScannedQty = item.scannedQty || 0;
+
         // 更新已扫描数量
         item.scannedQty = quantity;
+
+        // 如果是批量导入模式且数量发生变化,将该SKU移到顶部
+        // 使用 moveRowToTop 避免全量刷新
+        if (isBulkImportMode && quantity !== oldScannedQty && index !== 0) {
+            moveRowToTop(index);
+        }
 
         // 如果不是批量模式，也可以同步更新采购数量(视需求而定，暂保持原逻辑只跟新扫描数)
         // 但注意：原逻辑没有同步更新 quantity，除非是在 addSKUToInboundList 里
