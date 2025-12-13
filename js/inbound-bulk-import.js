@@ -756,8 +756,11 @@ async function executeInbound() {
     }
 
     try {
-        // 找到提交按钮并显示处理状态
-        const submitBtn = document.querySelector('#inbound-view .panel-header .btn');
+        // 找到提交按钮并显示处理状态 (Fix: selector was picking Clear button)
+        // 使用更精确的选择器，找包含 onclick="submitInbound()" 的按钮，或者找 .btn-black(确认按钮通常是黑色)
+        const submitBtn = document.querySelector('#inbound-view .panel-actions .btn-black') ||
+            document.querySelector('button[onclick="submitInbound()"]');
+
         const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
         if (submitBtn) {
             submitBtn.disabled = true;
@@ -766,8 +769,8 @@ async function executeInbound() {
 
         logger.debug('开始批量入库...');
 
-        // 从输入框读取实际入库数量
-        const inputs = document.querySelectorAll('.quantity-input');
+        // 从输入框读取实际入库数量 (Fix: scope to specific table body)
+        const inputs = document.querySelectorAll('#inbound-list-body .quantity-input');
         const records = [];
 
         pendingInboundList.forEach((item, index) => {
