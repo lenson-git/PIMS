@@ -897,9 +897,9 @@ window.addSKUToInboundList = async function (sku, quantity = 1) {
             }
 
             // 更新统计
-            if (isBulkImportMode) {
-                updateBulkImportStats();
-            }
+            // if (isBulkImportMode) {
+            updateBulkImportStats();
+            // }
 
         } else {
             // 不存在,添加新商品到顶部

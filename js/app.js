@@ -583,7 +583,7 @@ window._viewReady = { inbound: false, outbound: false, sku: false, stock: false,
 window._skuCacheByBarcode = {};
 
 // 全局版本号配置
-window.APP_VERSION = '20251213-004';
+window.APP_VERSION = '20251213-005';
 
 // ==========================================
 // Initialization
