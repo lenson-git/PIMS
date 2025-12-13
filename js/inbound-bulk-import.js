@@ -424,30 +424,86 @@ async function renderPendingInboundList() {
 /**
  * 更新待入库数量
  */
+/**
+ * 更新待入库数量
+ * 优化: 只更新数据和统计，不触发表格重绘
+ */
 window.updatePendingQuantity = function (index, value) {
     const quantity = parseInt(value);
-    if (quantity > 0 && pendingInboundList[index]) {
-        const item = pendingInboundList[index];
-        const oldScannedQty = item.scannedQty || 0;
+    if (isNaN(quantity) || quantity < 0) return;
 
+    if (pendingInboundList[index]) {
+        const item = pendingInboundList[index];
         // 更新已扫描数量
         item.scannedQty = quantity;
 
-        // 如果是批量导入模式且数量发生变化,将该SKU移到顶部
-        if (isBulkImportMode && quantity !== oldScannedQty && index !== 0) {
-            // 从当前位置移除
-            const [movedItem] = pendingInboundList.splice(index, 1);
-            // 插入到顶部
-            pendingInboundList.unshift(movedItem);
+        // 如果不是批量模式，也可以同步更新采购数量(视需求而定，暂保持原逻辑只跟新扫描数)
+        // 但注意：原逻辑没有同步更新 quantity，除非是在 addSKUToInboundList 里
+        // 这里仅更新 scannedQty 即可
 
-            // 重新渲染列表
-            renderPendingInboundList();
-        } else {
-            // 只更新统计信息
-            updateBulkImportStats();
-        }
+        // 更新统计信息
+        updateBulkImportStats();
     }
 };
+
+/**
+ * 将指定索引的行移到顶部(DOM操作+数据更新)
+ * 避免全量重绘导致的图片闪烁
+ */
+function moveRowToTop(index) {
+    if (index === 0) return;
+
+    // 1. 数据重排
+    const [movedItem] = pendingInboundList.splice(index, 1);
+    pendingInboundList.unshift(movedItem);
+
+    // 2. DOM 操作
+    const tbody = document.getElementById('inbound-list-body');
+    if (!tbody) return;
+
+    const row = tbody.querySelector(`tr[data-index="${index}"]`);
+    if (row) {
+        // 移到顶部
+        tbody.insertBefore(row, tbody.firstChild);
+
+        // 高亮效果
+        const originalBg = row.style.backgroundColor;
+        row.style.backgroundColor = '#e0f2fe'; // 浅蓝色高亮
+        row.style.transition = 'background-color 0.5s ease';
+        setTimeout(() => {
+            row.style.backgroundColor = originalBg;
+        }, 1000);
+    }
+
+    // 3. 重新索引所有行
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((r, i) => {
+        // 更新 data-index
+        r.setAttribute('data-index', i);
+
+        // 更新序号
+        const seqCell = r.querySelector('td:first-child');
+        if (seqCell) seqCell.textContent = i + 1;
+
+        // 更新 input onchange
+        const qtyInput = r.querySelector('.quantity-input');
+        if (qtyInput) {
+            qtyInput.setAttribute('onchange', `updatePendingQuantity(${i}, this.value)`);
+        }
+
+        // 更新删除按钮 onclick
+        const deleteBtn = r.querySelector('button[onclick*="removePendingInboundItem"]');
+        if (deleteBtn) {
+            deleteBtn.setAttribute('onclick', `removePendingInboundItem(${i})`);
+        }
+
+        // 更新图片点击索引 (如果用到)
+        const imgContainer = r.querySelector('.image-container');
+        if (imgContainer) {
+            imgContainer.setAttribute('data-img-id', `bulk-${i}`);
+        }
+    });
+}
 
 /**
  * 删除待入库商品
@@ -790,50 +846,55 @@ window.addSKUToInboundList = async function (sku, quantity = 1) {
 
     try {
         // 查找是否已存在
-        const existingIndex = pendingInboundList.findIndex(item => item.sku_id === sku.id);
+        let existingIndex = pendingInboundList.findIndex(item => item.sku_id === sku.id);
 
         if (existingIndex >= 0) {
             // 已存在,增加数量
             const item = pendingInboundList[existingIndex];
             item.scannedQty = (item.scannedQty || 0) + quantity;
 
-            // 如果不是批量导入模式,也需要增加采购数量(因为手动扫描时两者相等)
+            // 如果不是批量导入模式,也需要增加采购数量
             if (!isBulkImportMode) {
                 item.quantity = (item.quantity || 0) + quantity;
             }
 
-            // 移至顶部(无论是否批量导入模式)
-            if (existingIndex !== 0) {
-                const [movedItem] = pendingInboundList.splice(existingIndex, 1);
-                pendingInboundList.unshift(movedItem);
+            // 更新DOM中的输入框
+            const tbody = document.getElementById('inbound-list-body');
+            if (tbody) {
+                const row = tbody.querySelector(`tr[data-index="${existingIndex}"]`);
+                if (row) {
+                    const qtyInput = row.querySelector('.quantity-input');
+                    if (qtyInput) qtyInput.value = item.scannedQty;
 
-                // 只重新渲染列表(移动行位置)
-                await renderPendingInboundList();
-            } else {
-                // 已经在顶部,只更新数量显示
-                const tbody = document.getElementById('inbound-list-body');
-                if (tbody) {
-                    const row = tbody.querySelector('tr[data-index="0"]');
-                    if (row) {
-                        // 更新采购数量显示
-                        const purchaseQtyCell = row.cells[3];
-                        if (purchaseQtyCell) {
-                            purchaseQtyCell.textContent = item.quantity;
-                        }
-
-                        // 更新入库数量输入框
-                        const qtyInput = row.querySelector('.quantity-input');
-                        if (qtyInput) {
-                            qtyInput.value = item.scannedQty || 0;
-                        }
+                    // 如果增加采购数量（非批量模式），也更新显示的采购数量列
+                    if (!isBulkImportMode) {
+                        const purchaseQtyCell = row.cells[3]; // 第4列是采购数量
+                        if (purchaseQtyCell) purchaseQtyCell.textContent = item.quantity;
                     }
                 }
+            }
 
-                // 更新统计信息
-                if (isBulkImportMode) {
-                    updateBulkImportStats();
+            // 移至顶部 (使用 DOM 操作而非重绘)
+            if (existingIndex !== 0) {
+                moveRowToTop(existingIndex);
+            } else {
+                // 已经在顶部，仅高亮
+                const row = tbody?.querySelector('tr[data-index="0"]');
+                if (row) {
+                    const originalBg = row.style.backgroundColor;
+                    row.style.backgroundColor = '#e0f2fe';
+                    row.style.transition = 'background-color 0.5s ease';
+                    setTimeout(() => {
+                        row.style.backgroundColor = originalBg;
+                    }, 1000);
                 }
             }
+
+            // 更新统计
+            if (isBulkImportMode) {
+                updateBulkImportStats();
+            }
+
         } else {
             // 不存在,添加新商品到顶部
             const newItem = {
@@ -846,16 +907,13 @@ window.addSKUToInboundList = async function (sku, quantity = 1) {
                 scannedQty: quantity // 已扫描数量
             };
 
-            // 添加到顶部
             pendingInboundList.unshift(newItem);
 
-            // 重新渲染列表(因为是新商品,需要渲染)
+            // 新商品，必须重新渲染列表(或只 prepend DOM，但这里为了确保图片加载逻辑简单，调用 render 也行)
+            // 考虑到 renderPendingInboundList 有完整的图片处理逻辑，直接调用它
+            // 但为了避免全部图片重刷，理想情况是 createRow HTML string prepend to Tbody
+            // 暂时保持调用 renderPendingInboundList，因为新添加商品场景不如重复扫描频繁
             await renderPendingInboundList();
-        }
-
-        // 更新统计信息
-        if (isBulkImportMode) {
-            updateBulkImportStats();
         }
 
         return true;
