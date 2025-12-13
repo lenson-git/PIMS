@@ -210,7 +210,8 @@ function addToPendingInbound(data, skuDetails) {
  * 更新批量导入统计信息
  */
 function updateBulkImportStats() {
-    if (!isBulkImportMode) return;
+    // 移除模式检查，始终计算统计信息，方便手动模式也显示
+    // if (!isBulkImportMode) return;
 
     bulkImportStats.skuCount = pendingInboundList.length;
     bulkImportStats.purchaseQty = pendingInboundList.reduce((sum, item) => sum + item.quantity, 0);
@@ -231,8 +232,8 @@ function renderBulkImportStats() {
     const oldStats = panelTitle.querySelector('.bulk-stats');
     if (oldStats) oldStats.remove();
 
-    // 如果是批量导入模式,添加统计信息
-    if (isBulkImportMode && pendingInboundList.length > 0) {
+    // 始终显示统计信息（只要有数据）
+    if (pendingInboundList.length > 0) {
         const statsSpan = document.createElement('span');
         statsSpan.className = 'bulk-stats';
         statsSpan.style.cssText = 'color: #6b7280; font-size: 14px; font-weight: normal; margin-left: 12px;';
@@ -606,14 +607,8 @@ window.submitInbound = async function () {
         return;
     }
 
-    // 如果是批量导入模式,先显示确认弹窗
-    if (isBulkImportMode) {
-        showInboundConfirmModal();
-        return;
-    }
-
-    // 非批量导入模式,直接执行入库
-    await executeInbound();
+    // 始终显示确认弹窗，确保用户知悉入库详情
+    showInboundConfirmModal();
 };
 
 /**
