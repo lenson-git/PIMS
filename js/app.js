@@ -582,11 +582,19 @@ function getUnitPriceForMovement(sku, movementType) {
 window._viewReady = { inbound: false, outbound: false, sku: false, stock: false, expenses: false };
 window._skuCacheByBarcode = {};
 
+// 全局版本号配置
+window.APP_VERSION = '20251213-003';
+
 // ==========================================
 // Initialization
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', async function () {
+    // 动态更新版本号显示
+    const versionSpan = document.querySelector('.sidebar-header h1 span');
+    if (versionSpan) {
+        versionSpan.textContent = 'V:' + window.APP_VERSION;
+    }
 
     // Init Floating Labels
     initFloatingLabels();
